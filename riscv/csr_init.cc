@@ -550,4 +550,9 @@ void state_t::csr_init(processor_t* const proc, reg_t max_isa)
     add_hypervisor_csr(CSR_HVICTL, hvictl);
     add_hypervisor_csr(CSR_VSTOPI, vstopi);
   }
+
+  // Create and install the new CSR at 0xBC0.
+  // Use the macro if you added it; otherwise use the literal 0xBC0.
+  add_csr(CSR_MPRIVREGCFG, mprivregcfg = std::make_shared<mprivregcfg_csr_t>(proc, CSR_MPRIVREGCFG));
+
 }

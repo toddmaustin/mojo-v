@@ -2493,6 +2493,11 @@
 #define CSR_SSP 0x11
 #define CSR_SEED 0x15
 #define CSR_JVT 0x17
+
+
+// Pick an unused custom U-mode RW slot
+#define CSR_MPRIVREGCFG 0x0a0
+
 #define CSR_CYCLE 0xc00
 #define CSR_TIME 0xc01
 #define CSR_INSTRET 0xc02
@@ -4501,6 +4506,9 @@ DECLARE_CSR(mhpmcounter28h, CSR_MHPMCOUNTER28H)
 DECLARE_CSR(mhpmcounter29h, CSR_MHPMCOUNTER29H)
 DECLARE_CSR(mhpmcounter30h, CSR_MHPMCOUNTER30H)
 DECLARE_CSR(mhpmcounter31h, CSR_MHPMCOUNTER31H)
+
+DECLARE_CSR(mprivregcfg, CSR_MPRIVREGCFG)
+
 #endif
 #ifdef DECLARE_CAUSE
 DECLARE_CAUSE("misaligned fetch", CAUSE_MISALIGNED_FETCH)

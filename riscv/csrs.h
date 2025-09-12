@@ -997,4 +997,16 @@ class aia_csr_t: public masked_csr_t {
   aia_csr_t(processor_t* const proc, const reg_t addr, const reg_t mask, const reg_t init);
   virtual void verify_permissions(insn_t insn, bool write) const override;
 };
+
+class mprivregcfg_csr_t : public masked_csr_t {
+public:
+  // Only bit 0 is writable; reset value 0.
+  mprivregcfg_csr_t(processor_t* const proc, reg_t addr)
+    : masked_csr_t(proc, addr, /*mask=*/reg_t(1), /*init=*/reg_t(0)) {}
+
+protected:
+  // Called after permission checks; return true if write actually applied.
+  bool unlogged_write(const reg_t val) noexcept override;
+};
+
 #endif
