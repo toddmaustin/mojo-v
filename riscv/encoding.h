@@ -2510,7 +2510,7 @@
 
 
 // Pick an unused custom U-mode RW slot
-#define CSR_MPRIVREGCFG 0x0a0
+#define CSR_MSECREGCFG 0x0a0
 
 #define CSR_CYCLE 0xc00
 #define CSR_TIME 0xc01
@@ -4528,7 +4528,7 @@ DECLARE_CSR(mhpmcounter29h, CSR_MHPMCOUNTER29H)
 DECLARE_CSR(mhpmcounter30h, CSR_MHPMCOUNTER30H)
 DECLARE_CSR(mhpmcounter31h, CSR_MHPMCOUNTER31H)
 
-DECLARE_CSR(mprivregcfg, CSR_MPRIVREGCFG)
+DECLARE_CSR(msecregcfg, CSR_MSECREGCFG)
 
 #endif
 #ifdef DECLARE_CAUSE

@@ -2231,7 +2231,7 @@ void aia_csr_t::verify_permissions(insn_t insn, bool write) const {
   basic_csr_t::verify_permissions(insn, write);
 }
 
-bool mprivregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
+bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   // masked_csr_t will apply the mask & store the value into its internal reg.
   const bool wrote = masked_csr_t::unlogged_write(val);
 
@@ -2239,7 +2239,7 @@ bool mprivregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   // We'll store this in processor_t (see step 3).
   if (wrote) {
     const bool enabled = (read() & 1) != 0;
-    proc->set_privreg_mode(enabled);
+    proc->set_secreg_mode(enabled);
   }
   return wrote;
 }

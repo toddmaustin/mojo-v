@@ -181,7 +181,7 @@ struct state_t
   csr_t_p hvictl;
   csr_t_p vstopi;
 
-  csr_t_p mprivregcfg;
+  csr_t_p msecregcfg;
 
   bool serialized; // whether timer CSRs are in a well-defined state
 
@@ -384,8 +384,8 @@ public:
   reg_t select_an_interrupt_with_default_priority(reg_t enabled_interrupts) const;
 
   // Quick check used by instruction handlers, etc.
-  bool get_privreg_mode() const { return privreg_mode; }
-  void set_privreg_mode(bool en) { privreg_mode = en; }
+  bool get_secreg_mode() const { return secreg_mode; }
+  void set_secreg_mode(bool en) { secreg_mode = en; }
 
 private:
   const isa_parser_t isa;
@@ -446,7 +446,7 @@ private:
   // Track repeated executions for processor_t::disasm()
   uint64_t last_pc, last_bits, executions;
 
-  bool privreg_mode = false;
+  bool secreg_mode = false;
 
 public:
   entropy_source es; // Crypto ISE Entropy source.
