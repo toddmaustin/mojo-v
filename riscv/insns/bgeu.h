@@ -1,2 +1,2 @@
-if (RS1 >= RS2)
+if (BRPRED_RS1 >= BRPRED_RS2)
   set_pc(BRANCH_TARGET);

@@ -19,7 +19,11 @@
 #define READ_FREG(reg) STATE.FPR[reg]
 #define RD READ_REG(insn.rd())
 #define RS1 READ_REG(insn.rs1())
+#define BRPRED_RS1 RS1 // Mojo-V checks
+#define CPTR_RS1 RS1 // Mojo-V checks
+#define BASE_RS1 RS1 // Mojo-V checks
 #define RS2 READ_REG(insn.rs2())
+#define BRPRED_RS2 RS2 // Mojo-V checks
 #define RS3 READ_REG(insn.rs3())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
 #define CHECK_RD() CHECK_REG(insn.rd())
@@ -57,17 +61,22 @@
 #define WRITE_RVC_RS2S(value) WRITE_REG(insn.rvc_rs2s(), value)
 #define WRITE_RVC_FRS2S(value) WRITE_FREG(insn.rvc_rs2s(), value)
 #define RVC_RS1 READ_REG(insn.rvc_rs1())
+#define CPTR_RVC_RS1 RVC_RS1 // Mojo-V checks
 #define RVC_RS2 READ_REG(insn.rvc_rs2())
 #define RVC_RS1S READ_REG(insn.rvc_rs1s())
+#define BASE_RVC_RS1S RVC_RS1S // Mojo-V checks
+#define BRPRED_RVC_RS1S RVC_RS1S // Mojo-V checks
 #define RVC_RS2S READ_REG(insn.rvc_rs2s())
 #define RVC_FRS2 READ_FREG(insn.rvc_rs2())
 #define RVC_FRS2S READ_FREG(insn.rvc_rs2s())
 #define RVC_SP READ_REG(X_SP)
+#define BASE_RVC_SP RVC_SP // Mojo-V checks
 
 // Zc* macros
 #define RVC_R1S (Sn(insn.rvc_r1sc()))
 #define RVC_R2S (Sn(insn.rvc_r2sc()))
 #define SP READ_REG(X_SP)
+#define BASE_SP SP // Mojo-V check
 #define RA READ_REG(X_RA)
 
 // Zdinx macros

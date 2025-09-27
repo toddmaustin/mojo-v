@@ -22,7 +22,7 @@ if (insn.rs2() == 0) {
 } else {
   swap = RS2 | ((uint128_t)READ_REG(insn.rs2() + 1) << 64);
 }
-res = MMU.amo_compare_and_swap<uint128_t>(RS1, comp, swap);
+res = MMU.amo_compare_and_swap<uint128_t>(BASE_RS1, comp, swap);
 if (insn.rd() != 0) {
   if (MMU.is_target_big_endian()) {
     WRITE_REG(insn.rd(), res >> 64);

@@ -72,12 +72,16 @@ const int NCSR = 4096;
 #define Sn(n) ((n) < 2 ? X_S0 + (n) : X_Sn + (n))
 
 typedef uint64_t insn_bits_t;
+typedef uint64_t reg_deps_t;
 class insn_t
 {
 public:
   insn_t() = default;
-  insn_t(insn_bits_t bits) : b(bits) {}
+  insn_t(insn_bits_t bits) : b(bits) { _xpr_deps_in = 0; _xpr_deps_out = 0; }
   insn_bits_t bits() { return b; }
+  reg_deps_t xpr_deps_in() { return _xpr_deps_in; }
+  reg_deps_t xpr_deps_out() { return _xpr_deps_out; }
+  void xpr_deps_rd(reg_t src);
   int length() { return insn_length(b); }
   [[maybe_unused]] int64_t opcode() { return x(0, 7); }
   [[maybe_unused]] int64_t funct7() { return x(25, 7); }
@@ -209,6 +213,8 @@ public:
 
 private:
   insn_bits_t b;
+  reg_deps_t _xpr_deps_in, _xpr_deps_out;
+  // reg_deps_t fpr_deps, fpr_deps_out;
   uint64_t x(int lo, int len) { return (b >> lo) & ((insn_bits_t(1) << len) - 1); }
   uint64_t xs(int lo, int len) { return int64_t(b) << (64 - lo - len) >> (64 - len); }
   uint64_t imm_sign() { return xs(31, 1); }

@@ -1,7 +1,7 @@
 require_zcmp_pushpop;
 
 const auto new_sp = SP - insn.zcmp_stack_adjustment(xlen);
-auto addr = SP;
+auto addr = BASE_SP;
 
 for (int i = Sn(11); i >= 0; i--) {
   if (insn.zcmp_regmask() & (1 << i)) {

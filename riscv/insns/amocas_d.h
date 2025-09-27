@@ -21,7 +21,7 @@ if (xlen == 32) {
   } else {
     swap = (uint32_t)RS2 | (READ_REG(insn.rs2() + 1) << 32);
   }
-  res = MMU.amo_compare_and_swap<uint64_t>(RS1, comp, swap);
+  res = MMU.amo_compare_and_swap<uint64_t>(BASE_RS1, comp, swap);
   if (insn.rd() != 0) {
     if (MMU.is_target_big_endian()) {
       WRITE_REG(insn.rd() + 1, sext32((uint32_t)res));
@@ -33,5 +33,5 @@ if (xlen == 32) {
   }
  } else {
   // RV64
-  WRITE_RD(MMU.amo_compare_and_swap<uint64_t>(RS1, RD, RS2));
+  WRITE_RD(MMU.amo_compare_and_swap<uint64_t>(BASE_RS1, RD, RS2));
 }

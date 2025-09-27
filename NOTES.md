@@ -1,0 +1,4 @@
+- X_RA and X_SP can NEVER overlap with secret registers P0-P3, or instructions like "popret" will create side channels
+- be aware of the VERY STRANGE ZCMT extension, it seems to make code pointers from CSR regs!
+- need to check VECTOR memory accesses, see v_ext_macros.h
+- figure out the "mret", "mnret", "sret", "jalt", and "dret" instructions, they get their PCs from a rather elusive place

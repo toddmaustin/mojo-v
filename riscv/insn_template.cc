@@ -51,6 +51,7 @@ reg_t logged_rv64i_NAME(processor_t* p, insn_t insn, reg_t pc)
   #undef xlen
 }
 
+#define OLD_CHECK_REG CHECK_REG
 #undef CHECK_REG
 #define CHECK_REG(reg) require((reg) < 16)
 
@@ -95,3 +96,8 @@ reg_t logged_rv64e_NAME(processor_t* p, insn_t insn, reg_t pc)
   EPILOGUE;
   #undef xlen
 }
+
+// restore CHECK_REG
+#undef CHECK_REG
+#define CHECK_REG OLD_CHECK_REG
+
