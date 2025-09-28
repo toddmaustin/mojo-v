@@ -10,23 +10,50 @@
 #include "softfloat_types.h"
 #include "specialize.h"
 
+// Mojo-V architecturally defined secret registers
+#define SECREGS \
+  (((reg_deps_t)1 << X_P0) \
+   | ((reg_deps_t)1 << X_P1) \
+   | ((reg_deps_t)1 << X_P2) \
+   | ((reg_deps_t)1 << X_P3))
+#define IS_SECREG(reg) (((reg_deps_t)1 << (reg)) & SECREGS)
+#define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
+
+#define SECFREGS \
+  (((reg_deps_t)1 << X_FP0) \
+   | ((reg_deps_t)1 << X_FP1) \
+   | ((reg_deps_t)1 << X_FP2) \
+   | ((reg_deps_t)1 << X_FP3))
+#define IS_SECFREG(reg) (((reg_deps_t)1 << (reg)) & SECFREGS)
+#define CHECK_FLEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
+
 // helpful macros, etc
 #define MMU (*p->get_mmu())
 #define STATE (*p->get_state())
 #define FLEN (p->get_flen())
-#define CHECK_REG(reg) ((void) 0)
-#define READ_REG(reg) (CHECK_REG(reg), STATE.XPR[reg])
+// Mojo-V: track the input dependencies
+#define CHECK_REG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
+// Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
+#define CHECK_REG_W(reg) \
+  ((p->get_secreg_mode() && (insn.get_xpr_deps() & SECREGS) && !IS_SECREG(reg)) \
+    ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
+#define _READ_REG(reg) (STATE.XPR[reg]) // unchecked version for interactive.cc
+#define READ_REG(reg) (CHECK_REG_R(reg), STATE.XPR[reg])
 #define READ_FREG(reg) STATE.FPR[reg]
 #define RD READ_REG(insn.rd())
 #define RS1 READ_REG(insn.rs1())
-#define BRPRED_RS1 RS1 // Mojo-V checks
-#define CPTR_RS1 RS1 // Mojo-V checks
-#define BASE_RS1 RS1 // Mojo-V checks
+// Mojo-V: secret reg cannot be a branch predicate
+#define BRPRED_RS1 (CHECK_LEAKY(insn.rs1()), (RS1))
+// Mojo-V: secret reg cannot be a code pointer jump target
+#define CPTR_RS1 (CHECK_LEAKY(insn.rs1()), (RS1))
+// Mojo-V: secret reg cannot be a data pointer base register for a load/store
+#define BASE_RS1 (CHECK_LEAKY(insn.rs1()), (RS1))
 #define RS2 READ_REG(insn.rs2())
-#define BRPRED_RS2 RS2 // Mojo-V checks
+// Mojo-V: secret reg cannot be a branch predicate
+#define BRPRED_RS2 (CHECK_LEAKY(insn.rs2()), (RS2))
 #define RS3 READ_REG(insn.rs3())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
-#define CHECK_RD() CHECK_REG(insn.rd())
+#define CHECK_RD() CHECK_REG_W(insn.rd())
 
 /* 0 : int
  * 1 : floating
@@ -35,13 +62,16 @@
  * 4 : csr
  */
 #define WRITE_REG(reg, value) ({ \
-    CHECK_REG(reg); \
+    /* Mojo-V: need to evaluate the value BEFORE checking output dependencies! */ \
     reg_t wdata = (value); /* value may have side effects */ \
+    CHECK_REG_W(reg); \
     if (DECODE_MACRO_USAGE_LOGGED) STATE.log_reg_write[(reg) << 4] = {wdata, 0}; \
     STATE.XPR.write(reg, wdata); \
   })
 #define WRITE_FREG(reg, value) ({ \
+    /* Mojo-V: need to evaluate the value BEFORE checking output dependencies! */ \
     freg_t wdata = freg(value); /* value may have side effects */ \
+    CHECK_FREG_W(reg); \
     if (DECODE_MACRO_USAGE_LOGGED) STATE.log_reg_write[((reg) << 4) | 1] = wdata; \
     DO_WRITE_FREG(reg, wdata); \
   })
@@ -61,22 +91,27 @@
 #define WRITE_RVC_RS2S(value) WRITE_REG(insn.rvc_rs2s(), value)
 #define WRITE_RVC_FRS2S(value) WRITE_FREG(insn.rvc_rs2s(), value)
 #define RVC_RS1 READ_REG(insn.rvc_rs1())
-#define CPTR_RVC_RS1 RVC_RS1 // Mojo-V checks
+// Mojo-V: secret reg cannot be a code pointer jump target
+#define CPTR_RVC_RS1 (CHECK_LEAKY(insn.rvc_rs1()), (RVC_RS1))
 #define RVC_RS2 READ_REG(insn.rvc_rs2())
 #define RVC_RS1S READ_REG(insn.rvc_rs1s())
-#define BASE_RVC_RS1S RVC_RS1S // Mojo-V checks
-#define BRPRED_RVC_RS1S RVC_RS1S // Mojo-V checks
+// Mojo-V: secret reg cannot be a data pointer base register for a load/store
+#define BASE_RVC_RS1S (CHECK_LEAKY(insn.rvc_rs1s()), RVC_RS1S)
+// Mojo-V: secret reg cannot be a branch predicate
+#define BRPRED_RVC_RS1S (CHECK_LEAKY(insn.rvc_rs1s()), RVC_RS1S)
 #define RVC_RS2S READ_REG(insn.rvc_rs2s())
 #define RVC_FRS2 READ_FREG(insn.rvc_rs2())
 #define RVC_FRS2S READ_FREG(insn.rvc_rs2s())
 #define RVC_SP READ_REG(X_SP)
-#define BASE_RVC_SP RVC_SP // Mojo-V checks
+// Mojo-V: secret reg cannot be a data pointer base register for a load/store
+#define BASE_RVC_SP (CHECK_LEAKY(X_SP), RVC_SP)
 
 // Zc* macros
 #define RVC_R1S (Sn(insn.rvc_r1sc()))
 #define RVC_R2S (Sn(insn.rvc_r2sc()))
 #define SP READ_REG(X_SP)
-#define BASE_SP SP // Mojo-V check
+// Mojo-V: secret reg cannot be a data pointer base register for a load/store
+#define BASE_SP (CHECK_LEAKY(X_SP), SP)
 #define RA READ_REG(X_RA)
 
 // Zdinx macros
@@ -99,6 +134,7 @@
 #define RVC_RS2_PAIR READ_REG_PAIR(insn.rvc_rs2())
 
 // FPU macros
+#define CHECK_FREG_W(reg) ((void)0)
 #define READ_ZDINX_REG(reg) (xlen == 32 ? f64(READ_REG_PAIR(reg)) : f64(STATE.XPR[reg] & (uint64_t)-1))
 #define READ_FREG_H(reg) (p->extension_enabled(EXT_ZFINX) ? f16(STATE.XPR[reg] & (uint16_t)-1) : f16(READ_FREG(reg)))
 #define READ_FREG_BF(reg) (p->extension_enabled(EXT_ZFINX) ? bf16(STATE.XPR[reg] & (uint16_t)-1) : bf16(READ_FREG(reg)))

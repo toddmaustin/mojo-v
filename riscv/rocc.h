@@ -15,7 +15,8 @@ struct rocc_insn_t
   unsigned funct : 7;
 };
 
-union rocc_insn_union_t
+// FIXME: kludge!
+struct/*union*/ rocc_insn_union_t
 {
   rocc_insn_t r;
   insn_t i;

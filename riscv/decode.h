@@ -32,6 +32,16 @@ const int NCSR = 4096;
 #define X_A1 11
 #define X_Sn 16
 
+// Mojo-V secret registers
+#define X_P0 28
+#define X_P1 29
+#define X_P2 30
+#define X_P3 31
+#define X_FP0 28
+#define X_FP1 29
+#define X_FP2 30
+#define X_FP3 31
+
 #define VCSR_VXRM_SHIFT 1
 #define VCSR_VXRM  (0x3 << VCSR_VXRM_SHIFT)
 
@@ -77,11 +87,10 @@ class insn_t
 {
 public:
   insn_t() = default;
-  insn_t(insn_bits_t bits) : b(bits) { _xpr_deps_in = 0; _xpr_deps_out = 0; }
+  insn_t(insn_bits_t bits) : b(bits) { xpr_deps = 0; }
   insn_bits_t bits() { return b; }
-  reg_deps_t xpr_deps_in() { return _xpr_deps_in; }
-  reg_deps_t xpr_deps_out() { return _xpr_deps_out; }
-  void xpr_deps_rd(reg_t src);
+  reg_deps_t get_xpr_deps() { return xpr_deps; }
+  void set_xpr_deps(reg_deps_t new_deps) { xpr_deps = new_deps; }
   int length() { return insn_length(b); }
   [[maybe_unused]] int64_t opcode() { return x(0, 7); }
   [[maybe_unused]] int64_t funct7() { return x(25, 7); }
@@ -212,8 +221,8 @@ public:
   }
 
 private:
-  insn_bits_t b;
-  reg_deps_t _xpr_deps_in, _xpr_deps_out;
+  insn_bits_t b = 0;
+  reg_deps_t xpr_deps = 0;
   // reg_deps_t fpr_deps, fpr_deps_out;
   uint64_t x(int lo, int len) { return (b >> lo) & ((insn_bits_t(1) << len) - 1); }
   uint64_t xs(int lo, int len) { return int64_t(b) << (64 - lo - len) >> (64 - len); }

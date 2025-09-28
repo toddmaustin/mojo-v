@@ -527,7 +527,7 @@ freg_t sim_t::get_freg(const std::vector<std::string>& args, int size)
     if ((p->get_xlen() == 32) && (size == 64)) {
       if (r % 2 != 0)
         throw trap_interactive();
-      return freg(f64(r== 0 ? reg_t(0) : (READ_REG(r + 1) << 32) + zext32(READ_REG(r))));
+      return freg(f64(r== 0 ? reg_t(0) : (_READ_REG(r + 1) << 32) + zext32(_READ_REG(r))));
     } else { //xlen >= size
       return {p->get_state()->XPR[r] | ~(((uint64_t)-1) >> (64 - size)) ,(uint64_t)-1};
     }
