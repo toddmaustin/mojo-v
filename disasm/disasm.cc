@@ -870,7 +870,7 @@ void disassembler_t::add_instructions(const isa_parser_t* isa, bool strict)
 
   DEFINE_XSTORE(sb)
   DEFINE_XSTORE(sh)
-  DEFINE_XSTORE(sw)
+  DEFINE_XSTORE(sb)
 
   if (xlen_eq(64)) {
     DEFINE_XLOAD(lwu)
@@ -1979,6 +1979,11 @@ void disassembler_t::add_instructions(const isa_parser_t* isa, bool strict)
   if (ext_enabled(EXT_ZICOND)) {
     DEFINE_RTYPE(czero_eqz);
     DEFINE_RTYPE(czero_nez);
+  }
+
+  if (ext_enabled(EXT_ZKMOJOV)) {
+    DEFINE_XLOAD(lde)
+    DEFINE_XSTORE(sde)
   }
 
   if (ext_enabled(EXT_ZIMOP)) {

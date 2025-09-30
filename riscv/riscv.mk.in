@@ -1106,6 +1106,11 @@ riscv_insn_ext_zicfiss = \
 	c_sspush_x1 \
 	c_sspopchk_x5 \
 
+
+riscv_insn_ext_zkmojov = \
+	lde \
+	sde \
+
 riscv_insn_ext_zvk = \
 	$(riscv_insn_ext_zvbb) \
 	$(riscv_insn_ext_zvbc) \
@@ -1150,6 +1155,7 @@ riscv_insn_list = \
 	$(riscv_insn_ext_zcmop) \
 	$(riscv_insn_ext_zicfilp) \
 	$(riscv_insn_ext_zicfiss) \
+	$(riscv_insn_ext_zkmojov) \
 
 riscv_gen_srcs = $(addsuffix .cc,$(riscv_insn_list))
 

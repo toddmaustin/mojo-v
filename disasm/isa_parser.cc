@@ -423,6 +423,8 @@ isa_parser_t::isa_parser_t(const char* str, const char *priv)
       } else if (ext_str != "xdummy") {
         extensions.insert(ext_str.substr(1));
       }
+    } else if (ext_str == "zkmojov") {
+      extension_table[EXT_ZKMOJOV] = true;
     } else {
       bad_isa_string(str, ("unsupported extension: " + ext_str).c_str());
     }
