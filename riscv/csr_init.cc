@@ -551,8 +551,11 @@ void state_t::csr_init(processor_t* const proc, reg_t max_isa)
     add_hypervisor_csr(CSR_VSTOPI, vstopi);
   }
 
-  // Create and install the new CSR at 0xBC0.
-  // Use the macro if you added it; otherwise use the literal 0xBC0.
-  add_csr(CSR_MSECREGCFG, msecregcfg = std::make_shared<msecregcfg_csr_t>(proc, CSR_MSECREGCFG));
+  if (proc->extension_enabled_const(EXT_ZKMOJOV))
+  {
+    // Create and install the new CSR at 0xBC0.
+    // Use the macro if you added it; otherwise use the literal 0xBC0.
+    add_csr(CSR_MSECREGCFG, msecregcfg = std::make_shared<msecregcfg_csr_t>(proc, CSR_MSECREGCFG));
+   }
 
 }
