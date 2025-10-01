@@ -17,6 +17,7 @@
 #include "triggers.h"
 #include "../fesvr/memif.h"
 #include "vector_unit.h"
+#include "simon.h"
 
 #define FIRST_HPMCOUNTER 3
 #define N_HPMCOUNTERS 29
@@ -385,7 +386,15 @@ public:
 
   // Quick check used by instruction handlers, etc.
   bool get_secreg_mode() const { return secreg_mode; }
-  void set_secreg_mode(bool en) { secreg_mode = en; }
+  void set_secreg_mode(bool en)
+    {
+      secreg_mode = en;
+      if (en)
+      {
+        // Mojo-V: turning on SECRET regs, initialize the cipher core
+        simon_128_128_keyexpand(&simon_state, simon_key);
+      }
+    }
 
 private:
   const isa_parser_t isa;
@@ -446,9 +455,12 @@ private:
   // Track repeated executions for processor_t::disasm()
   uint64_t last_pc, last_bits, executions;
 
-  bool secreg_mode = false;
-
 public:
+  // Mojo-V internal processor state
+  bool secreg_mode = false;
+  uint128_t simon_key = GEN128(0x0f0e0d0c0b0a0908, 0x0706050403020100);
+  simon_state_t simon_state;
+
   entropy_source es; // Crypto ISE Entropy source.
 
   reg_t n_pmp;

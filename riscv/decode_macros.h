@@ -114,6 +114,17 @@
 #define BASE_SP (CHECK_LEAKY(X_SP), SP)
 #define RA READ_REG(X_RA)
 
+// Mojo-V memory format details
+#define MOJOV_PT_SIG   0xdeadbeef
+union mojov_memfmt_t {
+  uint128_t ct;     // ciphertext
+  struct {          // plaintext
+    uint64_t val;     // register plaintext value
+    uint32_t salt;    // random salt
+    uint32_t sig;     // fixed signature
+  } pt;
+};
+
 // Zdinx macros
 #define READ_REG_PAIR(reg) ({ \
   require((reg) % 2 == 0); \

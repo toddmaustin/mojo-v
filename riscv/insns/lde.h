@@ -7,6 +7,21 @@ if (!p->get_secreg_mode() || !IS_SECREG(insn.rd()))
   throw trap_illegal_instruction(insn.bits());
 }
 
-// Mojo-V: read 3rd-party decrypted value into SECREG RD
-WRITE_RD(MMU.load<int64_t>(BASE_RS1 + insn.i_imm()));
+union mojov_memfmt_t ctval;
+union mojov_memfmt_t ptval;
+
+// Mojo-V: read 3rd-party encrypted ciphertext into MEMVAL
+ctval.ct = MMU.load<uint128_t>(BASE_RS1 + insn.i_imm());
+
+// decrypt the value with the processor-internal key
+simon_128_128_decrypt(&p->simon_state, ctval.ct, &ptval.ct);
+
+if (ptval.pt.sig != MOJOV_PT_SIG)
+{
+  // Mojo-V not valid ciphertext, trap out...
+  throw trap_software_check(42);
+}
+
+// Mojo-V: all good, write the decrypted 3rd-party value to the secret register
+WRITE_RD(ptval.pt.val);
 
