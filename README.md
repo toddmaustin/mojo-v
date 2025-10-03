@@ -5,5 +5,4 @@ Mojo-V is a new RISC-V extension that introduces secret computation, enabling se
 To learn more...
 - Here is an intro video describing Mojo-V: https://www.youtube.com/watch?v=HUT46TcNyyM
 - Slides details the new Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
-- Our GitHub repo is here: https://github.com/toddmaustin/mojo-v
 
