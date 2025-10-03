@@ -1,3 +1,11 @@
 require_extension('A');
 require_rv64;
+
+// Mojo-V: RS2 finds its way (via max operation) to unencrypted memory
+if (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(insn.rs2()))
+{
+  // illegal use of SDE
+  throw trap_illegal_instruction(insn.bits());
+}
+
 WRITE_RD(MMU.amo<uint64_t>(BASE_RS1, [&](int64_t lhs) { return std::max(lhs, int64_t(RS2)); }));

@@ -3,6 +3,13 @@ require_rv64;
 require_align(insn.rd(), 2);
 require_align(insn.rs2(), 2);
 
+// Mojo-V: RS2 finds its way to unencrypted memory
+if (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(insn.rs2()))
+{ 
+  // illegal use of store operation
+  throw trap_illegal_instruction(insn.bits());
+}
+
 // The spec defines two 64-bit comparisons. Since we're loading
 // 128-bit for memory we have to adjust for endianness.
 

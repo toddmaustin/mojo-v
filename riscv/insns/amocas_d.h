@@ -1,5 +1,12 @@
 require_extension(EXT_ZACAS);
 
+// Mojo-V: RS2 finds its way (via swap operation) to unencrypted memory
+if (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(insn.rs2()))
+{
+  // illegal use of SDE
+  throw trap_illegal_instruction(insn.bits());
+}
+
 if (xlen == 32) {
   // RV32: the spec defines two 32-bit comparisons. Since we're
   // loading 64-bit for memory we have to adjust for endianness.
