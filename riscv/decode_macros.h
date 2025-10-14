@@ -10,7 +10,7 @@
 #include "softfloat_types.h"
 #include "specialize.h"
 
-// Mojo-V architecturally defined secret registers
+// Mojo-V architecturally defined secret INT registers
 #define SECREGS \
   (((reg_deps_t)1 << X_P0) \
    | ((reg_deps_t)1 << X_P1) \
@@ -19,6 +19,7 @@
 #define IS_SECREG(reg) (((reg_deps_t)1 << (reg)) & SECREGS)
 #define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
 
+// Mojo-V architecturally defined secret FP registers
 #define SECFREGS \
   (((reg_deps_t)1 << X_FP0) \
    | ((reg_deps_t)1 << X_FP1) \
@@ -48,6 +49,8 @@
 #define CPTR_RS1 (CHECK_LEAKY(insn.rs1()), (RS1))
 // Mojo-V: secret reg cannot be a data pointer base register for a load/store
 #define BASE_RS1 (CHECK_LEAKY(insn.rs1()), (RS1))
+// Mojo-V: used by INT -> FP transfer insns (e.g., fmv, fcvt)
+#define NOLEAK_RS1 (CHECK_LEAKY(insn.rs1()), (RS1))
 #define RS2 READ_REG(insn.rs2())
 // Mojo-V: secret reg cannot be a branch predicate
 #define BRPRED_RS2 (CHECK_LEAKY(insn.rs2()), (RS2))
