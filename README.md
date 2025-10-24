@@ -7,7 +7,6 @@ To learn more...
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
 The current Mojo-V ISA Extension Specification:
-- [In markdown format.] (https://github.com/toddmaustin/mojo-v/MojoV-spec-0.90.md)
 - [In PDF format.] (https://drive.google.com/file/d/1IlRrDrWvsOj-reC-BC01QHwn6NAkF7bf)
 
 To contact the developers of Mojo-V:
