@@ -2985,6 +2985,9 @@
 #define CAUSE_VIRTUAL_INSTRUCTION 0x16
 #define CAUSE_STORE_GUEST_PAGE_FAULT 0x17
 
+// Mojo-V security exception trap
+#define CAUSE_SECURITY_EXCEPTION 0x1f
+
 #define INSN_FIELD_RD 0xf80
 #define INSN_FIELD_RT 0xf8000
 #define INSN_FIELD_RS1 0xf8000

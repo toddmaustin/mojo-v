@@ -17,7 +17,8 @@
    | ((reg_deps_t)1 << X_P2) \
    | ((reg_deps_t)1 << X_P3))
 #define IS_SECREG(reg) (((reg_deps_t)1 << (reg)) & SECREGS)
-#define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
+#define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
+#define SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(reg))
 
 // Mojo-V architecturally defined secret FP registers
 #define SECFREGS \
@@ -26,7 +27,7 @@
    | ((reg_deps_t)1 << X_FP2) \
    | ((reg_deps_t)1 << X_FP3))
 #define IS_SECFREG(reg) (((reg_deps_t)1 << (reg)) & SECFREGS)
-#define CHECK_FLEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
+#define CHECK_FLEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 
 // helpful macros, etc
 #define MMU (*p->get_mmu())
@@ -37,7 +38,7 @@
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
 #define CHECK_REG_W(reg) \
   ((p->get_secreg_mode() && (insn.get_xpr_deps() & SECREGS) && !IS_SECREG(reg)) \
-    ? (throw trap_illegal_instruction(insn.bits()), (void)0) : (void)0)
+    ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define _READ_REG(reg) (STATE.XPR[reg]) // unchecked version for interactive.cc
 #define READ_REG(reg) (CHECK_REG_R(reg), STATE.XPR[reg])
 #define READ_FREG(reg) STATE.FPR[reg]

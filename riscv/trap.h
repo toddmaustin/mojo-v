@@ -122,4 +122,7 @@ DECLARE_INST_TRAP(CAUSE_VIRTUAL_INSTRUCTION, virtual_instruction)
 DECLARE_MEM_GVA_TRAP(CAUSE_STORE_GUEST_PAGE_FAULT, store_guest_page_fault)
 DECLARE_INST_TRAP(CAUSE_SOFTWARE_CHECK_FAULT, software_check)
 
+// Mojo-V Security Exception
+DECLARE_INST_TRAP(CAUSE_SECURITY_EXCEPTION, security_exception)
+
 #endif

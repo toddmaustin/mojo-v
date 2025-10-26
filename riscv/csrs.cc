@@ -2231,9 +2231,19 @@ void aia_csr_t::verify_permissions(insn_t insn, bool write) const {
   basic_csr_t::verify_permissions(insn, write);
 }
 
+// implement class msecregcfg_csr_t
+msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
+  basic_csr_t(proc, addr, (/* ver:0x1 */(reg_t)1 << 3) | (/* format_sel: weak(0) */(reg_t)0 << 2) | (/* key_valid:1 */(reg_t)1 << 1) | (/*mojov_en:off(0)*/0)) {
+}
+
 bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
+  reg_t masked_secreg = (read() & ~(reg_t)1);
+  reg_t new_secreg = masked_secreg | (val & 1);
+  const bool enabled = (read() & 1) != 0;
+  proc->set_secreg_mode(enabled);
+
   // masked_csr_t will apply the mask & store the value into its internal reg.
-  const bool wrote = masked_csr_t::unlogged_write(val);
+  const bool wrote = basic_csr_t::unlogged_write(new_secreg);
 
   // Optional: latch a fast flag on the processor for quick checks in exec path.
   // We'll store this in processor_t (see step 3).
