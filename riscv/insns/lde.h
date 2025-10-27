@@ -4,7 +4,7 @@ require_extension(EXT_ZKMOJOV);
 if (!p->get_secreg_mode() || !IS_SECREG(insn.rd()))
 {
   // illegal use of LDE
-  throw trap_illegal_instruction(insn.bits());
+  throw trap_security_exception(insn.bits());
 }
 
 union mojov_memfmt_t ctval;
@@ -19,7 +19,7 @@ simon_128_128_decrypt(&p->simon_state, ctval.ct, &ptval.ct);
 if (ptval.pt.sig != MOJOV_PT_SIG)
 {
   // Mojo-V not valid ciphertext, trap out...
-  throw trap_software_check(42);
+  throw trap_security_exception(insn.bits());
 }
 
 // Mojo-V: all good, write the decrypted 3rd-party value to the secret register

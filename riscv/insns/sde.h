@@ -4,7 +4,7 @@ require_extension(EXT_ZKMOJOV);
 if (!p->get_secreg_mode() || !IS_SECREG(insn.rs2())) 
 {
   // illegal use of SDE
-  throw trap_illegal_instruction(insn.bits());
+  throw trap_security_exception(insn.bits());
 }
 
 union mojov_memfmt_t ctval;
