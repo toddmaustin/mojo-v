@@ -14,9 +14,6 @@ To contact the developers of Mojo-V:
 
 # 🧩 Mojo-V Reference Platform — Release 0.90
 
-[![RISC-V](https://img.shields.io/badge/ISA-RISC--V-blue)](https://riscv.org/)
-[![Spec v0.90](https://img.shields.io/badge/Spec-Version-0.90-orange)](./doc/Mojo-V-spec-0.90.pdf)
-
 ---
 
 ## 🚧 Project Status
@@ -31,7 +28,8 @@ To contact the developers of Mojo-V:
    – Mojo-V integrated into `riscv-isa-sim`, nearly feature-complete.  
    – Missing only:  
      i) Secret floating-point (FP) support                       
-     ii) Public-Key Infrastructure (PKI) support (currently uses fixed keys)
+     ii) strong encyption packet marshalling
+     iii) Public-Key Infrastructure (PKI) support (currently uses fixed keys)
 3. **Bring-up Benchmarks** — hand-coded examples showing Mojo-V semantics:  
    - `mojov-test`  – example from Mojo-V intro slides  
    - `mojov-test1` – secret-register + third-party encrypted-memory test  
@@ -56,9 +54,10 @@ cd mojo-v
 ```bash
 sudo apt-get install device-tree-compiler libboost-regex-dev libboost-system-dev
 cd riscv-isa-sim
-mkdir build && cd build
+mkdir build
+cd build
 ../configure --prefix=$RISCV
-make -j4
+make
 ```
 
 ---
@@ -67,7 +66,7 @@ make -j4
 
 1. **Build the Spike device driver**
    ```bash
-   cd target
+   cd bringup-bench/target
    make
    ```
 
