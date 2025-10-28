@@ -1,0 +1,47 @@
+Version 1.8
+  - Added TARGET={spike32,spike64,spike32-pk,spike64-pk} to support running benchmarks on a wide range of Spike configurations
+  - Ported the Spike simulator bare-metal device driver (spike_mmio_plugin.so) to utilize Spike's new Device Factory framework,
+    the new driver now works on the most recent version of the RISC-V Spike simulator
+  - Added support for target-dependent performance measurement, implemented for target "host" and demonstrated on benchmark "bubblesort",
+    to use these interfaces enable TARGET_PERFHOOKS and use the interfaces libtarg_start_perf() and void libtarg_stop_perf() in target/libtarg.h
+  - Added more FP-intensive benchmarks (ccmac, congrad, transcend, verlat), the suite now has 90 benchmarks in total!
+
+Version 1.7
+  - AES benchmark added, now for a total of 86 benchmarks
+  - Added TARGET=spike-pk to support running benchmarks on RISC-V Spike Proxy Kernel
+  - Processed a lot of pull requests from the BRINGUP-BENCH community, thank you!
+
+Version 1.6
+  - 20 new benchmarks added, now for a total of 85 benchmarks!
+  - TARGETs can now exclude benchmarks from their tests by adding them to TARGET_EXCLUDES in the Makefile
+  - more benchmarks are now working on more targets
+  - the SPIKE target now supports 8 MB memory
+  - HASHALONE targets now are self-checking
+  - the QSORT library implementation is now much more robust
+  - an FP libmin_printf() problem was fixed, it affected some benchmark outputs (which have been corrected)
+  - SPIKE and SIMPLE targets are now completely separated
+
+Version 1.5
+  - added support for hash-alone execution, which allows devices with no explicit I/O devices to be tested
+
+Version 1.4
+  - added RISC-V Spike instruction set simulator (ISS) support, which is 100% compatible with the "Simple_System" RTL target
+  - 12 new benchmarks added, from AI, compression, audio processing, data processing, etc.
+  - many improvements to libmin, including a much more complete math library
+
+Version 1.3
+  - added support for fine-grained library object files, resulting in an average code size reduction of 40%
+  - added more benchmarks
+
+Version 1.2
+  - much more robust Makefile with more error guidance
+  - target support for RISC-V's Simple_System simulation environment, see here for details: https://github.com/lowRISC/ibex/tree/master/examples/simple_system
+
+Version 1.1
+  - Incorporated user-made pull requests
+  - New benchmarks: checkers, donut, life, lz-compress, pi-calc, quine, rho-factor, spelt2num, strange
+  - Improved support for standalone operation
+  - Expanded interface support for libmin()
+
+Version 1.0
+  - Initial version
