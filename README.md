@@ -30,7 +30,7 @@ To contact the developers of Mojo-V:
      i) Secret floating-point (FP) support                       
      ii) strong encyption packet marshalling
      iii) Public-Key Infrastructure (PKI) support (currently uses fixed keys)
-3. **Bring-up Benchmarks** — hand-coded examples showing Mojo-V semantics:  
+3. **Mojo-V Bringup-Bench Benchmarks** — hand-coded examples showing Mojo-V semantics:  
    - `mojov-test`  – example from Mojo-V intro slides  
    - `mojov-test1` – secret-register + third-party encrypted-memory test  
    - `mojov-test2` – data-oblivious bubble-sort benchmark  
@@ -62,7 +62,7 @@ make
 
 ---
 
-### D. Build and Run Bring-up Bench Tests
+### D. Build and Run Mojo-V Bringup-Bench Benchmark Tests
 
 1. **Build the Spike device driver**
    ```bash
@@ -82,19 +82,19 @@ make
 
 Repeat for:
 ```bash
-mojov-test1   # secret-register and encrypted-memory semantics
-mojov-test2   # data-oblivious bubble-sort
+mojov-test1   # secret-register and encrypted-memory semantics tests
+mojov-test2   # data-oblivious bubble-sort in Mojo-V
 ```
 
 ---
 
-## 🧪 Mojo-V Bring-up Benchmarks Overview
+## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
 | Program | Description |
 |:---------|:-------------|
 | `mojov-test` | Intro example from slides |
-| `mojov-test1` | Secret-register and encrypted-memory semantics test |
-| `mojov-test2` | Hand-coded data-oblivious bubble-sort benchmark |
+| `mojov-test1` | Secret-register and encrypted-memory semantics tests |
+| `mojov-test2` | Hand-coded data-oblivious bubble-sort benchmark in Mojo-V |
 
 All three are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
 
