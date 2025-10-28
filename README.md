@@ -37,7 +37,7 @@ To contact the developers of Mojo-V:
 
 ---
 
-## ⚙️ Building and Running Mojo-V
+## ⚙️ Building and Running the Mojo-V Reference Platform
 
 ### A. Install a RISC-V LLVM Compiler
 You’ll need an LLVM-based RISC-V cross-compiler capable of producing `RV64GC` binaries.
