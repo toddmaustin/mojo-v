@@ -1,0 +1,21 @@
+To update the code from the upstream repos... Note, things may conflict or break!
+
+First set up the upstream repos for your local repo (you only need to do this once):
+  git remote add bringup-bench https://github.com/toddmaustin/bringup-bench.git
+  git remote add riscv-isa-sim https://github.com/riscv-software-src/riscv-isa-sim.git
+
+Update the Mojo-V central repo:
+  git fetch origin main
+  git diff HEAD origin/main
+  git pull origin main
+
+Update bringup-bench benchmarks:
+  git fetch bringup-bench main
+  git diff HEAD:bringup-bench bringup-bench/main
+  git subtree pull --prefix=bringup-bench bringup-bench main
+
+Update Spike instruction set simulator:
+  git fetch riscv-isa-sim master
+  git diff HEAD:riscv-isa-sim riscv-isa-sim/master 
+  git subtree pull --prefix=riscv-isa-sim riscv-isa-sim master
+
