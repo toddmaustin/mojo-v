@@ -48,13 +48,13 @@ Here is a good place to start: https://clang.llvm.org/get_started.html
 
 ---
 
-### B. Clone the Repository
+### B. Clone the Mojo-V Repository
 ```bash
 git clone https://github.com/toddmaustin/mojo-v.git
 cd mojo-v
 ```
 
-### C. Build Spike with Mojo-V Support
+### C. Build the RISC-V Spike simulator with Mojo-V Support
 ```bash
 sudo apt-get install device-tree-compiler libboost-regex-dev libboost-system-dev
 cd riscv-isa-sim
@@ -69,16 +69,19 @@ make
 ### D. Build and Run Mojo-V Bringup-Bench Benchmark Tests
 
 1. **Build the Spike device driver**
+
    ```bash
    cd bringup-bench/target
    make
    ```
 
 2. **Configure your compiler**
+
    Edit `../Makefile` and set  
-   `TARGET_CC` for the `mojov` target to your Clang-based RISC-V compiler.
+   `TARGET_CC` for the `mojov` target to the location of your LVM Clang-based RISC-V compiler.
 
 3. **Build and test**
+
    ```bash
    cd ../mojov-test
    make TARGET=mojov clean build test
