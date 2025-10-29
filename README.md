@@ -42,16 +42,12 @@ The Mojo-V reference platform release 0.90 implements secret integer computation
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
 
----
-
 ## ⚙️ Building and Running the Mojo-V Reference Platform
 
 ### A. Install a RISC-V LLVM Compiler
 You’ll need an LLVM-based RISC-V cross-compiler capable of producing `RV64GC` binaries.
 
 Here is a good place to start: https://clang.llvm.org/get_started.html
-
----
 
 ### B. Clone the Mojo-V Repository
 ```bash
@@ -68,8 +64,6 @@ cd build
 ../configure --prefix=$RISCV
 make
 ```
-
----
 
 ### D. Build and Run Mojo-V Bringup-Bench Benchmark Tests
 
@@ -96,8 +90,6 @@ make
    mojov-test1   # secret-register and encrypted-memory semantics tests
    mojov-test2   # data-oblivious bubble-sort in Mojo-V
    ```
-
----
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
