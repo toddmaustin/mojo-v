@@ -102,7 +102,7 @@ make
 | `mojov-test1` | Secret-register and encrypted-memory semantics tests |
 | `mojov-test2` | Hand-coded data-oblivious bubble-sort benchmark in Mojo-V |
 
-All three are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
+All three test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
 
 ---
 
