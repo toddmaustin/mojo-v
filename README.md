@@ -1,12 +1,12 @@
 # Mojo-V: Secret Computation for RISC-V
 
-**Mojo-V** (pronounced *“mojo-five”*) is a new RISC-V extension that introduces secret computation, enabling secure, efficient, and data-oblivious execution without reliance on fragile software and programmer trust. By sequestering sensitive data in dedicated secret registers and encrypting memory under a third-party key, Mojo-V prevents disclosures and enforces computation that is both blind (no direct disclosures) and silent (no side channel leakage). The design integrates seamlessly into the existing RISC-V ISA with only a mode bit and two new instructions, enforced entirely at decode. Early results show near-native execution speeds while offering over 5-7 orders of magnitude performance improvement compared to fully homomorphic encryption (FHE), with a clear roadmap for integration into CPUs, GPUs, and specialized accelerators.
+**Mojo-V** (pronounced *“mojo-five”*) is a new RISC-V extension that introduces privacy-oriented programming capabilities for RISC-V. Mojo-V implements secret computation, enabling secure, efficient, and data-oblivious execution without reliance on fragile software and programmer trust. By sequestering sensitive data in dedicated secret registers and encrypting memory under a third-party key, Mojo-V prevents disclosures and enforces computation that is both blind (no direct disclosures) and silent (no side channel leakage). The design integrates seamlessly into the existing RISC-V ISA with only a mode bit and two new instructions, enforced entirely at decode. Early results show near-native execution speeds while offering over 5-7 orders of magnitude performance improvement compared to fully homomorphic encryption (FHE), with a clear roadmap for integration into CPUs, GPUs, and specialized accelerators.
 
 To learn more...
 - Here is an intro video describing Mojo-V: https://www.youtube.com/watch?v=HUT46TcNyyM
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
-The current Mojo-V ISA Extension Specification:
+The current Mojo-V ISA Extension Specification (release 0.90):
 - [In PDF format.] (https://drive.google.com/file/d/1IlRrDrWvsOj-reC-BC01QHwn6NAkF7bf)
 
 To contact the developers of Mojo-V:
@@ -14,9 +14,9 @@ To contact the developers of Mojo-V:
 
 # 🧩 Mojo-V Reference Platform — Release 0.90
 
----
-
 ## 🚧 Project Status
+
+The Mojo-V reference platform release 0.90 implements secret integer computation using a fixed symmetric key cipher. As of this release, 64-bit integer secret computation is fully secretized and this early reference platform can be used for software development and red-teaming. Additional capabilities will be rolled out in future releases, including PKI support, secret FP register support, LLVM compiler support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
 
 **Specification Version:** 0.90  (October 2025)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
@@ -28,19 +28,23 @@ To contact the developers of Mojo-V:
    – Mojo-V integrated into `riscv-isa-sim`, nearly feature-complete.  
    – Missing only:  
      i) Secret floating-point (FP) support                       
-     ii) strong encyption packet marshalling
-     iii) Public-Key Infrastructure (PKI) support (currently uses fixed keys)
+     ii) strong encyption packet marshalling, currently only weak encryption format supported
+     iii) Public-Key Infrastructure (PKI) support (currently uses fixed keys with a Simon-128 cipher)
+   - to run Spike with Mojo-V extensions enabled, add the `--isa=rv64gc_zicond_zkmojov_zicntr` flag when running `spike`
 3. **Mojo-V Bringup-Bench Benchmarks** — hand-coded examples showing Mojo-V semantics:  
-   - `mojov-test`  – example from Mojo-V intro slides  
-   - `mojov-test1` – secret-register + third-party encrypted-memory test  
-   - `mojov-test2` – data-oblivious bubble-sort benchmark  
+   - `mojov-test`  – the simple Mojo-V code example from Mojo-V intro slides  
+   - `mojov-test1` – a battery of secret-register + third-party encrypted-memory tests
+   - `mojov-test2` – a hand-coded Mojo-V self-checking bubble-sort benchmark  
 
+(Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.)
 ---
 
 ## ⚙️ Building and Running the Mojo-V Reference Platform
 
 ### A. Install a RISC-V LLVM Compiler
 You’ll need an LLVM-based RISC-V cross-compiler capable of producing `RV64GC` binaries.
+
+Here is a good place to start: https://clang.llvm.org/get_started.html
 
 ---
 
@@ -106,4 +110,3 @@ We welcome contributions, bug reports, and suggestions!
 📧 **Email:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)  
 🌐 **Project Home:** [https://github.com/toddmaustin/mojo-v](https://github.com/toddmaustin/mojo-v)
 
----
