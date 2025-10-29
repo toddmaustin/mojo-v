@@ -40,7 +40,7 @@ The Mojo-V reference platform release 0.90 implements secret integer computation
    - `mojov-test1` – a battery of secret-register + third-party encrypted-memory tests
    - `mojov-test2` – a hand-coded Mojo-V self-checking bubble-sort benchmark  
 
-(Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.)
+Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
 ---
 
 ## ⚙️ Building and Running the Mojo-V Reference Platform
