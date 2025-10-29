@@ -25,7 +25,7 @@ The Mojo-V reference platform release 0.90 implements secret integer computation
 **Specification Version:** 0.90  (October 2025)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
-### Current components
+## Current components
 
 1. **Mojo-V ISA Spec v0.90** — released in `doc/`.
 2. **Spike (Instruction Set Simulator) Implementation**  
@@ -41,6 +41,7 @@ The Mojo-V reference platform release 0.90 implements secret integer computation
    - `mojov-test2` – a hand-coded Mojo-V self-checking bubble-sort benchmark  
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
+
 ---
 
 ## ⚙️ Building and Running the Mojo-V Reference Platform
