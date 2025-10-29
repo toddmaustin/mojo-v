@@ -86,11 +86,11 @@ make
    make TARGET=mojov clean build test
    ```
 
-Repeat for:
-```bash
-mojov-test1   # secret-register and encrypted-memory semantics tests
-mojov-test2   # data-oblivious bubble-sort in Mojo-V
-```
+   Repeat for:
+   ```bash
+   mojov-test1   # secret-register and encrypted-memory semantics tests
+   mojov-test2   # data-oblivious bubble-sort in Mojo-V
+   ```
 
 ---
 
