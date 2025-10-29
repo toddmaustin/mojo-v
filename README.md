@@ -77,8 +77,7 @@ make
 
 2. **Configure your compiler**
 
-   Edit `../Makefile` and set  
-   `TARGET_CC` for the `mojov` target to the location of your LVM Clang-based RISC-V compiler.
+   Edit `../Makefile` and set `TARGET_CC` for the `mojov` target to the location of your LVM Clang-based RISC-V compiler.
 
 3. **Build and test**
 
