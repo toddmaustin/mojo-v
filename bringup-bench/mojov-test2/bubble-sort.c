@@ -46,11 +46,11 @@ write_mprivregcfg(uint64_t value)
   __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MPRIVREGCFG), "rK"(value));
 }
 
-SECRET int
-secret_cmov(SECRET bool p, SECRET int x, SECRET int y)
-{
-  return (int)p*x + (int)!p*y;
-}
+// SECRET int
+// secret_cmov(SECRET bool p, SECRET int x, SECRET int y)
+// {
+//   return (int)p*x + (int)!p*y;
+// }
 
 #define MOJOV_PT_SIG   0xdeadbeef
 union mojov_memfmt_t {
@@ -74,6 +74,17 @@ secret_decrypt(uint128_t ct)
   return mempkt.pt.val;
 }
 
+inline extern void
+secret_print(uint128_t ct)
+{
+  libmin_printf("0x%08x%08x%08x%08x",
+    (uint32_t)(ct >> 96),
+    (uint32_t)(ct >> 64),
+    (uint32_t)(ct >> 32),
+    (uint32_t)ct);
+}
+
+
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
@@ -87,7 +98,11 @@ print_data(uint64_t *data, unsigned size)
 {
   libmin_printf("DATA DUMP:\n");
   for (unsigned i=0; i < size; i++)
-    libmin_printf("  data[%u] = %ld\n", i, data[i]);
+  {
+    libmin_printf("  data[%4u] = %10ld, ct =[", i, data[i]);
+    secret_print(secret_data[i]);
+    libmin_printf("]\n");
+  }
 }
 
 void
