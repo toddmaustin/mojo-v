@@ -21,13 +21,14 @@
 #define SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(reg))
 
 // Mojo-V architecturally defined secret FP registers
-#define SECFREGS \
-  (((reg_deps_t)1 << X_FP0) \
-   | ((reg_deps_t)1 << X_FP1) \
-   | ((reg_deps_t)1 << X_FP2) \
-   | ((reg_deps_t)1 << X_FP3))
-#define IS_SECFREG(reg) (((reg_deps_t)1 << (reg)) & SECFREGS)
-#define CHECK_FLEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
+#define FP_SECREGS \
+  (((reg_deps_t)1 << (X_FP0 + 32)) \
+   | ((reg_deps_t)1 << (X_FP1 + 32)) \
+   | ((reg_deps_t)1 << (X_FP2 + 32)) \
+   | ((reg_deps_t)1 << (X_FP3 + 32)))
+#define IS_FP_SECREG(reg) (((reg_deps_t)1 << ((reg) + 32)) & FP_SECREGS)
+#define CHECK_LEAKY_FP(reg) ((p->get_secreg_mode() && IS_FP_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
+#define FP_SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_FP_SECREG(reg))
 
 // helpful macros, etc
 #define MMU (*p->get_mmu())
@@ -41,7 +42,8 @@
     ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define _READ_REG(reg) (STATE.XPR[reg]) // unchecked version for interactive.cc
 #define READ_REG(reg) (CHECK_REG_R(reg), STATE.XPR[reg])
-#define READ_FREG(reg) STATE.FPR[reg]
+#define _READ_FREG(reg) (STATE.FPR[reg]) // unchecked version for interactive.cc
+#define READ_FREG(reg) (CHECK_FREG_R(reg), STATE.FPR[reg])
 #define RD READ_REG(insn.rd())
 #define RS1 READ_REG(insn.rs1())
 // Mojo-V: secret reg cannot be a branch predicate
@@ -149,18 +151,24 @@ union mojov_memfmt_t {
 #define RVC_RS2_PAIR READ_REG_PAIR(insn.rvc_rs2())
 
 // FPU macros
-#define CHECK_FREG_W(reg) ((void)0)
+// Mojo-V: track the input dependencies
+#define CHECK_FREG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0)
+// Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
+#define CHECK_FREG_W(reg) \
+  ((p->get_secreg_mode() && (insn.get_xpr_deps() & FP_SECREGS) && !IS_FP_SECREG(reg)) \
+    ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define READ_ZDINX_REG(reg) (xlen == 32 ? f64(READ_REG_PAIR(reg)) : f64(STATE.XPR[reg] & (uint64_t)-1))
-#define READ_FREG_H(reg) (p->extension_enabled(EXT_ZFINX) ? f16(STATE.XPR[reg] & (uint16_t)-1) : f16(READ_FREG(reg)))
-#define READ_FREG_BF(reg) (p->extension_enabled(EXT_ZFINX) ? bf16(STATE.XPR[reg] & (uint16_t)-1) : bf16(READ_FREG(reg)))
-#define READ_FREG_F(reg) (p->extension_enabled(EXT_ZFINX) ? f32(STATE.XPR[reg] & (uint32_t)-1) : f32(READ_FREG(reg)))
-#define READ_FREG_D(reg) (p->extension_enabled(EXT_ZFINX) ? READ_ZDINX_REG(reg) : f64(READ_FREG(reg)))
+#define READ_FREG_H(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f16(STATE.XPR[reg] & (uint16_t)-1) : f16(READ_FREG(reg)))
+#define READ_FREG_BF(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? bf16(STATE.XPR[reg] & (uint16_t)-1) : bf16(READ_FREG(reg)))
+#define READ_FREG_F(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f32(STATE.XPR[reg] & (uint32_t)-1) : f32(READ_FREG(reg)))
+#define READ_FREG_D(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? READ_ZDINX_REG(reg) : f64(READ_FREG(reg)))
 #define FRS1 READ_FREG(insn.rs1())
 #define FRS2 READ_FREG(insn.rs2())
 #define FRS3 READ_FREG(insn.rs3())
 #define FRS1_H READ_FREG_H(insn.rs1())
 #define FRS1_BF READ_FREG_BF(insn.rs1())
 #define FRS1_F READ_FREG_F(insn.rs1())
+#define FRS1_D READ_FREG_D(insn.rs1())
 #define FRS1_D READ_FREG_D(insn.rs1())
 #define FRS2_H READ_FREG_H(insn.rs2())
 #define FRS2_F READ_FREG_F(insn.rs2())
