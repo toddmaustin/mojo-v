@@ -7,4 +7,8 @@ if (isNaNF16UI(FRS1_H.v) || isNaNF16UI(FRS2_H.v))
   WRITE_FRD_H(f16(defaultNaNF16UI));
 else
   WRITE_FRD_H(greater ? FRS1_H : FRS2_H);
-set_fp_exceptions;
+
+if (!FP_SECREG_REF(insn.rd()))
+  set_fp_exceptions; // not a secret reg write, declare exceptions
+else
+  drop_fp_exceptions; // else, drop the exception

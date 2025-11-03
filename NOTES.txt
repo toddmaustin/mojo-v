@@ -1,0 +1,5 @@
+Various dev notes:
+
+FIXMEs:
+ - currently the Spike implementation is not compatible with EXT_ZFINX (single-precision floating-point instructions using the integer register file), enforce this!
+ - currently Vector instructions are not supported and will leak secret register values, fix this!

@@ -6,4 +6,8 @@ if (isNaNF64UI(FRS1_D.v) && isNaNF64UI(FRS2_D.v))
   WRITE_FRD_D(f64(defaultNaNF64UI));
 else
   WRITE_FRD_D((less || isNaNF64UI(FRS2_D.v) ? FRS1_D : FRS2_D));
-set_fp_exceptions;
+
+if (!FP_SECREG_REF(insn.rd()))
+  set_fp_exceptions; // not a secret reg write, declare exceptions
+else
+  drop_fp_exceptions; // else, drop the exception

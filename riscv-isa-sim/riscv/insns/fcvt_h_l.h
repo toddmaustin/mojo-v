@@ -3,4 +3,8 @@ require_rv64;
 require_fp;
 softfloat_roundingMode = RM;
 WRITE_FRD_H(i64_to_f16(RS1));
-set_fp_exceptions;
+
+if (!FP_SECREG_REF(insn.rd()))
+  set_fp_exceptions; // not a secret reg write, declare exceptions
+else
+  drop_fp_exceptions; // else, drop the exception

@@ -6,4 +6,8 @@ if (isNaNF128(f128(FRS1)) && isNaNF128(f128(FRS2)))
   WRITE_FRD(f128(defaultNaNF128()));
 else
   WRITE_FRD(greater || isNaNF128(f128(FRS2)) ? FRS1 : FRS2);
-set_fp_exceptions;
+
+if (!FP_SECREG_REF(insn.rd()))
+  set_fp_exceptions; // not a secret reg write, declare exceptions
+else
+  drop_fp_exceptions; // else, drop the exception

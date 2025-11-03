@@ -38,7 +38,7 @@
 #define CHECK_REG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
 #define CHECK_REG_W(reg) \
-  ((p->get_secreg_mode() && (insn.get_xpr_deps() & SECREGS) && !IS_SECREG(reg)) \
+  ((p->get_secreg_mode() && (insn.get_xpr_deps() & (SECREGS|FP_SECREGS)) && !IS_SECREG(reg)) \
     ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define _READ_REG(reg) (STATE.XPR[reg]) // unchecked version for interactive.cc
 #define READ_REG(reg) (CHECK_REG_R(reg), STATE.XPR[reg])
@@ -155,7 +155,7 @@ union mojov_memfmt_t {
 #define CHECK_FREG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0)
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
 #define CHECK_FREG_W(reg) \
-  ((p->get_secreg_mode() && (insn.get_xpr_deps() & FP_SECREGS) && !IS_FP_SECREG(reg)) \
+  ((p->get_secreg_mode() && (insn.get_xpr_deps() & (SECREGS|FP_SECREGS)) && !IS_FP_SECREG(reg)) \
     ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define READ_ZDINX_REG(reg) (xlen == 32 ? f64(READ_REG_PAIR(reg)) : f64(STATE.XPR[reg] & (uint64_t)-1))
 #define READ_FREG_H(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f16(STATE.XPR[reg] & (uint16_t)-1) : f16(READ_FREG(reg)))
@@ -283,7 +283,12 @@ static inline bool is_aligned(const unsigned val, const unsigned pos)
   do { \
     raise_fp_exceptions(softfloat_exceptionFlags); \
     softfloat_exceptionFlags = 0; \
-  } while (0);
+  } while (0)
+#define drop_fp_exceptions \
+  do { \
+    softfloat_exceptionFlags = 0; \
+  } while (0)
+
 
 #define sext32(x) ((sreg_t)(int32_t)(x))
 #define zext32(x) ((reg_t)(uint32_t)(x))

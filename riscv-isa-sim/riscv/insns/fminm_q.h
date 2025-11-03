@@ -14,4 +14,8 @@ if (isNaNF128UI(ui1.ui.v64, ui1.ui.v0) || isNaNF128UI(ui2.ui.v64, ui2.ui.v0)) {
   WRITE_FRD(f128(ui.f));
  } else
   WRITE_FRD(less ? f128(FRS1) : f128(FRS2));
-set_fp_exceptions;
+
+if (!FP_SECREG_REF(insn.rd()))
+  set_fp_exceptions; // not a secret reg write, declare exceptions
+else
+  drop_fp_exceptions; // else, drop the exception

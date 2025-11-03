@@ -1,4 +1,8 @@
 require_either_extension(EXT_ZFH, EXT_ZHINX);
 require_fp;
 WRITE_RD(f16_lt(FRS1_H, FRS2_H));
-set_fp_exceptions;
+
+if (!SECREG_REF(insn.rd()))
+  set_fp_exceptions; // not a secret reg write, declare exceptions
+else
+  drop_fp_exceptions; // else, drop the exception
