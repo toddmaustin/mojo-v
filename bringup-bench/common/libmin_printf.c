@@ -62,7 +62,7 @@
 #define HAVE_LONG_LONG
 
 #ifdef HAVE_LONG_DOUBLE
-#define LDOUBLE long double
+#define LDOUBLE /*long*/ double
 #else
 #define LDOUBLE double
 #endif

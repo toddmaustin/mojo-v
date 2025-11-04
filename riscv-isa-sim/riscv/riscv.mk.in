@@ -1113,6 +1113,8 @@ riscv_insn_ext_zicfiss = \
 riscv_insn_ext_zkmojov = \
 	lde \
 	sde \
+	flde \
+	fsde \
 
 riscv_insn_ext_zvk = \
 	$(riscv_insn_ext_zvbb) \
