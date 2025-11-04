@@ -998,6 +998,7 @@ class aia_csr_t: public masked_csr_t {
   virtual void verify_permissions(insn_t insn, bool write) const override;
 };
 
+/* Mojo-V configuration CSR register */
 class msecregcfg_csr_t : public basic_csr_t {
 public:
   msecregcfg_csr_t(processor_t* const proc, reg_t addr);

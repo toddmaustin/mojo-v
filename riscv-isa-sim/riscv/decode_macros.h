@@ -122,12 +122,28 @@
 
 // Mojo-V memory format details
 #define MOJOV_PT_SIG   0xdeadbeef
-union mojov_memfmt_t {
-  uint128_t ct;     // ciphertext
-  struct {          // plaintext
-    uint64_t val;     // register plaintext value
-    uint32_t salt;    // random salt
-    uint32_t sig;     // fixed signature
+
+// weak memory format
+union mojov_mem_weak_t {
+  uint128_t ct;          // ciphertext
+  struct {               // plaintext
+    uint64_t val;          // register plaintext value
+    uint32_t salt;         // random salt
+    uint32_t auth_sig;     // fixed signature
+  } pt;
+};
+
+// strong memory format
+union mojov_mem_strong_t {
+  struct {               // ciphertext
+    uint128_t ct_lo;       // ciphertext low 128-bits
+    uint128_t ct_hi;       // ciphertext high 128-bits
+  } ct;
+  struct { // 256-bits in size, 128-bit alignment
+    uint64_t val; // register plaintext value
+    uint64_t salt; // random salt
+    uint64_t auth_sig; // authentication signature (from contract)
+    uint64_t metadata; // target-specific metadata (e.g., device hash, overflow flag)
   } pt;
 };
 

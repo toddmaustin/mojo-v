@@ -447,6 +447,16 @@
 #define SCTRSTATUS_WRPTR    0x000000FF
 #define SCTRSTATUS_FROZEN   0x80000000
 
+/* Mojo-V SECREG fields */
+#define MSECREGCFG_MOJOV_EN   0x00000001
+#define MSECREGCFG_KEY_VALID  0x00000002
+#define MSECREGCFG_FORMAT_SEL 0x00000004
+#define MSECREGCFG_MOJOV_VER  0x000007f8
+
+/* Mojo-V FORMAT_SEL values */
+#define FORMAT_SEL_WEAK       0
+#define FORMAT_SEL_STRONG     1
+
 #define IRQ_U_SOFT        0
 #define IRQ_S_SOFT        1
 #define IRQ_VS_SOFT       2
