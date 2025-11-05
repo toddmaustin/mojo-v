@@ -290,3 +290,69 @@ libtarg_stop_perf(void)
 }
 #endif /* TARGET_PERFHOOKS */
 
+#ifdef TARGET_SPIKE
+static inline void write_csr_mtvec(uintptr_t x) { __asm__ volatile ("csrw mtvec, %0" :: "r"(x)); }
+static inline uint64_t read_csr_mcause(void)    { uint64_t x; __asm__ volatile ("csrr %0, mcause" : "=r"(x)); return x; }
+static inline uint64_t read_csr_mepc(void)      { uint64_t x; __asm__ volatile ("csrr %0, mepc"   : "=r"(x)); return x; }
+static inline uint64_t read_csr_mtval(void)     { uint64_t x; __asm__ volatile ("csrr %0, mtval"  : "=r"(x)); return x; }
+
+// ----- mcause decoding (exceptions only, top bit=0)
+static const char *
+cause_str(uint64_t mcause)
+{
+  if (mcause >> 63) return "interrupt";
+  switch (mcause & 0x7fffFFFFffffFFFFULL) {
+    case 0:  return "instr addr misaligned";
+    case 1:  return "instr access fault";
+    case 2:  return "illegal instruction";
+    case 3:  return "breakpoint";
+    case 4:  return "load addr misaligned";
+    case 5:  return "load access fault";
+    case 6:  return "store/AMO addr misaligned";
+    case 7:  return "store/AMO access fault";
+    case 8:  return "ecall from U";
+    case 9:  return "ecall from S";
+    case 11: return "ecall from M";
+    case 12: return "instr page fault";
+    case 13: return "load page fault";
+    case 15: return "store/AMO page fault";
+    case 0x1f: return "Mojo-V security exception";
+    default: return "unknown";
+  }
+}
+
+// trap handler (C), align to 8-bits to make sure bits [1:0] are 00 indicating
+// DIRECT handler jump mode for M-mode, NOTE: mtvec uses a stange code pointer
+// format
+void __attribute__((aligned(8), noinline, used /*, interrupt("machine") */))
+trap_handler(void)
+{
+  uint64_t mc = read_csr_mcause();
+  uint64_t me = read_csr_mepc();
+  uint64_t tv = read_csr_mtval();
+
+  libmin_printf("\nERROR: *** TRAP ***\n");
+  libmin_printf("  mcause = 0x%02lx (%s)\n", mc, cause_str(mc));
+  libmin_printf("  mepc   = 0x%08lx\n", me);
+  libmin_printf("  mtval  = 0x%08lx\n", tv);
+  libmin_fail(1);
+}
+#endif /* TARGET_SPIKE */
+
+// some targets use a pre-main function __main, for additional setup
+extern void main(void);
+
+void
+__main(void)
+{
+#ifdef TARGET_SPIKE
+  // install the trap vector (direct for M-mode), NOTE: bits [1:0] MUST BE
+  // ZERO for direct jump mode!
+  write_csr_mtvec((uint64_t)trap_handler);
+  // libmin_printf("INFO: Trap vector installed @ 0x%08lx.\n", (uint64_t)trap_handler);
+#endif /* TARGET_SPIKE */
+
+  // call main main()
+  main();
+}
+

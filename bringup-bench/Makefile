@@ -294,3 +294,25 @@ clean-all all-clean:
 spike-build:
 	$(MAKE) -C target clean build
 
+MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5
+
+mojov-tests:
+	@for _BMARK in $(MOJOV_BMARKS) ; do \
+	  cd $$_BMARK ; \
+	  echo "--------------------------------" ; \
+	  echo "Running "$$_BMARK" in TARGET=mojov" ; \
+	  echo "--------------------------------" ; \
+	  $(MAKE) TARGET=mojov clean build test || exit 1; \
+	  cd .. ; \
+	done
+
+mojov-clean:
+	@for _BMARK in $(MOJOV_BMARKS) ; do \
+	  cd $$_BMARK ; \
+	  echo "--------------------------------" ; \
+	  echo "Cleaning "$$_BMARK" in TARGET=mojov" ; \
+	  echo "--------------------------------" ; \
+	  $(MAKE) TARGET=mojov clean ; \
+	  cd .. ; \
+	done
+

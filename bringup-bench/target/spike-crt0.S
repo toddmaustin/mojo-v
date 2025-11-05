@@ -83,7 +83,7 @@ main_entry:
   /* jump to main program entry point (argc = argv = 0) */
   addi x10, x0, 0
   addi x11, x0, 0
-  jal x1, main
+  jal x1, __main
 
   /* Halt simulation */
   li x5, SIM_CTRL_BASE + SIM_CTRL_CTRL

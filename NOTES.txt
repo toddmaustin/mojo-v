@@ -1,5 +1,12 @@
 Various dev notes:
 
+Usage Notes:
+ - Bringup-Bench now has the top-level "make mojov-clean" and "make mojov-tests" to clean all Mojo-V directories and run tests
+
 FIXMEs:
  - currently the Spike implementation is not compatible with EXT_ZFINX (single-precision floating-point instructions using the integer register file), enforce this!
  - currently Vector instructions are not supported and will leak secret register values, fix this!
+
+UPSTREAMS:
+ - test out the non-long long version of dopr() on the base bringup-bench
+ - add the exception dump code for all RISC-V targets

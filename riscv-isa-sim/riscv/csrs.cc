@@ -2233,8 +2233,13 @@ void aia_csr_t::verify_permissions(insn_t insn, bool write) const {
 
 // implement class msecregcfg_csr_t
 msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
-  basic_csr_t(proc, addr, (/* ver:0x1 */(reg_t)1 << 3) | (/* format_sel: weak(0) */(reg_t)(proc->get_cfg().mojov_strong ? 1 : 0) << 2) | (/* key_valid:1 */(reg_t)1 << 1) | (/*mojov_en:off(0)*/0)) {
-}
+  basic_csr_t(proc,
+              addr,
+              (((reg_t)proc->get_cfg().mojov_arg << 11)
+               | (/* ver:0x1 */(reg_t)1 << 3)
+               | (/* format_sel: weak(0) */(reg_t)(proc->get_cfg().mojov_strong ? 1 : 0) << 2)
+               | (/* key_valid:1 */(reg_t)1 << 1)
+               | (/*mojov_en:off(0)*/0))) { }
 
 bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   reg_t masked_secreg = (read() & ~(reg_t)1);
