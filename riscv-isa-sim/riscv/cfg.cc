@@ -48,4 +48,5 @@ cfg_t::cfg_t()
   real_time_clint  = false;
   trigger_count    = 4;
   cache_blocksz    = 64;
+  mojov_strong     = false;
 }

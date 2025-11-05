@@ -79,6 +79,7 @@ public:
   bool                    real_time_clint;
   reg_t                   trigger_count;
   reg_t                   cache_blocksz;
+  bool                    mojov_strong;
   std::optional<abstract_sim_if_t*> external_simulator;
 
   size_t nprocs() const { return hartids.size(); }

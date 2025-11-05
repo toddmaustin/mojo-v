@@ -38,9 +38,9 @@ else if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SE
   ctval.ct.ct_hi = MMU.load<uint128_t>((BASE_RS1 + insn.i_imm()) + 16);
 
   // decrypt the value with the processor-internal key
-  simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
-  ptval.ct.ct_hi = ptval.ct.ct_hi ^ ptval.ct.ct_lo;
   simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
+  simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
+  ptval.ct.ct_hi = ptval.ct.ct_hi ^ ctval.ct.ct_lo;
 
   if (ptval.pt.auth_sig != MOJOV_PT_SIG)
   {

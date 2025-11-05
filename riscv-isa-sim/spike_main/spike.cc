@@ -85,6 +85,7 @@ static void help(int exit_code = 1)
   fprintf(stderr, "  --dm-no-impebreak     Debug module won't support implicit ebreak in program buffer\n");
   fprintf(stderr, "  --blocksz=<size>      Cache block size (B) for CMO operations(powers of 2) [default 64]\n");
   fprintf(stderr, "  --instructions=<n>    Stop after n instructions\n");
+  fprintf(stderr, "  --mojov-strong        Use Mojo-V strong encryption format (otherwise weak format)\n");
 
   exit(exit_code);
 }
@@ -456,6 +457,7 @@ int main(int argc, char** argv)
   parser.option(0, "instructions", 1, [&](const char* s){
     instructions = strtoull(s, 0, 0);
   });
+  parser.option(0, "mojov-strong", 0, [&](const char UNUSED *s){cfg.mojov_strong = true;});
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
