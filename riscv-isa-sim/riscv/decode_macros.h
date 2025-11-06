@@ -10,6 +10,11 @@
 #include "softfloat_types.h"
 #include "specialize.h"
 
+// helpful macros, etc
+#define MMU (*p->get_mmu())
+#define STATE (*p->get_state())
+#define FLEN (p->get_flen())
+
 // Mojo-V architecturally defined secret INT registers
 #define SECREGS \
   (((reg_deps_t)1 << X_P0) \
@@ -19,6 +24,8 @@
 #define IS_SECREG(reg) (((reg_deps_t)1 << (reg)) & SECREGS)
 #define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(reg))
+#define SECREG_RESET \
+  { STATE.XPR.write(X_P0, 0); STATE.XPR.write(X_P1, 0); STATE.XPR.write(X_P2, 0); STATE.XPR.write(X_P3, 0); }
 
 // Mojo-V architecturally defined secret FP registers
 #define FP_SECREGS \
@@ -29,11 +36,9 @@
 #define IS_FP_SECREG(reg) (((reg_deps_t)1 << ((reg) + 32)) & FP_SECREGS)
 #define CHECK_LEAKY_FP(reg) ((p->get_secreg_mode() && IS_FP_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define FP_SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_FP_SECREG(reg))
+#define FP_SECREG_RESET \
+  { DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); }
 
-// helpful macros, etc
-#define MMU (*p->get_mmu())
-#define STATE (*p->get_state())
-#define FLEN (p->get_flen())
 // Mojo-V: track the input dependencies
 #define CHECK_REG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg

@@ -2244,8 +2244,6 @@ msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
 bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   reg_t masked_secreg = (read() & ~(reg_t)1);
   reg_t new_secreg = masked_secreg | (val & 1);
-  const bool enabled = (read() & 1) != 0;
-  proc->set_secreg_mode(enabled);
 
   // masked_csr_t will apply the mask & store the value into its internal reg.
   const bool wrote = basic_csr_t::unlogged_write(new_secreg);
@@ -2255,6 +2253,12 @@ bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   if (wrote) {
     const bool enabled = (read() & 1) != 0;
     proc->set_secreg_mode(enabled);
+
+    if (!enabled)
+    { 
+      SECREG_RESET;
+      FP_SECREG_RESET;
+    }
   }
   return wrote;
 }
