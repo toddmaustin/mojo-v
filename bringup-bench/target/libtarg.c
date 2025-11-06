@@ -293,7 +293,7 @@ libtarg_stop_perf(void)
 #ifdef TARGET_SPIKE
 static inline void write_csr_mtvec(uintptr_t x) { __asm__ volatile ("csrw mtvec, %0" :: "r"(x)); }
 static inline uint64_t read_csr_mcause(void)    { uint64_t x; __asm__ volatile ("csrr %0, mcause" : "=r"(x)); return x; }
-static inline uint64_t read_csr_mepc(void)      { uint64_t x; __asm__ volatile ("csrr %0, mepc"   : "=r"(x)); return x; }
+// static inline uint64_t read_csr_mepc(void)      { uint64_t x; __asm__ volatile ("csrr %0, mepc"   : "=r"(x)); return x; }
 static inline uint64_t read_csr_mtval(void)     { uint64_t x; __asm__ volatile ("csrr %0, mtval"  : "=r"(x)); return x; }
 
 // ----- mcause decoding (exceptions only, top bit=0)
@@ -328,12 +328,12 @@ void __attribute__((aligned(8), noinline, used /*, interrupt("machine") */))
 trap_handler(void)
 {
   uint64_t mc = read_csr_mcause();
-  uint64_t me = read_csr_mepc();
+  // uint64_t me = read_csr_mepc();
   uint64_t tv = read_csr_mtval();
 
-  libmin_printf("\nERROR: *** TRAP ***\n");
+  libmin_printf("ERROR: *** TRAP ***\n");
   libmin_printf("  mcause = 0x%02lx (%s)\n", mc, cause_str(mc));
-  libmin_printf("  mepc   = 0x%08lx\n", me);
+  // libmin_printf("  mepc   = 0x%08lx\n", me);
   libmin_printf("  mtval  = 0x%08lx\n", tv);
   libmin_fail(1);
 }

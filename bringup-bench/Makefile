@@ -294,7 +294,7 @@ clean-all all-clean:
 spike-build:
 	$(MAKE) -C target clean build
 
-MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5
+MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-negtests
 
 mojov-tests:
 	@for _BMARK in $(MOJOV_BMARKS) ; do \
