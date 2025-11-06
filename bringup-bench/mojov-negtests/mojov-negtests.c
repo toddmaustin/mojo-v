@@ -131,6 +131,21 @@ main(void)
     break;
 
   case 1:
+    // Mojo-V: all legal instructions
+    __asm__ volatile (
+      // cannot ld/sd a secret register
+      "ld     t3, (%0)\n\t"
+      "fld    f28, (%0)\n\t"
+
+      // Mojo-V test: no secret inputs
+      "slt    /*p2*/t5, x1, x2\n\t"
+      :
+      : "r" (&simon_key) // input operands
+      : "t3", "t4", "t5", "t6" // clobbered registers
+    );
+    break;
+
+  case 2:
     __asm__ volatile (
       // test-load a bogus ciphertext value -- it should get an exception
       LDE(t3, %0, 0)
@@ -140,10 +155,40 @@ main(void)
     );
     break;
 
-  case 2:
+  case 3:
     __asm__ volatile (
       // cannot ld/sd a secret register
       "sd t3, (%0)\n\t"
+      :
+      : "r" (&simon_key) // input operands
+      : "t3", "t4", "t5", "t6" // clobbered registers
+    );
+    break;
+
+  case 4:
+    __asm__ volatile (
+      // cannot ld/sd a secret register
+      "fsd f28, (%0)\n\t"
+      :
+      : "r" (&simon_key) // input operands
+      : "t3", "t4", "t5", "t6" // clobbered registers
+    );
+    break;
+
+  case 5:
+    __asm__ volatile (
+      // Mojo-V test: should have secret dest
+      "slt       t0, /*p1*/t4, /*p0*/t3\n\t"
+      :
+      : "r" (&simon_key) // input operands
+      : "t3", "t4", "t5", "t6" // clobbered registers
+    );
+    break;
+
+  case 6:
+    __asm__ volatile (
+      // Mojo-V test: should have secret dest
+      "flt.d     t0, f28, f27\n\t"
       :
       : "r" (&simon_key) // input operands
       : "t3", "t4", "t5", "t6" // clobbered registers
@@ -155,14 +200,11 @@ main(void)
     break;
   }
 
-    // "sd t0, (%0)\n\t"
 
-    // "slt       /*p2*/t5, x1, x2\n\t" // Mojo-V test: no secret inputs
     // "jalr         ra, 64(t4)\n\t"
     // "sw        t5, (t3)\n\t"
     // "bne       t3, t0, .+12\n\t"
     // "bne       t0, t3, .+12\n\t"
-    // "slt       t0, /*p1*/t4, /*p0*/t3\n\t" // Mojo-V test: should have secret dest
 
     // try to move the secret predicate, via integer to FP register/ moves/converts
     // "fmv.w.x      f1, t2\n\t"
