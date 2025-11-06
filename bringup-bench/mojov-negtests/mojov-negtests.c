@@ -22,6 +22,12 @@ print_mprivregcfg(uint64_t val)
                 (val >> 3) & 0xff);
 }
 
+void negfailed(void)
+{
+  libmin_printf("ERROR: negative test failed because NO exception occurred!\n");
+  libmin_fail(2);
+}
+
 // Inline helpers
 static inline uint64_t
 read_mprivregcfg(void)
@@ -398,30 +404,229 @@ main(void)
     break;
 
   // negative tests
+
+  //
+  // GPR ALU immediates (secret -> non-secret)
+  //
   case 1:
     __asm__ volatile ("addi x5, x28, 1");
-    libmin_printf("ERROR: negative test did NOT fail!\n"); libmin_fail(2);
+    negfailed();
     break;
 
   case 2:
     __asm__ volatile ("slti x5, x28, 0");
-    libmin_printf("ERROR: negative test did NOT fail!\n"); libmin_fail(2);
+    negfailed();
     break;
 
   case 3:
     __asm__ volatile ("sltiu x5, x28, 0");
-    libmin_printf("ERROR: negative test did NOT fail!\n"); libmin_fail(2);
+    negfailed();
     break;
 
   case 4:
     __asm__ volatile ("xori x5, x28, 1");
-    libmin_printf("ERROR: negative test did NOT fail!\n"); libmin_fail(2);
+    negfailed();
     break;
 
   case 5:
     __asm__ volatile ("ori  x5, x28, 1");
-    libmin_printf("ERROR: negative test did NOT fail!\n"); libmin_fail(2);
+    negfailed();
     break;
+
+  case 6:
+    __asm__ volatile ("andi x5, x28, 1");
+    negfailed();
+    break;
+
+  case 7:
+    __asm__ volatile ("slli x5, x28, 7");
+    negfailed();
+    break;
+
+  case 8:
+    __asm__ volatile ("srli x5, x28, 7");
+    negfailed();
+    break;
+
+  case 9:
+    __asm__ volatile ("srai x5, x28, 7");
+    negfailed();
+    break;
+
+  case 10:
+    __asm__ volatile ("addiw x5, x28, 1");
+    negfailed();
+    break;
+
+  case 11:
+    __asm__ volatile ("slliw x5, x28, 7");
+    negfailed();
+    break;
+
+  case 12:
+    __asm__ volatile ("srliw x5, x28, 7");
+    negfailed();
+    break;
+
+  case 13:
+    __asm__ volatile ("sraiw x5, x28, 7");
+    negfailed();
+    break;
+
+  //
+  // GPR ALU regs (any secret source -> non-secret dest)
+  //
+  case 14:
+    __asm__ volatile ("add  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 15:
+    __asm__ volatile ("add  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 16:
+    __asm__ volatile ("sub  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 17:
+    __asm__ volatile ("sub  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 18:
+    __asm__ volatile ("sll  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 19:
+    __asm__ volatile ("sll  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 20:
+    __asm__ volatile ("srl  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 21:
+    __asm__ volatile ("srl  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 22:
+    __asm__ volatile ("sra  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 23:
+    __asm__ volatile ("sra  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 24:
+    __asm__ volatile ("slt  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 25:
+    __asm__ volatile ("slt  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 26:
+    __asm__ volatile ("sltu x5, x28, x6");
+    negfailed();
+    break;
+
+  case 27:
+    __asm__ volatile ("sltu x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 28:
+    __asm__ volatile ("xor  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 29:
+    __asm__ volatile ("xor  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 30:
+    __asm__ volatile ("or   x5, x28, x6");
+    negfailed();
+    break;
+
+  case 31:
+    __asm__ volatile ("or   x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 32:
+    __asm__ volatile ("and  x5, x28, x6");
+    negfailed();
+    break;
+
+  case 33:
+    __asm__ volatile ("and  x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 34:
+    __asm__ volatile ("addw x5, x28, x6");
+    negfailed();
+    break;
+
+  case 35:
+    __asm__ volatile ("addw x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 36:
+    __asm__ volatile ("subw x5, x28, x6");
+    negfailed();
+    break;
+
+  case 37:
+    __asm__ volatile ("subw x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 38:
+    __asm__ volatile ("sllw x5, x28, x6");
+    negfailed();
+    break;
+
+  case 39:
+    __asm__ volatile ("sllw x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 40:
+    __asm__ volatile ("srlw x5, x28, x6");
+    negfailed();
+    break;
+
+  case 41:
+    __asm__ volatile ("srlw x5, x6,  x28");
+    negfailed();
+    break;
+
+  case 42:
+    __asm__ volatile ("sraw x5, x28, x6");
+    negfailed();
+    break;
+
+  case 43:
+    __asm__ volatile ("sraw x5, x6,  x28");
+    negfailed();
+    break;
+
+
 
 
   case 99:
