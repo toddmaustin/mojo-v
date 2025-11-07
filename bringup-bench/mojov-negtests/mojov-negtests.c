@@ -371,15 +371,14 @@ main(void)
       "fle.d    x28, f29, f30\n\t"
       "fclass.d x28, f29\n\t"
 
-#ifdef notdef
       // CSR reads to secret GPR (Zicsr)
-      "csrrs  x28, mstatus, x0\n\t"
-      "csrrw  x28, mstatus, x0\n\t"
-      "csrrc  x28, mstatus, x0\n\t"
-      "csrrsi x28, mstatus, 1\n\t"
-      "csrrwi x28, mstatus, 1\n\t"
-      "csrrci x28, mstatus, 1\n\t"
-#endif /* notdef */
+      "csrrsi x28, fcsr, 1\n\t"
+      "csrrwi x28, fcsr, 1\n\t"
+      "csrrci x28, fcsr, 1\n\t"
+
+      "csrrs x28, fcsr, x0\n\t"
+      "csrrw x28, fcsr, x0\n\t"
+      "csrrc x28, fcsr, x0\n\t"
 
       // compressed (C) forms that write/load into secret regs
       "c.addi  x28, 1\n\t"
@@ -626,84 +625,820 @@ main(void)
     negfailed();
     break;
 
+  //
+  // stores of secret GPR to plain memory
+  //
+  case 44:
+    __asm__ volatile ("sb x28, 0(x1)");
+    negfailed();
+    break;
 
+  case 45:
+    __asm__ volatile ("sh x28, 0(x1)");
+    negfailed();
+    break;
 
+  case 46:
+    __asm__ volatile ("sw x28, 0(x1)");
+    negfailed();
+    break;
 
-  case 99:
-    __asm__ volatile (
-      // test-load a bogus ciphertext value -- it should get an exception
-      LDE(t3, %0, 0)
-      :
-      : "r" (&simon_key) // input operands
-      : "t3", "t4", "t5", "t6" // clobbered registers
-    );
+  case 47:
+    __asm__ volatile ("sd x28, 0(x1)");
+    negfailed();
+    break;
+
+  //
+  // Use secret GPR as base address (loads/stores)
+  //
+  case 48:
+    __asm__ volatile ("lb  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 49:
+    __asm__ volatile ("lbu x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 50:
+    __asm__ volatile ("lh  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 51:
+    __asm__ volatile ("lhu x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 52:
+    __asm__ volatile ("lw  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 53:
+    __asm__ volatile ("lwu x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 54:
+    __asm__ volatile ("ld  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 55:
+    __asm__ volatile ("sb  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 56:
+    __asm__ volatile ("sh  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 57:
+    __asm__ volatile ("sw  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 58:
+    __asm__ volatile ("sd  x5, 0(x28)");
+    negfailed();
+    break;
+
+  case 59:
+    __asm__ volatile ("flw f5, 0(x28)");
+    negfailed();
+    break;
+
+  case 60:
+    __asm__ volatile ("fld f5, 0(x28)");
+    negfailed();
+    break;
+
+  case 61:
+    __asm__ volatile ("fsw f5, 0(x28)");
+    negfailed();
+    break;
+
+  case 62:
+    __asm__ volatile ("fsd f5, 0(x28)");
+    negfailed();
+    break;
+
+  //
+  // branch predicate uses secret GPR
+  //
+  case 63:
+    __asm__ volatile ("beq  x28, x0, 0");
+    negfailed();
+    break;
+
+  case 64:
+    __asm__ volatile ("bne  x28, x0, 0");
+    negfailed();
+    break;
+
+  case 65:
+    __asm__ volatile ("blt  x28, x0, 0");
+    negfailed();
+    break;
+
+  case 66:
+    __asm__ volatile ("bge  x28, x0, 0");
+    negfailed();
+    break;
+
+  case 67:
+    __asm__ volatile ("bltu x28, x0, 0");
+    negfailed();
+    break;
+
+  case 68:
+    __asm__ volatile ("bgeu x28, x0, 0");
+    negfailed();
+    break;
+
+  case 69:
+    __asm__ volatile ("beq  x0,  x28, 0");
+    negfailed();
+    break;
+
+  case 70:
+    __asm__ volatile ("bne  x0,  x28, 0");
+    negfailed();
+    break;
+
+  case 71:
+    __asm__ volatile ("blt  x0,  x28, 0");
+    negfailed();
+    break;
+
+  case 72:
+    __asm__ volatile ("bge  x0,  x28, 0");
+    negfailed();
+    break;
+
+  case 73:
+    __asm__ volatile ("bltu  x0,  x28, 0");
+    negfailed();
+    break;
+
+  case 74:
+    __asm__ volatile ("bgeu x0,  x28, 0");
+    negfailed();
+    break;
+
+  //
+  // code pointer (jalr) uses secret GPR
+  //
+  case 75:
+    __asm__ volatile ("jalr x0, 0(x28)");
+    negfailed();
+    break;
+
+  //
+  // FP arithmetic to non-secret FP dest with secret operand(s) (S)
+  //
+  case 76:
+    __asm__ volatile ("fadd.s   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 77:
+    __asm__ volatile ("fsub.s   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 78:
+    __asm__ volatile ("fsub.s   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 79:
+    __asm__ volatile ("fmul.s   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 80:
+    __asm__ volatile ("fmul.s   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 81:
+    __asm__ volatile ("fdiv.s   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 82:
+    __asm__ volatile ("fdiv.s   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 83:
+    __asm__ volatile ("fsqrt.s  f5, f28");
+    negfailed();
+    break;
+
+  case 84:
+    __asm__ volatile ("fmin.s   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 85:
+    __asm__ volatile ("fmin.s   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 86:
+    __asm__ volatile ("fmax.s   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 87:
+    __asm__ volatile ("fmax.s   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 88:
+    __asm__ volatile ("fsgnj.s  f5, f28, f28");
+    negfailed();
+    break;
+
+  case 89:
+    __asm__ volatile ("fsgnjn.s f5, f28, f28");
+    negfailed();
+    break;
+
+  case 90:
+    __asm__ volatile ("fsgnjx.s f5, f28, f28");
+    negfailed();
+    break;
+
+  case 91:
+    __asm__ volatile ("fmadd.s  f5, f28, f6, f7");
+    negfailed();
+    break;
+
+  case 92:
+    __asm__ volatile ("fmsub.s  f5, f28, f6, f7");
+    negfailed();
     break;
 
   case 93:
-    __asm__ volatile (
-      // cannot ld/sd a secret register
-      "sd t3, (%0)\n\t"
-      :
-      : "r" (&simon_key) // input operands
-      : "t3", "t4", "t5", "t6" // clobbered registers
-    );
+    __asm__ volatile ("fnmsub.s f5, f28, f6, f7");
+    negfailed();
     break;
 
   case 94:
-    __asm__ volatile (
-      // cannot ld/sd a secret register
-      "fsd f28, (%0)\n\t"
-      :
-      : "r" (&simon_key) // input operands
-      : "t3", "t4", "t5", "t6" // clobbered registers
-    );
+    __asm__ volatile ("fnmadd.s f5, f28, f6, f7");
+    negfailed();
     break;
 
+  //
+  // FP arithmetic to non-secret FP dest with secret operand(s) (D)
+  //
   case 95:
-    __asm__ volatile (
-      // Mojo-V test: should have secret dest
-      "slt       t0, /*p1*/t4, /*p0*/t3\n\t"
-      :
-      : "r" (&simon_key) // input operands
-      : "t3", "t4", "t5", "t6" // clobbered registers
-    );
+    __asm__ volatile ("fadd.d   f5, f28, f6");
+    negfailed();
     break;
 
   case 96:
-    __asm__ volatile (
-      // Mojo-V test: should have secret dest
-      "flt.d     t0, f28, f27\n\t"
-      :
-      : "r" (&simon_key) // input operands
-      : "t3", "t4", "t5", "t6" // clobbered registers
-    );
+    __asm__ volatile ("fadd.d   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 97:
+    __asm__ volatile ("fsub.d   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 98:
+    __asm__ volatile ("fsub.d   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 99:
+    __asm__ volatile ("fmul.d   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 100:
+    __asm__ volatile ("fmul.d   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 101:
+    __asm__ volatile ("fdiv.d   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 102:
+    __asm__ volatile ("fdiv.d   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 103:
+    __asm__ volatile ("fsqrt.d  f5, f28");
+    negfailed();
+    break;
+
+  case 104:
+    __asm__ volatile ("fmin.d   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 105:
+    __asm__ volatile ("fmin.d   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 106:
+    __asm__ volatile ("fmax.d   f5, f28, f6");
+    negfailed();
+    break;
+
+  case 107:
+    __asm__ volatile ("fmax.d   f5, f6,  f28");
+    negfailed();
+    break;
+
+  case 108:
+    __asm__ volatile ("fsgnj.d  f5, f28, f28");
+    negfailed();
+    break;
+
+  case 109:
+    __asm__ volatile ("fsgnjn.d f5, f28, f28");
+    negfailed();
+    break;
+
+  case 110:
+    __asm__ volatile ("fsgnjx.d f5, f28, f28");
+    negfailed();
+    break;
+
+  case 111:
+    __asm__ volatile ("fmadd.d  f5, f28, f6, f7");
+    negfailed();
+    break;
+
+  case 112:
+    __asm__ volatile ("fmsub.d  f5, f28, f6, f7");
+    negfailed();
+    break;
+
+  case 113:
+    __asm__ volatile ("fnmsub.d f5, f28, f6, f7");
+    negfailed();
+    break;
+
+  case 114:
+    __asm__ volatile ("fnmadd.d f5, f28, f6, f7");
+    negfailed();
+    break;
+
+  //
+  // FP compares/class to non-secret GPR with secret sources
+  //
+  case 115:
+    __asm__ volatile ("feq.s    x5, f28, f6");
+    negfailed();
+    break;
+
+  case 116:
+    __asm__ volatile ("feq.s    x5, f6,  f28");
+    negfailed();
+    break;
+
+  case 117:
+    __asm__ volatile ("flt.s    x5, f28, f6");
+    negfailed();
+    break;
+
+  case 118:
+    __asm__ volatile ("fle.s    x5, f28, f6");
+    negfailed();
+    break;
+
+  case 119:
+    __asm__ volatile ("fclass.s x5, f28");
+    negfailed();
+    break;
+
+  case 120:
+    __asm__ volatile ("feq.d    x5, f28, f6");
+    negfailed();
+    break;
+
+  case 121:
+    __asm__ volatile ("feq.d    x5, f6,  f28");
+    negfailed();
+    break;
+
+  case 122:
+    __asm__ volatile ("flt.d    x5, f28, f6");
+    negfailed();
+    break;
+
+  case 123:
+    __asm__ volatile ("fle.d    x5, f28, f6");
+    negfailed();
+    break;
+
+  case 124:
+    __asm__ volatile ("fclass.d x5, f28");
+    negfailed();
+    break;
+
+  //
+  // FP/GPR moves & converts: secret -> non-secret
+  //
+  case 125:
+    __asm__ volatile ("fmv.x.w  x5,  f28");
+    negfailed();
+    break;
+
+  case 126:
+    __asm__ volatile ("fmv.x.d  x5,  f28");
+    negfailed();
+    break;
+
+  case 127:
+    __asm__ volatile ("fmv.s.x  f5,  x28");
+    negfailed();
+    break;
+
+  case 128:
+    __asm__ volatile ("fmv.d.x  f5,  x28");
+    negfailed();
+    break;
+
+  case 129:
+    __asm__ volatile ("fcvt.w.s  x5,  f28");
+    negfailed();
+    break;
+
+  case 130:
+    __asm__ volatile ("fcvt.wu.s x5,  f28");
+    negfailed();
+    break;
+
+  case 131:
+    __asm__ volatile ("fcvt.l.s  x5,  f28");
+    negfailed();
+    break;
+
+  case 132:
+    __asm__ volatile ("fcvt.lu.s x5,  f28");
+    negfailed();
+    break;
+
+  case 133:
+    __asm__ volatile ("fcvt.w.d  x5,  f28");
+    negfailed();
+    break;
+
+  case 134:
+    __asm__ volatile ("fcvt.wu.d x5,  f28");
+    negfailed();
+    break;
+
+  case 135:
+    __asm__ volatile ("fcvt.l.d  x5,  f28");
+    negfailed();
+    break;
+
+  case 136:
+    __asm__ volatile ("fcvt.lu.d x5,  f28");
+    negfailed();
+    break;
+
+  case 137:
+    __asm__ volatile ("fcvt.s.w  f5,  x28");
+    negfailed();
+    break;
+
+  case 138:
+    __asm__ volatile ("fcvt.s.wu f5,  x28");
+    negfailed();
+    break;
+
+  case 139:
+    __asm__ volatile ("fcvt.s.l  f5,  x28");
+    negfailed();
+    break;
+
+  case 140:
+    __asm__ volatile ("fcvt.s.lu f5,  x28");
+    negfailed();
+    break;
+
+  case 141:
+    __asm__ volatile ("fcvt.d.w  f5,  x28");
+    negfailed();
+    break;
+
+  case 142:
+    __asm__ volatile ("fcvt.d.wu f5,  x28");
+    negfailed();
+    break;
+
+  case 143:
+    __asm__ volatile ("fcvt.d.l  f5,  x28");
+    negfailed();
+    break;
+
+  case 144:
+    __asm__ volatile ("fcvt.d.lu f5,  x28");
+    negfailed();
+    break;
+
+  //
+  // stores of secret FP to plain memory
+  //
+  case 145:
+    __asm__ volatile ("fsw f28, 0(x1)");
+    negfailed();
+    break;
+
+  case 146:
+    __asm__ volatile ("fsd f28, 0(x1)");
+    negfailed();
+    break;
+
+  //
+  // compressed moves/stores with secret sources
+  //
+  case 147:
+    __asm__ volatile ("c.mv   x5, x28");
+    negfailed();
+    break;
+
+  case 148:
+    __asm__ volatile ("c.add  x5, x28");
+    negfailed();
+    break;
+
+  case 149:
+    __asm__ volatile ("c.swsp x28, 0(sp)");
+    negfailed();
+    break;
+
+  case 150:
+    __asm__ volatile ("c.sdsp x28, 0(sp)");
+    negfailed();
+    break;
+
+  case 151:
+    __asm__ volatile ("c.fsdsp f28, 0(sp)");
+    negfailed();
+    break;
+
+  //
+  // atomics with secret sources / addresses
+  //
+  case 152:
+    __asm__ volatile ("lr.d      x5, (x28)");
+    negfailed();
+    break;
+
+  case 153:
+    __asm__ volatile ("sc.d      x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 154:
+    __asm__ volatile ("sc.d      x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 155:
+    __asm__ volatile ("amoswap.d x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 156:
+    __asm__ volatile ("amoadd.d  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 157:
+    __asm__ volatile ("amoxor.d  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 158:
+    __asm__ volatile ("amoor.d   x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 159:
+    __asm__ volatile ("amoand.d  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 160:
+    __asm__ volatile ("amomin.d  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 161:
+    __asm__ volatile ("amomax.d  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 162:
+    __asm__ volatile ("amominu.d x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 163:
+    __asm__ volatile ("amomaxu.d x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 164:
+    __asm__ volatile ("amoswap.d x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 165:
+    __asm__ volatile ("amoadd.d  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 166:
+    __asm__ volatile ("amoxor.d  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 167:
+    __asm__ volatile ("amoor.d   x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 168:
+    __asm__ volatile ("amoand.d  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 169:
+    __asm__ volatile ("amomin.d  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 170:
+    __asm__ volatile ("amomax.d  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 171:
+    __asm__ volatile ("amominu.d x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 172:
+    __asm__ volatile ("amomaxu.d x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 173:
+    __asm__ volatile ("lr.w      x5, (x28)");
+    negfailed();
+    break;
+
+  case 174:
+    __asm__ volatile ("sc.w      x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 175:
+    __asm__ volatile ("sc.w      x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 176:
+    __asm__ volatile ("amoswap.w x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 177:
+    __asm__ volatile ("amoadd.w  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 178:
+    __asm__ volatile ("amoxor.w  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 179:
+    __asm__ volatile ("amoor.w   x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 180:
+    __asm__ volatile ("amoand.w  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 181:
+    __asm__ volatile ("amomin.w  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 182:
+    __asm__ volatile ("amomax.w  x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 183:
+    __asm__ volatile ("amominu.w x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 184:
+    __asm__ volatile ("amomaxu.w x5, x28,  (x1)");
+    negfailed();
+    break;
+
+  case 185:
+    __asm__ volatile ("amoswap.w x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 186:
+    __asm__ volatile ("amoadd.w  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 187:
+    __asm__ volatile ("amoxor.w  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 188:
+    __asm__ volatile ("amoor.w   x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 189:
+    __asm__ volatile ("amoand.w  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 190:
+    __asm__ volatile ("amomin.w  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 191:
+    __asm__ volatile ("amomax.w  x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 192:
+    __asm__ volatile ("amominu.w x5, x6,   (x28)");
+    negfailed();
+    break;
+
+  case 193:
+    __asm__ volatile ("amomaxu.w x5, x6,   (x28)");
+    negfailed();
+    break;
+
+
+  // --- CSR & SFENCE with secret operands (affecting public state) ---
+  case 194:
+    __asm__ volatile ("csrrs x5, fcsr,    x28");
+    negfailed();
+    break;
+
+  case 195:
+    __asm__ volatile ("csrrw x5, fcsr,    x28");
+    negfailed();
+    break;
+
+  case 196:
+    __asm__ volatile ("csrrc x5, fcsr,    x28");
+    negfailed();
+    break;
+
+  case 197:
+    __asm__ volatile ("sfence.vma x28, x0");
+    negfailed();
+    break;
+
+  case 198:
+    __asm__ volatile ("sfence.vma x0,  x28");
+    negfailed();
     break;
 
   default:
     libmin_printf("ERROR: invalid test (%u).\n", (uint32_t)mojov_arg);
     break;
   }
-
-
-    // "jalr         ra, 64(t4)\n\t"
-    // "sw        t5, (t3)\n\t"
-    // "bne       t3, t0, .+12\n\t"
-    // "bne       t0, t3, .+12\n\t"
-
-    // try to move the secret predicate, via integer to FP register/ moves/converts
-    // "fmv.w.x      f1, t2\n\t"
-    // "fcvt.s.w     f3, t2\n\t"
-    // "fmv.w.x      f1, t5\n\t"
-    // "fmv.d.x      f2, t5\n\t"
-    // "fcvt.s.w     f3, t5\n\t"
-    // "fcvt.s.wu    f3, t5\n\t"
-    // "fcvt.s.l     f5, t5\n\t"
-    // "fcvt.s.lu    f6, t5\n\t"
-    // "fcvt.d.w     f1, t5\n\t"
-    // "fcvt.d.wu    f2, t5\n\t"
-    // "fcvt.d.l     f3, t5\n\t"
-    // "fcvt.d.lu    f4, t5\n\t"
-
 
   // disable private register semantics (write 0)
   write_mprivregcfg(0);
