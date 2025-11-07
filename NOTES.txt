@@ -1,7 +1,9 @@
 Various dev notes:
 
 Usage Notes:
+ - ATOMICS!! Make sure to get them write!
  - Bringup-Bench now has the top-level "make mojov-clean" and "make mojov-tests" to clean all Mojo-V directories and run tests
+ - IMPORTANT: secret registers can never breach x15 or lower or f15 or lower, without making the short/implied-reg format compressed instructions safe!
 
 FIXMEs:
  - currently the Spike implementation is not compatible with EXT_ZFINX (single-precision floating-point instructions using the integer register file), enforce this!

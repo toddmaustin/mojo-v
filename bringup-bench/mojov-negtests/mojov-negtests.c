@@ -165,6 +165,17 @@ main(void)
     libmin_printf("Final results:   x:%lu, max:%lu\n", x_check.pt.val, max_check.pt.val);
 
     __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "ld t3, (%0)\n\t"
+      SDE(t3,%2,0)
+      "ld t3, (%1)\n\t"
+      SDE(t3,%3,0)
+
+      // load/store valid secrets into secret regs
+      LDE(x28,%2,0)
+      FLDE(f28,%2,0)
+      FSDE(f28,%2,0)
+
       // non-secret → secret GPR (ALU immediates & shifts)
       "lui   x28, 0x12345\n\t"
       "auipc x28, 0\n\t"
@@ -393,6 +404,21 @@ main(void)
       // encrypted → secret regs
       LDE(x28, %2, 0)
       FLDE(f28, %2, 0)
+
+      // jump tests, always jump to the next instruction
+      "jal    x28, .+4\n\t"
+      "auipc  x27, 0\n\t"
+      "jalr   x28, x27, 8\n\t"
+
+      // FP convert/move (secret-preserving)
+      "fcvt.s.d f28, f29\n\t"
+      "fcvt.d.s f28, f29\n\t"
+      "fmv.x.d  x28, f29\n\t"
+      "fmv.d.x f28, x29\n\t"
+
+      // more compress computation instructions
+      "c.li x28, 1\n\t"
+      "c.lui x28, 1\n\t"
 
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
@@ -1408,8 +1434,9 @@ main(void)
     negfailed();
     break;
 
-
-  // --- CSR & SFENCE with secret operands (affecting public state) ---
+  //
+  // CSR & SFENCE with secret operands (affecting public state)
+  //
   case 194:
     __asm__ volatile ("csrrs x5, fcsr,    x28");
     negfailed();
@@ -1425,13 +1452,251 @@ main(void)
     negfailed();
     break;
 
+  //
+  // SPECIAL CASE: CSR side effects prevent and SECRET inputs in CSR instructions!
+  //
   case 197:
-    __asm__ volatile ("sfence.vma x28, x0");
+    __asm__ volatile ("csrrs x28, fcsr,    x28");
     negfailed();
     break;
 
   case 198:
+    __asm__ volatile ("csrrw x28, fcsr,    x28");
+    negfailed();
+    break;
+
+  case 199:
+    __asm__ volatile ("csrrc x28, fcsr,    x28");
+    negfailed();
+    break;
+
+  case 200:
+    __asm__ volatile ("sfence.vma x28, x0");
+    negfailed();
+    break;
+
+  case 201:
     __asm__ volatile ("sfence.vma x0,  x28");
+    negfailed();
+    break;
+
+  //
+  // load of invalid ciphertext
+  //
+  case 202:
+    __asm__ volatile (
+      // load/store valid secrets into secret regs
+      LDE(x28,%4,0)
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  case 203:
+    __asm__ volatile (
+      // load/store valid secrets into secret regs
+      FLDE(x28,%4,0)
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  //
+  // load valid ciphertext, but into non-secret regs
+  //
+  case 204:
+    __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "ld x28, (%0)\n\t"
+      SDE(x28,%2,0)
+
+      // load/store valid secrets into secret regs
+      LDE(x27,%2,0)
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  case 205:
+    __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "fld f28, (%0)\n\t"
+      FSDE(f28,%2,0)
+
+      // load/store valid secrets into secret regs
+      FLDE(f27,%2,0)
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  //
+  // jump tests, all should fail, but jump to next insn to detect non-failure
+  //
+  case 206:
+    __asm__ volatile (
+      "auipc  x28, 0\n\t"
+      "jalr   x0, x28, 8\n\t"
+    );
+    negfailed();
+    break;
+
+  case 207:
+    __asm__ volatile (
+      "auipc  x28, 0\n\t"
+      "c.addi x28, 8\n\t"
+      "c.jalr x28\n\t"
+    );
+    negfailed();
+    break;
+
+  //
+  // branch predicate uses double secret GPR
+  //
+  case 208:
+    __asm__ volatile ("beq  x28, x29, 0");
+    negfailed();
+    break;
+
+  case 209:
+    __asm__ volatile ("bne  x28, x29, 0");
+    negfailed();
+    break;
+
+  case 210:
+    __asm__ volatile ("blt  x28, x29, 0");
+    negfailed();
+    break;
+
+  case 211:
+    __asm__ volatile ("bge  x28, x29, 0");
+    negfailed();
+    break;
+
+  case 212:
+    __asm__ volatile ("bltu x28, x29, 0");
+    negfailed();
+    break;
+
+  case 213:
+    __asm__ volatile ("bgeu x28, x29, 0");
+    negfailed();
+    break;
+
+  //
+  // third-party encrypted I/O misuse
+  //
+  case 214:
+    __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "ld x27, (%0)\n\t"
+      SDE(x27,%2,0)
+
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  case 215:
+    __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "fld f27, (%0)\n\t"
+      FSDE(f27,%2,0)
+
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  //
+  // third-party encrypted stores, invalid secret base register
+  //
+  case 216:
+    __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "ld x28, (%0)\n\t"
+      SDE(x28,x29,0)
+
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  case 217:
+    __asm__ volatile (
+      // first encrypt the public X and MAX values
+      "fld f28, (%0)\n\t"
+      FSDE(f28,x29,0)
+
+      :
+      : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
+      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+    );
+    negfailed();
+    break;
+
+  //
+  // sorry, not even x0 is secret!
+  //
+  case 218:
+    __asm__ volatile ("add x0, x28, x5");
+    negfailed();
+    break;
+
+  case 219:
+    __asm__ volatile ("xor x0, x28, x29");
+    negfailed();
+    break;
+
+  case 220:
+    __asm__ volatile ("sll x0, x5, x28");
+    negfailed();
+    break;
+
+  case 221:
+    __asm__ volatile ("fmv.x.d x0, f28");
+    negfailed();
+    break;
+
+  case 222:
+    __asm__ volatile ("fcvt.w.d x0, f28");
+    negfailed();
+    break;
+
+  //
+  // more leaky moves
+  //
+  case 223:
+    __asm__ volatile ("fcvt.s.d f5, f28");
+    negfailed();
+    break;
+
+  case 224:
+    __asm__ volatile ("fcvt.d.s f5, f28");
+    negfailed();
+    break;
+
+  case 225:
+    __asm__ volatile ("fmv.x.d x5, f28");
+    negfailed();
+    break;
+
+  case 226:
+    __asm__ volatile ("fmv.d.x f5, x28");
     negfailed();
     break;
 

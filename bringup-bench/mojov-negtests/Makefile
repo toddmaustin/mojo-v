@@ -9,7 +9,7 @@ include ../Makefile
 
 test: $(TARGET_EXE)
 	rm -f FOO
-	for i in $(shell seq 0 198); do \
+	for i in $(shell seq 0 226); do \
 	  echo "--- Test $$i ---" >> FOO; \
 	  $(TARGET_SIM) --mojov-arg=$$i ./$(TARGET_EXE) >> FOO; \
 	done
