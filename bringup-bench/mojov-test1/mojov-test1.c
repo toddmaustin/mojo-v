@@ -64,7 +64,7 @@ uxxe1(int w)
 
 int (*pbar)(int) = &bar;
 
-__attribute__((__secret__)) int (*sbar)(int) = &bar;
+/* __attribute__((__secret__)) */ int (*sbar)(int) = &bar;
 
 void
 foo(void)
