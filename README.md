@@ -81,14 +81,15 @@ make
 3. **Build and test**
 
    ```bash
-   cd ../mojov-test
-   make TARGET=mojov clean build test
+   cd ..                # go to the top-level bringup-bench directory
+   make mojov-tests     # run all Mojo-V tests
    ```
 
-   Repeat for:
+   As an alternative, you can run an individual benchmark by going into its directory and running the following command.
+
    ```bash
-   mojov-test1   # secret-register and encrypted-memory semantics tests
-   mojov-test2   # data-oblivious bubble-sort in Mojo-V
+   cd ../mojov-test
+   make TARGET=mojov clean build test
    ```
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
@@ -97,9 +98,13 @@ make
 |:---------|:-------------|
 | `mojov-test` | Intro example from slides |
 | `mojov-test1` | Secret-register and encrypted-memory semantics tests |
-| `mojov-test2` | Hand-coded data-oblivious bubble-sort benchmark in Mojo-V |
+| `mojov-test2` | Hand-coded data-oblivious integer bubble-sort benchmark with Mojo-V fast encryption (int,fast) |
+| `mojov-test3` | Hand-coded data-oblivious floating-point bubble-sort benchmark with Mojo-V fast encryption (fp,fast) |
+| `mojov-test4` | Hand-coded data-oblivious integer bubble-sort benchmark with Mojo-V strong encryption (int,strong) |
+| `mojov-test5` | Hand-coded data-oblivious floating-point bubble-sort benchmark with Mojo-V strong encryption (fp,strong) |
+| `mojov-sectests` | Hand-coded security test suite for RV64GC+Mojo-V that includes 130 pos + 245 neg tests == 375 total (int,fp,fast,strong) |
 
-All three test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
+All test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
 
 ---
 
