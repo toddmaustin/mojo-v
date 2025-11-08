@@ -420,6 +420,30 @@ main(void)
       "c.li x28, 1\n\t"
       "c.lui x28, 1\n\t"
 
+      // atomic instructions
+      "lr.d x28, (%0)\n\t"
+      "sc.d x28, x27, (%0)\n\t"
+      "lr.w x28, (%0)\n\t"
+      "sc.w x28, x27, (%0)\n\t"
+      "amoswap.d x28, x27, (%0)\n\t"
+      "amoswap.w x28, x27, (%0)\n\t"
+      "amoadd.d  x28, x27, (%0)\n\t"
+      "amoadd.w  x28, x27, (%0)\n\t"
+      "amoand.d  x28, x27, (%0)\n\t"
+      "amoand.w  x28, x27, (%0)\n\t"
+      "amoor.d  x28, x27, (%0)\n\t"
+      "amoor.w  x28, x27, (%0)\n\t"
+      "amoxor.d  x28, x27, (%0)\n\t"
+      "amoxor.w  x28, x27, (%0)\n\t"
+      "amomin.d  x28, x27, (%0)\n\t"
+      "amomin.w  x28, x27, (%0)\n\t"
+      "amomax.d  x28, x27, (%0)\n\t"
+      "amomax.w  x28, x27, (%0)\n\t"
+      "amominu.d  x28, x27, (%0)\n\t"
+      "amominu.w  x28, x27, (%0)\n\t"
+      "amomaxu.d  x28, x27, (%0)\n\t"
+      "amomaxu.w  x28, x27, (%0)\n\t"
+
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
       : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
@@ -1697,6 +1721,109 @@ main(void)
 
   case 226:
     __asm__ volatile ("fmv.d.x f5, x28");
+    negfailed();
+    break;
+
+  //
+  // more atomics tests
+  //
+  case 227:
+    __asm__ volatile ("sc.d      x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 228:
+    __asm__ volatile ("sc.w      x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 229:
+    __asm__ volatile ("amoswap.d x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 230:
+    __asm__ volatile ("amoswap.w x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 231:
+    __asm__ volatile ("amoadd.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 232:
+    __asm__ volatile ("amoadd.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 233:
+    __asm__ volatile ("amoand.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 234:
+    __asm__ volatile ("amoand.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 235:
+    __asm__ volatile ("amoor.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 236:
+    __asm__ volatile ("amoor.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 237:
+    __asm__ volatile ("amoxor.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 238:
+    __asm__ volatile ("amoxor.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 239:
+    __asm__ volatile ("amomin.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 240:
+    __asm__ volatile ("amomin.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 241:
+    __asm__ volatile ("amomax.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 242:
+    __asm__ volatile ("amomax.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 243:
+    __asm__ volatile ("amominu.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 244:
+    __asm__ volatile ("amominu.w  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 245:
+    __asm__ volatile ("amomaxu.d  x5, x28,  (x29)");
+    negfailed();
+    break;
+
+  case 246:
+    __asm__ volatile ("amomaxu.w  x5, x28,  (x29)");
     negfailed();
     break;
 
