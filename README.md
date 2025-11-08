@@ -30,12 +30,12 @@ The Mojo-V reference platform release 0.90 implements secret integer computation
 1. **Mojo-V ISA Spec v0.91**
    - released in `doc/`
 2. **Spike (Instruction Set Simulator) Implementation**
-   – Mojo-V integrated into `riscv-isa-sim`, nearly feature-complete
-   – Missing only: Public-Key Infrastructure (PKI) support (currently uses fixed keys with a Simon-128 cipher)
-   – To run Spike with Mojo-V extensions enabled, add the `--isa=rv64gc_zicond_zkmojov_zicntr` flag when running `spike`
+   - Mojo-V integrated into `riscv-isa-sim`, nearly feature-complete
+   - Missing only: Public-Key Infrastructure (PKI) support (currently uses fixed keys with a Simon-128 cipher)
+   - To run Spike with Mojo-V extensions enabled, add the `--isa=rv64gc_zicond_zkmojov_zicntr` flag when running `spike`
 3. **Mojo-V Bringup-Bench Benchmarks**
-   — Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
-   – Full battery of security tests for RV64GC+Mojo-V
+   - Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
+   - Full battery of security tests for RV64GC+Mojo-V
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
 
