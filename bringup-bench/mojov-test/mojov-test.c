@@ -16,7 +16,7 @@ print_mprivregcfg(uint64_t val)
   libmin_printf("(mojov_en:%s, key_valid:%s, format_sel:%s, mojov_ver:%u)",
                 (val & 0x01) ? "t" : "f",
                 (val & 0x02) ? "t" : "f",
-                (val & 0x04) ? "strong" : "weak",
+                (val & 0x04) ? "strong" : "fast",
                 (val >> 3) & 0xff);
 }
 

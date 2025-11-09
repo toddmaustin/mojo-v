@@ -7,11 +7,11 @@ if (!p->get_secreg_mode() || !IS_FP_SECREG(insn.rd()))
   throw trap_security_exception(insn.bits());
 }
 
-// determine if it is a weak or strong memory format
-if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_WEAK)
+// determine if it is a fast or strong memory format
+if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAST)
 {
-  union mojov_mem_weak_t ctval;
-  union mojov_mem_weak_t ptval;
+  union mojov_mem_fast_t ctval;
+  union mojov_mem_fast_t ptval;
 
   // Mojo-V: read 3rd-party encrypted ciphertext into MEMVAL
   ctval.ct = MMU.load<uint128_t>(BASE_RS1 + insn.i_imm());

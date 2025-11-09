@@ -7,11 +7,11 @@ if (!p->get_secreg_mode() || !IS_SECREG(insn.rs2()))
   throw trap_security_exception(insn.bits());
 }
 
-// determine if it is a weak or strong memory format
-if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_WEAK)
+// determine if it is a fast or strong memory format
+if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAST)
 {
-  union mojov_mem_weak_t ctval;
-  union mojov_mem_weak_t ptval;
+  union mojov_mem_fast_t ctval;
+  union mojov_mem_fast_t ptval;
 
   // Mojo-V: prep the encrypted packet with RS2 value, salt and sig
   ptval.pt = { RS2, (uint32_t)rand(), MOJOV_PT_SIG };

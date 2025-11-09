@@ -2237,7 +2237,7 @@ msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
               addr,
               (((reg_t)proc->get_cfg().mojov_arg << 11)
                | (/* ver:0x1 */(reg_t)1 << 3)
-               | (/* format_sel: weak(0) */(reg_t)(proc->get_cfg().mojov_strong ? 1 : 0) << 2)
+               | (/* format_sel: fast(0) */(reg_t)(proc->get_cfg().mojov_strong ? 1 : 0) << 2)
                | (/* key_valid:1 */(reg_t)1 << 1)
                | (/*mojov_en:off(0)*/0))) { }
 

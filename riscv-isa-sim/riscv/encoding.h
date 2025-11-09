@@ -454,7 +454,7 @@
 #define MSECREGCFG_MOJOV_VER  0x000007f8
 
 /* Mojo-V FORMAT_SEL values */
-#define FORMAT_SEL_WEAK       0
+#define FORMAT_SEL_FAST       0
 #define FORMAT_SEL_STRONG     1
 
 #define IRQ_U_SOFT        0

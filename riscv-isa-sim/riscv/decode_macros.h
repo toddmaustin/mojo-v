@@ -128,8 +128,8 @@
 // Mojo-V memory format details
 #define MOJOV_PT_SIG   0xdeadbeef
 
-// weak memory format
-union mojov_mem_weak_t {
+// fast memory format
+union mojov_mem_fast_t {
   uint128_t ct;          // ciphertext
   struct {               // plaintext
     uint64_t val;          // register plaintext value
