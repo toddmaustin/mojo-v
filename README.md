@@ -10,19 +10,19 @@ To learn more...
 - Here is an intro video describing Mojo-V: https://www.youtube.com/watch?v=HUT46TcNyyM
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
-The current Mojo-V ISA Extension Specification (release 0.90):
-- [In PDF format.] (https://drive.google.com/file/d/1IlRrDrWvsOj-reC-BC01QHwn6NAkF7bf)
+The current Mojo-V ISA Extension Specification (release 0.91):
+- [In PDF format.] (https://drive.google.com/file/d/10zZIAHvYXOnYYnal7Hsq8zkHRCz2k7Gn)
 
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
-# 🧩 Mojo-V Reference Platform — Release 0.90
+# 🧩 Mojo-V Reference Platform — Release 0.91
 
 ## 🚧 Project Status
 
-The Mojo-V reference platform release 0.90 implements secret integer computation using a fixed symmetric key cipher. As of this release, 64-bit integer secret computation is fully secretized and this early reference platform can be used for software development and red-teaming. Additional capabilities will be rolled out in future releases, including PKI support, secret FP register support, LLVM compiler support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
+The Mojo-V reference platform release 0.91 implements secret integer and floating-point computation using a fixed symmetric key cipher. As of this release, 64-bit secret computation is fully secretized and this early reference platform can be used for software development and red-teaming. Additional capabilities will be rolled out in future releases, including PKI support, LLVM compiler support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
 
-**Specification Version:** 0.90  (October 2025)  
+**Specification Version:** 0.91  (October 2025)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
 ## Current components
