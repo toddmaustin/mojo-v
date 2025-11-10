@@ -357,35 +357,103 @@ main(void)
       // secret FP → secret FP (S & D, incl. FMA)
       // Single-precision
       "fadd.s   f28, f29, f30\n\t"
+      "fadd.s   f28, f15, f30\n\t"
+      "fadd.s   f28, f29, f15\n\t"
       "fsub.s   f28, f29, f30\n\t"
+      "fsub.s   f28, f15, f30\n\t"
+      "fsub.s   f28, f29, f15\n\t"
       "fmul.s   f28, f29, f30\n\t"
+      "fmul.s   f28, f15, f30\n\t"
+      "fmul.s   f28, f29, f15\n\t"
       "fdiv.s   f28, f29, f30\n\t"
+      "fdiv.s   f28, f15, f30\n\t"
+      "fdiv.s   f28, f29, f15\n\t"
       "fsqrt.s  f28, f29\n\t"
       "fmin.s   f28, f29, f30\n\t"
+      "fmin.s   f28, f15, f30\n\t"
+      "fmin.s   f28, f29, f15\n\t"
       "fmax.s   f28, f29, f30\n\t"
+      "fmax.s   f28, f15, f30\n\t"
+      "fmax.s   f28, f29, f15\n\t"
       "fsgnj.s  f28, f29, f30\n\t"
+      "fsgnj.s  f28, f15, f30\n\t"
+      "fsgnj.s  f28, f29, f15\n\t"
       "fsgnjn.s f28, f29, f30\n\t"
+      "fsgnjn.s f28, f15, f30\n\t"
+      "fsgnjn.s f28, f29, f15\n\t"
       "fsgnjx.s f28, f29, f30\n\t"
+      "fsgnjx.s f28, f15, f30\n\t"
+      "fsgnjx.s f28, f29, f15\n\t"
       "fmadd.s  f28, f29, f30, f31\n\t"
+      "fmadd.s  f28, f15, f30, f31\n\t"
+      "fmadd.s  f28, f29, f15, f31\n\t"
+      "fmadd.s  f28, f29, f30, f15\n\t"
+      "fmadd.s  f28, f15, f15, f31\n\t"
       "fmsub.s  f28, f29, f30, f31\n\t"
+      "fmsub.s  f28, f15, f30, f31\n\t"
+      "fmsub.s  f28, f29, f15, f31\n\t"
+      "fmsub.s  f28, f29, f30, f15\n\t"
+      "fmsub.s  f28, f15, f15, f31\n\t"
       "fnmsub.s f28, f29, f30, f31\n\t"
+      "fnmsub.s f28, f15, f30, f31\n\t"
+      "fnmsub.s f28, f29, f15, f31\n\t"
+      "fnmsub.s f28, f29, f30, f15\n\t"
+      "fnmsub.s f28, f15, f15, f31\n\t"
       "fnmadd.s f28, f29, f30, f31\n\t"
+      "fnmadd.s f28, f15, f30, f31\n\t"
+      "fnmadd.s f28, f29, f15, f31\n\t"
+      "fnmadd.s f28, f29, f30, f15\n\t"
+      "fnmadd.s f28, f15, f15, f31\n\t"
 
       // Double-precision
       "fadd.d   f28, f29, f30\n\t"
+      "fadd.d   f28, f15, f30\n\t"
+      "fadd.d   f28, f29, f15\n\t"
       "fsub.d   f28, f29, f30\n\t"
+      "fsub.d   f28, f15, f30\n\t"
+      "fsub.d   f28, f29, f15\n\t"
       "fmul.d   f28, f29, f30\n\t"
+      "fmul.d   f28, f15, f30\n\t"
+      "fmul.d   f28, f29, f15\n\t"
       "fdiv.d   f28, f29, f30\n\t"
+      "fdiv.d   f28, f15, f30\n\t"
+      "fdiv.d   f28, f29, f15\n\t"
       "fsqrt.d  f28, f29\n\t"
       "fmin.d   f28, f29, f30\n\t"
+      "fmin.d   f28, f15, f30\n\t"
+      "fmin.d   f28, f29, f15\n\t"
       "fmax.d   f28, f29, f30\n\t"
+      "fmax.d   f28, f15, f30\n\t"
+      "fmax.d   f28, f29, f15\n\t"
       "fsgnj.d  f28, f29, f30\n\t"
+      "fsgnj.d  f28, f15, f30\n\t"
+      "fsgnj.d  f28, f29, f15\n\t"
       "fsgnjn.d f28, f29, f30\n\t"
+      "fsgnjn.d f28, f15, f30\n\t"
+      "fsgnjn.d f28, f29, f15\n\t"
       "fsgnjx.d f28, f29, f30\n\t"
+      "fsgnjx.d f28, f15, f30\n\t"
+      "fsgnjx.d f28, f29, f15\n\t"
       "fmadd.d  f28, f29, f30, f31\n\t"
+      "fmadd.d  f28, f15, f30, f31\n\t"
+      "fmadd.d  f28, f29, f15, f31\n\t"
+      "fmadd.d  f28, f29, f30, f15\n\t"
+      "fmadd.d  f28, f15, f15, f31\n\t"
       "fmsub.d  f28, f29, f30, f31\n\t"
+      "fmsub.d  f28, f15, f30, f31\n\t"
+      "fmsub.d  f28, f29, f15, f31\n\t"
+      "fmsub.d  f28, f29, f30, f15\n\t"
+      "fmsub.d  f28, f15, f15, f31\n\t"
       "fnmsub.d f28, f29, f30, f31\n\t"
+      "fnmsub.d f28, f15, f30, f31\n\t"
+      "fnmsub.d f28, f29, f15, f31\n\t"
+      "fnmsub.d f28, f29, f30, f15\n\t"
+      "fnmsub.d f28, f15, f15, f31\n\t"
       "fnmadd.d f28, f29, f30, f31\n\t"
+      "fnmadd.d f28, f15, f30, f31\n\t"
+      "fnmadd.d f28, f29, f15, f31\n\t"
+      "fnmadd.d f28, f29, f30, f15\n\t"
+      "fnmadd.d f28, f15, f15, f31\n\t"
 
       // load non-secret → secret FP (plain memory)
       "flw f28, (%0)\n\t"
@@ -395,8 +463,12 @@ main(void)
       // FPR <-> FPR moves via sign-inject (canonical moves)
       "fsgnj.s  f28, f27, f27\n\t"    // non-secret → secret
       "fsgnj.s  f28, f29, f29\n\t"    // secret → secret
+      "fsgnj.s  f28, f15, f29\n\t"    // secret → secret
+      "fsgnj.s  f28, f29, f15\n\t"    // secret → secret
       "fsgnj.d  f28, f27, f27\n\t"
       "fsgnj.d  f28, f29, f29\n\t"
+      "fsgnj.d  f28, f15, f29\n\t"
+      "fsgnj.d  f28, f29, f15\n\t"
 
       // INT <-> FP bit moves (RV64)
       "fmv.d.x  f28, x5\n\t"          // non-secret → secret FP
@@ -406,7 +478,9 @@ main(void)
 
       // (RV32+F alias shown for completeness when assembling generically)
       "fmv.s.x  f28, x5\n\t"
+      "fmv.s.x  f28, x28\n\t"
       "fmv.x.w  x28, f7\n\t"
+      "fmv.x.w  x28, f28\n\t"
 
       // fcvt between secret regs, and non-secret → secret (conversions)
       // INT -> FP (dest secret FP)
@@ -426,14 +500,22 @@ main(void)
       "fcvt.lu.s x28, f5\n\t"
       "fcvt.w.d  x28, f5\n\t"
       "fcvt.wu.d x28, f5\n\t"
+      "fcvt.s.l  f28, x5\n\t"
+      "fcvt.d.l  f28, x5\n\t"
       "fcvt.l.d  x28, f5\n\t"
       "fcvt.lu.d x28, f5\n\t"
 
       // Same but secret → secret
+      "fcvt.w.s  x28, f28\n\t"
+      "fcvt.wu.s x28, f28\n\t"
+      "fcvt.l.s  x28, f28\n\t"
+      "fcvt.lu.s x28, f28\n\t"
+      "fcvt.w.d  x28, f28\n\t"
+      "fcvt.wu.d x28, f28\n\t"
       "fcvt.s.l  f28, x29\n\t"
       "fcvt.d.l  f28, x29\n\t"
       "fcvt.l.d  x28, f29\n\t"
-      "fcvt.w.s  x28, f29\n\t"
+      "fcvt.lu.d x28, f28\n\t"
 
       // FP compares / class writing to secret GPR
       "feq.s    x28, f5,  f6\n\t"
@@ -448,9 +530,17 @@ main(void)
 
       // secret → secret versions
       "feq.d    x28, f29, f30\n\t"
+      "feq.d    x28, f15, f30\n\t"
+      "feq.d    x28, f29, f15\n\t"
       "flt.d    x28, f29, f30\n\t"
+      "flt.d    x28, f15, f30\n\t"
+      "flt.d    x28, f29, f15\n\t"
       "fle.d    x28, f29, f30\n\t"
+      "fle.d    x28, f15, f30\n\t"
+      "fle.d    x28, f29, f15\n\t"
       "fclass.d x28, f29\n\t"
+
+      // FIXME: here...
 
       // CSR reads to secret GPR (Zicsr)
       "csrrsi x28, fcsr, 1\n\t"
@@ -516,7 +606,7 @@ main(void)
 
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
-      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+      : "f15", "x15", "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
     );
 
     libmin_printf("INFO: All positive tests passed.\n");
