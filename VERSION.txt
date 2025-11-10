@@ -1,0 +1,22 @@
+** Mojo-V Reference Platform — Release 0.91
+
+  - Update Mojo-V specification to v0.91
+  - Added FP encrypted load/store, i.e., FLDE and FSDE
+  - Renamed “weak” encryption mode to “fast”
+  - Cleaned up Bringup-Bench directory tree
+  - Added extensive security tests (380 positive + 245 negative tests == 625 total tests).
+  - Added new integer and FP benchmarks, using fast and strong encryption.
+  - Added RISC-V trap handling to Bringup-Bench to enable negative testing.
+  - Added -fmojov-strong option to Spike to switch between fast/strong Mojo-V encryption.
+--
+
+** Mojo-V Reference Platform — Release 0.90
+
+  The Mojo-V reference platform release 0.90 implements secret integer
+  computation using a fixed symmetric key cipher. As of this release,
+  64-bit integer secret computation is fully secretized and this early
+  reference platform can be used for software development and red-teaming.
+  Additional capabilities will be rolled out in future releases, including
+  PKI support, secret FP register support, LLVM compiler support, 32-bit
+  RISC-V support, VIP-Bench benchmarks support, etc.
+
