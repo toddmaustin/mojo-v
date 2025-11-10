@@ -540,8 +540,6 @@ main(void)
       "fle.d    x28, f29, f15\n\t"
       "fclass.d x28, f29\n\t"
 
-      // FIXME: here...
-
       // CSR reads to secret GPR (Zicsr)
       "csrrsi x28, fcsr, 1\n\t"
       "csrrwi x28, fcsr, 1\n\t"
@@ -556,7 +554,9 @@ main(void)
       "c.addiw x28, 1\n\t"
       "c.slli  x28, 7\n\t"
       "c.add   x28, x5\n\t"
+      "c.add   x28, x29\n\t"
       "c.mv    x28, x5\n\t"
+      "c.mv    x28, x29\n\t"
       "c.lwsp  x28, 0(sp)\n\t"
       "c.ldsp  x28, 0(sp)\n\t"
       "c.fldsp f28, 0(sp)\n\t"
@@ -572,9 +572,13 @@ main(void)
 
       // FP convert/move (secret-preserving)
       "fcvt.s.d f28, f29\n\t"
+      "fcvt.s.d f28, f15\n\t"
       "fcvt.d.s f28, f29\n\t"
+      "fcvt.d.s f28, f15\n\t"
       "fmv.x.d  x28, f29\n\t"
+      "fmv.x.d  x28, f15\n\t"
       "fmv.d.x f28, x29\n\t"
+      "fmv.d.x f28, x15\n\t"
 
       // more compress computation instructions
       "c.li x28, 1\n\t"
