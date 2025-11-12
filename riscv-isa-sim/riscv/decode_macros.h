@@ -152,6 +152,20 @@ union mojov_mem_strong_t {
   } pt;
 };
 
+// proof-carrying memory format
+union mojov_mem_proofcarrying_t {
+  struct {               // ciphertext
+    uint128_t ct_lo;       // ciphertext low 128-bits
+    uint128_t ct_hi;       // ciphertext high 128-bits
+  } ct;
+  struct { // 256-bits in size, 128-bit alignment
+    uint64_t val; // register plaintext value
+    uint64_t salt; // random salt
+    uint64_t auth_sig; // authentication signature (from contract)
+    uint64_t metadata; // target-specific metadata (e.g., device hash, overflow flag)
+  } pt;
+};
+
 // Zdinx macros
 #define READ_REG_PAIR(reg) ({ \
   require((reg) % 2 == 0); \

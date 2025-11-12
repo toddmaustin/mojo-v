@@ -80,6 +80,7 @@ public:
   reg_t                   trigger_count;
   reg_t                   cache_blocksz;
   bool                    mojov_strong;
+  bool                    mojov_proofcarrying;
   uint16_t                mojov_arg;
   std::optional<abstract_sim_if_t*> external_simulator;
 

@@ -18,8 +18,8 @@ print_mprivregcfg(uint64_t val)
   libmin_printf("(mojov_en:%s, key_valid:%s, format_sel:%s, mojov_ver:%u)",
                 (val & 0x01) ? "t" : "f",
                 (val & 0x02) ? "t" : "f",
-                (val & 0x04) ? "strong" : "fast",
-                (val >> 3) & 0xff);
+                ((val >> 2) & 0x03) == 2 ? "proof-carrying" : ((((val >> 2) & 0x03) == 1) ? "strong" : "fast"),
+                (val >> 4) & 0xff);
 }
 
 void negfailed(void)
@@ -113,7 +113,7 @@ main(void)
   libmin_printf("\n");
 
   // read the mojov_arg
-  uint16_t mojov_arg = (val >> 11) & 0xffff;
+  uint16_t mojov_arg = (val >> 12) & 0xffff;
 
   // enable private register semantics (bit 0 = 1)
   write_mprivregcfg(1);

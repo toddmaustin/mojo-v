@@ -86,6 +86,7 @@ static void help(int exit_code = 1)
   fprintf(stderr, "  --blocksz=<size>      Cache block size (B) for CMO operations(powers of 2) [default 64]\n");
   fprintf(stderr, "  --instructions=<n>    Stop after n instructions\n");
   fprintf(stderr, "  --mojov-strong        Use Mojo-V strong encryption format (otherwise fast format)\n");
+  fprintf(stderr, "  --mojov-proofcarrying Use Mojo-V proof-carrying encryption format (otherwise fast format)\n");
   fprintf(stderr, "  --mojov-arg=<n>       Pass a numeric argument to a Mojo-V test code\n");
 
   exit(exit_code);
@@ -459,6 +460,7 @@ int main(int argc, char** argv)
     instructions = strtoull(s, 0, 0);
   });
   parser.option(0, "mojov-strong", 0, [&](const char UNUSED *s){cfg.mojov_strong = true;});
+  parser.option(0, "mojov-proofcarrying", 0, [&](const char UNUSED *s){cfg.mojov_proofcarrying = true;});
   parser.option(0, "mojov-arg", 1, [&](const char *s){
     uint64_t nval = atoul_safe(s);
     if (nval >= (1 << 16))

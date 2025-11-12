@@ -49,5 +49,6 @@ cfg_t::cfg_t()
   trigger_count    = 4;
   cache_blocksz    = 64;
   mojov_strong     = false;
+  mojov_proofcarrying = false;
   mojov_arg        = 0;
 }
