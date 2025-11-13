@@ -15,6 +15,9 @@
 #define STATE (*p->get_state())
 #define FLEN (p->get_flen())
 
+// Mojo-V: read SECREG CSR fields
+#define SECREG_CSR_FIELD(field) (get_field(STATE.msecregcfg->read(), field))
+
 // Mojo-V architecturally defined secret INT registers
 #define SECREGS \
   (((reg_deps_t)1 << X_P0) \

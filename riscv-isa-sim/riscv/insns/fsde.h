@@ -8,7 +8,7 @@ if (!p->get_secreg_mode() || !IS_FP_SECREG(insn.rs2()))
 }
 
 // determine if it is a fast or strong memory format
-if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAST)
+if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAST)
 {
   union mojov_mem_fast_t ctval;
   union mojov_mem_fast_t ptval;
@@ -22,7 +22,7 @@ if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAS
   // Mojo-V: all good, store 3rd-party encrypted value to memory
   MMU.store<uint128_t>(BASE_RS1 + insn.s_imm(), ctval.ct);
 }
-else if (get_field(STATE.msecregcfg->read(), MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
+else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
 {
   union mojov_mem_strong_t ctval;
   union mojov_mem_strong_t ptval;
