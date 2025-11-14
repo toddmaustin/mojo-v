@@ -1,11 +1,14 @@
 require_either_extension('D', EXT_ZDINX);
 require_fp;
-bool less = f64_lt_quiet(FRS1_D, FRS2_D) ||
-            (f64_eq(FRS1_D, FRS2_D) && (FRS1_D.v & F64_SIGN));
-if (isNaNF64UI(FRS1_D.v) && isNaNF64UI(FRS2_D.v))
+// Mojo-V: make this insn implementation idempotent
+auto frs1_d = FRS1_D;
+auto frs2_d = FRS2_D;
+bool less = f64_lt_quiet(frs1_d, frs2_d) ||
+            (f64_eq(frs1_d, frs2_d) && (frs1_d.v & F64_SIGN));
+if (isNaNF64UI(frs1_d.v) && isNaNF64UI(frs2_d.v))
   WRITE_FRD_D(f64(defaultNaNF64UI));
 else
-  WRITE_FRD_D((less || isNaNF64UI(FRS2_D.v) ? FRS1_D : FRS2_D));
+  WRITE_FRD_D((less || isNaNF64UI(frs2_d.v) ? frs1_d : frs2_d));
 
 if (!FP_SECREG_REF(insn.rd()))
   set_fp_exceptions; // not a secret reg write, declare exceptions

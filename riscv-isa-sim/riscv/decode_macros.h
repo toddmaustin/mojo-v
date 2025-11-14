@@ -42,12 +42,17 @@
 #define FP_SECREG_RESET \
   { DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); }
 
+// Mojo-V: DFHASH handling
+#define DFHASH_REG_R(regID) (assert(STATE.n_inputs < 3), (STATE.dfhash_input[STATE.n_inputs++] = (SECREG_REF(regID) ? STATE.dfhash_xpr[regID] : STATE.XPR[regID])))
+#define DFHASH_REG_W(regID) ((void)0)
+
 // Mojo-V: track the input dependencies
-#define CHECK_REG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
+#define CHECK_REG_R(reg) (DFHASH_REG_R(reg), insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
 #define CHECK_REG_W(reg) \
-  ((p->get_secreg_mode() && (insn.get_xpr_deps() & (SECREGS|FP_SECREGS)) && !IS_SECREG(reg)) \
-    ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
+  (DFHASH_REG_W(reg), \
+   ((p->get_secreg_mode() && (insn.get_xpr_deps() & (SECREGS|FP_SECREGS)) && !IS_SECREG(reg)) \
+     ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0))
 #define _READ_REG(reg) (STATE.XPR[reg]) // unchecked version for interactive.cc
 #define READ_REG(reg) (CHECK_REG_R(reg), STATE.XPR[reg])
 #define _READ_FREG(reg) (STATE.FPR[reg]) // unchecked version for interactive.cc
@@ -189,17 +194,21 @@ union mojov_mem_proofcarrying_t {
 #define RVC_RS2_PAIR READ_REG_PAIR(insn.rvc_rs2())
 
 // FPU macros
+// Mojo-V: DFHASH handling
+#define DFHASH_FREG_R(regID) (assert(STATE.n_inputs < 3), (STATE.dfhash_input[STATE.n_inputs++] = (FP_SECREG_REF(regID) ? STATE.dfhash_fpr[regID] : STATE.FPR[regID].v[0])))
+#define DFHASH_FREG_W(regID) ((void)0)
 // Mojo-V: track the input dependencies
-#define CHECK_FREG_R(reg) (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0)
+#define CHECK_FREG_R(reg) (DFHASH_FREG_R(reg), (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0))
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
 #define CHECK_FREG_W(reg) \
-  ((p->get_secreg_mode() && (insn.get_xpr_deps() & (SECREGS|FP_SECREGS)) && !IS_FP_SECREG(reg)) \
-    ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
+  (DFHASH_FREG_W(reg), \
+   ((p->get_secreg_mode() && (insn.get_xpr_deps() & (SECREGS|FP_SECREGS)) && !IS_FP_SECREG(reg)) \
+     ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0))
 #define READ_ZDINX_REG(reg) (xlen == 32 ? f64(READ_REG_PAIR(reg)) : f64(STATE.XPR[reg] & (uint64_t)-1))
-#define READ_FREG_H(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f16(STATE.XPR[reg] & (uint16_t)-1) : f16(READ_FREG(reg)))
-#define READ_FREG_BF(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? bf16(STATE.XPR[reg] & (uint16_t)-1) : bf16(READ_FREG(reg)))
-#define READ_FREG_F(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f32(STATE.XPR[reg] & (uint32_t)-1) : f32(READ_FREG(reg)))
-#define READ_FREG_D(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? READ_ZDINX_REG(reg) : f64(READ_FREG(reg)))
+#define READ_FREG_H(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f16(STATE.XPR[reg] & (uint16_t)-1) : f16(_READ_FREG(reg)))
+#define READ_FREG_BF(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? bf16(STATE.XPR[reg] & (uint16_t)-1) : bf16(_READ_FREG(reg)))
+#define READ_FREG_F(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? f32(STATE.XPR[reg] & (uint32_t)-1) : f32(_READ_FREG(reg)))
+#define READ_FREG_D(reg) (CHECK_FREG_R(reg), p->extension_enabled(EXT_ZFINX) ? READ_ZDINX_REG(reg) : f64(_READ_FREG(reg)))
 #define FRS1 READ_FREG(insn.rs1())
 #define FRS2 READ_FREG(insn.rs2())
 #define FRS3 READ_FREG(insn.rs3())

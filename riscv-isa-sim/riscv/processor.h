@@ -68,6 +68,32 @@ typedef std::map<reg_t, freg_t> commit_log_reg_t;
 // addr, value, size
 typedef std::vector<std::tuple<reg_t, uint64_t, uint8_t>> commit_log_mem_t;
 
+//
+// Mojo-V: the dataflow hash (dfhash) function
+//
+#define FNV64_OFFSET_BASIS 0xcbf29ce484222325ULL
+#define FNV64_PRIME        1099511628211ULL  /* 0x100000001b3 */
+
+extern inline uint64_t
+fnv64_init(void)
+{
+    return FNV64_OFFSET_BASIS;
+}
+
+extern inline uint64_t
+fnv64_hash64(uint64_t h, uint64_t v)
+{
+  h ^= v;             // XOR in the whole 64-bit word
+  h *= FNV64_PRIME;   // FNV-1a style multiply
+  return h;
+}
+
+//
+// Mojo-V integrity checking state
+//
+#define MAX_INPUTS 3
+typedef uint64_t dfhash_t;
+
 // architectural state of a RISC-V hart
 struct state_t
 {
@@ -78,6 +104,16 @@ struct state_t
   reg_t pc;
   regfile_t<reg_t, NXPR, true> XPR;
   regfile_t<freg_t, NFPR, false> FPR;
+
+  // when executed, an insn operand dfhash'es (0..3) are put here
+  unsigned n_inputs;
+  dfhash_t dfhash_input[MAX_INPUTS];
+
+  // XPR reg dfhash values, one for each 
+  dfhash_t dfhash_xpr[NXPR];
+
+  // FPR reg dfhash values, one for each 
+  dfhash_t dfhash_fpr[NFPR];
 
   // control and status registers
   std::unordered_map<reg_t, csr_t_p> csrmap;
@@ -385,6 +421,10 @@ public:
   reg_t select_an_interrupt_with_default_priority(reg_t enabled_interrupts) const;
 
   // Quick check used by instruction handlers, etc.
+
+  //
+  // Mojo-V: secret mode state accessors
+  //
   bool get_secreg_mode() const { return secreg_mode; }
   void set_secreg_mode(bool en)
     {
@@ -395,6 +435,20 @@ public:
         simon_128_128_keyexpand(&simon_state, simon_key);
       }
     }
+
+  //
+  // Mojo-V: dfhash reset
+  //
+  void dfhash_reset()
+  {
+    state.n_inputs = 0;
+    for (unsigned i=0; i<MAX_INPUTS; i++)
+       state.dfhash_input[i] = 0;
+    for (unsigned i=0; i<NXPR; i++)
+       state.dfhash_xpr[i] = 0;
+    for (unsigned i=0; i<NFPR; i++)
+       state.dfhash_fpr[i] = 0;
+  }
 
 private:
   const isa_parser_t isa;

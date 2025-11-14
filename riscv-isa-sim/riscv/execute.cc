@@ -159,10 +159,16 @@ inline void processor_t::update_histogram(reg_t pc)
 // These two functions are expected to be inlined by the compiler separately in
 // the processor_t::step() loop. The logged variant is used in the slow path
 static inline reg_t execute_insn_fast(processor_t* p, reg_t pc, insn_fetch_t fetch) {
+  // Mojo-V: reset DFHASH tracker
+  p->get_state()->n_inputs = 0;
+
   return fetch.func(p, fetch.insn, pc);
 }
 static inline reg_t execute_insn_logged(processor_t* p, reg_t pc, insn_fetch_t fetch)
 {
+  // Mojo-V: reset DFHASH tracker
+  p->get_state()->n_inputs = 0;
+
   if (p->get_log_commits_enabled()) {
     commit_log_reset(p);
     commit_log_stash_privilege(p);
