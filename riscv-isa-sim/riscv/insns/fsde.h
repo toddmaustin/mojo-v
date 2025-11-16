@@ -38,6 +38,22 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
   MMU.store<uint128_t>(BASE_RS1 + insn.s_imm(), ctval.ct.ct_lo);
   MMU.store<uint128_t>((BASE_RS1 + insn.s_imm()) + 16, ctval.ct.ct_hi);
 }
+else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
+{
+  union mojov_mem_proofcarrying_t ctval;
+  union mojov_mem_proofcarrying_t ptval;
+
+  // Mojo-V: prep the encrypted packet with RS2 value, salt and sig
+  ptval.pt = { FRS2.v[0], ((((uint64_t)rand()) << 32) | (uint64_t)rand()), MOJOV_PT_SIG, /* metadata */p->get_state()->dfhash_fpr[insn.rs2()] };
+
+  // encrypt the memory packet with the processor's internal key
+  simon_128_128_encrypt(&p->simon_state, ptval.ct.ct_lo, &ctval.ct.ct_lo);
+  simon_128_128_encrypt(&p->simon_state, (ptval.ct.ct_hi ^ ctval.ct.ct_lo), &ctval.ct.ct_hi);
+
+  // Mojo-V: all good, store 3rd-party encrypted value to memory
+  MMU.store<uint128_t>(BASE_RS1 + insn.s_imm(), ctval.ct.ct_lo);
+  MMU.store<uint128_t>((BASE_RS1 + insn.s_imm()) + 16, ctval.ct.ct_hi);
+}
 else
 {
   // illegal use of SDE

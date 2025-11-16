@@ -69,26 +69,6 @@ typedef std::map<reg_t, freg_t> commit_log_reg_t;
 typedef std::vector<std::tuple<reg_t, uint64_t, uint8_t>> commit_log_mem_t;
 
 //
-// Mojo-V: the dataflow hash (dfhash) function
-//
-#define FNV64_OFFSET_BASIS 0xcbf29ce484222325ULL
-#define FNV64_PRIME        1099511628211ULL  /* 0x100000001b3 */
-
-extern inline uint64_t
-fnv64_init(void)
-{
-    return FNV64_OFFSET_BASIS;
-}
-
-extern inline uint64_t
-fnv64_hash64(uint64_t h, uint64_t v)
-{
-  h ^= v;             // XOR in the whole 64-bit word
-  h *= FNV64_PRIME;   // FNV-1a style multiply
-  return h;
-}
-
-//
 // Mojo-V integrity checking state
 //
 #define MAX_INPUTS 3
@@ -524,5 +504,61 @@ public:
   vectorUnit_t VU;
   triggers::module_t TM;
 };
+
+//
+// Mojo-V: the dataflow hash (dfhash) function
+//
+#define FNV64_OFFSET_BASIS 0xcbf29ce484222325ULL
+#define FNV64_PRIME        1099511628211ULL  /* 0x100000001b3 */
+
+extern inline uint64_t
+fnv64_init(void)
+{
+  return FNV64_OFFSET_BASIS;
+}
+
+
+extern inline uint64_t
+fnv64_hash64(uint64_t h, uint64_t v)
+{
+  h ^= v;             // XOR in the whole 64-bit word
+  h *= FNV64_PRIME;   // FNV-1a style multiply
+  return h;
+}
+
+//
+// Mojo-V: compute the current insn's (which just executed) dfhash
+//
+extern inline uint64_t
+dfhash_gen(processor_t *p, insn_t insn)
+{
+  dfhash_t hval;
+
+  // get the unambiguous opcode descriptor
+  uint64_t opcode = ((uint64_t)insn.bits() << 32) | (uint64_t)insn.bits();
+
+  unsigned n_inputs = p->get_state()->n_inputs;
+  assert(0 <= n_inputs && n_inputs <= MAX_INPUTS);
+
+  if (n_inputs == 0)
+  {
+    // no inputs, start new dfhash chain with opcode
+    hval = fnv64_hash64(fnv64_init(), opcode);
+  }
+  else
+  {
+    // at least one input
+    hval = p->get_state()->dfhash_input[0];
+    for (unsigned i=1; i<p->get_state()->n_inputs; i++)
+    {
+      // hash in all of the inputs df hash values
+      hval = fnv64_hash64(hval, p->get_state()->dfhash_input[i]);
+    }
+    // and finally hash in the opcode
+    hval = fnv64_hash64(hval, opcode);
+  }
+
+  return hval;
+}
 
 #endif

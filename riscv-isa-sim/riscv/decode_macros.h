@@ -44,7 +44,7 @@
 
 // Mojo-V: DFHASH handling
 #define DFHASH_REG_R(regID) (assert(STATE.n_inputs < 3), (STATE.dfhash_input[STATE.n_inputs++] = (SECREG_REF(regID) ? STATE.dfhash_xpr[regID] : STATE.XPR[regID])))
-#define DFHASH_REG_W(regID) ((void)0)
+#define DFHASH_REG_W(regID) ((STATE.dfhash_xpr[regID] = dfhash_gen(p, insn)), (void)0)
 
 // Mojo-V: track the input dependencies
 #define CHECK_REG_R(reg) (DFHASH_REG_R(reg), insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
@@ -196,7 +196,8 @@ union mojov_mem_proofcarrying_t {
 // FPU macros
 // Mojo-V: DFHASH handling
 #define DFHASH_FREG_R(regID) (assert(STATE.n_inputs < 3), (STATE.dfhash_input[STATE.n_inputs++] = (FP_SECREG_REF(regID) ? STATE.dfhash_fpr[regID] : STATE.FPR[regID].v[0])))
-#define DFHASH_FREG_W(regID) ((void)0)
+#define DFHASH_FREG_W(regID) ((STATE.dfhash_fpr[regID] = dfhash_gen(p, insn)), (void)0)
+
 // Mojo-V: track the input dependencies
 #define CHECK_FREG_R(reg) (DFHASH_FREG_R(reg), (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0))
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
