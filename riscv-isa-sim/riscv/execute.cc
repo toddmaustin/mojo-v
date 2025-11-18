@@ -134,6 +134,28 @@ static void commit_log_print_insn(processor_t *p, reg_t pc, insn_t insn)
       else
         commit_log_print_value(log_file, size, item.second.v);
     }
+
+    // Mojo-V: print dfhash information
+    if (prefix == 'x')
+    {
+      if (SECREG_REF(rd))
+      {
+        fprintf(log_file, " dfhash:0x%016lxi (", p->get_state()->dfhash_xpr[rd]);
+        for (unsigned i=0; i < p->get_state()->n_inputs; i++)
+          fprintf(log_file, "0x%016lx ", p->get_state()->dfhash_input[i]);
+        fprintf(log_file, ")");
+      }
+    }
+    else if (prefix == 'f')
+    {
+      if (FP_SECREG_REF(rd))
+      {
+        fprintf(log_file, " dfhash:0x%016lx (", p->get_state()->dfhash_fpr[rd]);
+        for (unsigned i=0; i < p->get_state()->n_inputs; i++)
+          fprintf(log_file, "0x%016lx ", p->get_state()->dfhash_input[i]);
+        fprintf(log_file, ")");
+      }
+    }
   }
 
   for (auto item : load) {
@@ -148,6 +170,7 @@ static void commit_log_print_insn(processor_t *p, reg_t pc, insn_t insn)
     commit_log_print_value(log_file, std::get<2>(item) << 3, std::get<1>(item));
   }
   fprintf(log_file, "\n");
+
 }
 
 inline void processor_t::update_histogram(reg_t pc)
