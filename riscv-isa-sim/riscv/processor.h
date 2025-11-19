@@ -71,7 +71,7 @@ typedef std::vector<std::tuple<reg_t, uint64_t, uint8_t>> commit_log_mem_t;
 //
 // Mojo-V integrity checking state
 //
-#define MAX_INPUTS 3
+#define MAX_INPUTS 4
 typedef uint64_t dfhash_t;
 
 // architectural state of a RISC-V hart
@@ -87,7 +87,10 @@ struct state_t
 
   // when executed, an insn operand dfhash'es (0..3) are put here
   unsigned n_inputs;
-  dfhash_t dfhash_input[MAX_INPUTS];
+  struct {
+    int regID;
+    dfhash_t hash;
+  } dfhash_input[MAX_INPUTS];
 
   // XPR reg dfhash values, one for each 
   dfhash_t dfhash_xpr[NXPR];
@@ -423,7 +426,7 @@ public:
   {
     state.n_inputs = 0;
     for (unsigned i=0; i<MAX_INPUTS; i++)
-       state.dfhash_input[i] = 0;
+       state.dfhash_input[i] = { 0, 0 };
     for (unsigned i=0; i<NXPR; i++)
        state.dfhash_xpr[i] = 0;
     for (unsigned i=0; i<NFPR; i++)
@@ -532,30 +535,23 @@ fnv64_hash64(uint64_t h, uint64_t v)
 extern inline uint64_t
 dfhash_gen(processor_t *p, insn_t insn)
 {
-  dfhash_t hval;
-
-  // get the unambiguous opcode descriptor
-  uint64_t opcode = ((uint64_t)insn.bits() << 32) | (uint64_t)insn.bits();
-
   unsigned n_inputs = p->get_state()->n_inputs;
-  assert(0 <= n_inputs && n_inputs <= MAX_INPUTS);
+  assert(1 <= n_inputs && n_inputs <= MAX_INPUTS);
 
-  if (n_inputs == 0)
+#ifdef notdef
+  // check for input duplicates
+  for (unsigned i=0; i < n_inputs; i++)
+    for (unsigned j=0; j < n_inputs; j++)
+      if ((i != j) && (p->get_state()->dfhash_input[i].regID == p->get_state()->dfhash_input[j].regID))
+        fprintf(stderr, "dup: %s%u:0x%016lx\n", ((p->get_state()->dfhash_input[i].regID >= 32) ? "f" : "x"), ((p->get_state()->dfhash_input[i].regID >= 32) ? p->get_state()->dfhash_input[i].regID-32 : p->get_state()->dfhash_input[i].regID), p->get_state()->dfhash_input[i].hash);
+#endif /* notdef */
+
+  // at least one input
+  dfhash_t hval = p->get_state()->dfhash_input[0].hash;
+  for (unsigned i=1; i<p->get_state()->n_inputs; i++)
   {
-    // no inputs, start new dfhash chain with opcode
-    hval = fnv64_hash64(fnv64_init(), opcode);
-  }
-  else
-  {
-    // at least one input
-    hval = p->get_state()->dfhash_input[0];
-    for (unsigned i=1; i<p->get_state()->n_inputs; i++)
-    {
-      // hash in all of the inputs df hash values
-      hval = fnv64_hash64(hval, p->get_state()->dfhash_input[i]);
-    }
-    // and finally hash in the opcode
-    hval = fnv64_hash64(hval, opcode);
+    // hash in all of the inputs df hash values
+    hval = fnv64_hash64(hval, p->get_state()->dfhash_input[i].hash);
   }
 
   return hval;

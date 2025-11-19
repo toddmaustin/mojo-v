@@ -1,0 +1,15 @@
+
+LOCAL_CFLAGS=
+LOCAL_LIBS=
+LOCAL_OBJS=bubble-sort.o ../common/simon.o
+LOCAL_SIMOPTS=--mojov-proofcarrying
+
+PROG=bubble-sort
+
+include ../Makefile
+
+test: $(TARGET_EXE)
+	-$(TARGET_SIM) ./$(TARGET_EXE) > FOO 
+	$(TARGET_DIFF) FOO bubble-sort.$(TARGET_REFEXT)
+	rm -f FOO
+

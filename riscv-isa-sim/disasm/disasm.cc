@@ -1983,9 +1983,9 @@ void disassembler_t::add_instructions(const isa_parser_t* isa, bool strict)
 
   if (ext_enabled(EXT_ZKMOJOV)) {
     DEFINE_XLOAD(lde)
-    DEFINE_XLOAD(flde)
+    DEFINE_FLOAD(flde)
     DEFINE_XSTORE(sde)
-    DEFINE_XSTORE(fsde)
+    DEFINE_FSTORE(fsde)
   }
 
   if (ext_enabled(EXT_ZIMOP)) {

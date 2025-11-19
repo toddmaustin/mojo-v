@@ -140,9 +140,12 @@ static void commit_log_print_insn(processor_t *p, reg_t pc, insn_t insn)
     {
       if (SECREG_REF(rd))
       {
-        fprintf(log_file, " dfhash:0x%016lxi (", p->get_state()->dfhash_xpr[rd]);
+        fprintf(log_file, " dfhash:0x%016lx (", p->get_state()->dfhash_xpr[rd]);
         for (unsigned i=0; i < p->get_state()->n_inputs; i++)
-          fprintf(log_file, "0x%016lx ", p->get_state()->dfhash_input[i]);
+          fprintf(log_file, "%s%u:0x%016lx ",
+                  ((p->get_state()->dfhash_input[i].regID == -1) ? "i" : ((p->get_state()->dfhash_input[i].regID >= 32) ? "f" : "x")),
+                  ((p->get_state()->dfhash_input[i].regID == -1) ? 0 : ((p->get_state()->dfhash_input[i].regID >= 32) ? p->get_state()->dfhash_input[i].regID-32 : p->get_state()->dfhash_input[i].regID)),
+                  p->get_state()->dfhash_input[i].hash);
         fprintf(log_file, ")");
       }
     }
@@ -152,7 +155,10 @@ static void commit_log_print_insn(processor_t *p, reg_t pc, insn_t insn)
       {
         fprintf(log_file, " dfhash:0x%016lx (", p->get_state()->dfhash_fpr[rd]);
         for (unsigned i=0; i < p->get_state()->n_inputs; i++)
-          fprintf(log_file, "0x%016lx ", p->get_state()->dfhash_input[i]);
+          fprintf(log_file, "%s%u:0x%016lx ",
+                  ((p->get_state()->dfhash_input[i].regID == -1) ? "i" : ((p->get_state()->dfhash_input[i].regID >= 32) ? "f" : "x")),
+                  ((p->get_state()->dfhash_input[i].regID == -1) ? 0 : ((p->get_state()->dfhash_input[i].regID >= 32) ? p->get_state()->dfhash_input[i].regID-32 : p->get_state()->dfhash_input[i].regID)),
+                  p->get_state()->dfhash_input[i].hash);
         fprintf(log_file, ")");
       }
     }
@@ -181,16 +187,25 @@ inline void processor_t::update_histogram(reg_t pc)
 
 // These two functions are expected to be inlined by the compiler separately in
 // the processor_t::step() loop. The logged variant is used in the slow path
-static inline reg_t execute_insn_fast(processor_t* p, reg_t pc, insn_fetch_t fetch) {
+static inline reg_t execute_insn_fast(processor_t* p, reg_t pc, insn_fetch_t fetch)
+{
   // Mojo-V: reset DFHASH tracker
-  p->get_state()->n_inputs = 0;
+  p->get_state()->n_inputs = 1;
+
+  // get the unambiguous opcode descriptor
+  uint64_t opcode = ((uint64_t)fetch.insn.bits() << 32) | (uint64_t)fetch.insn.bits();
+  p->get_state()->dfhash_input[0] = { -1, fnv64_hash64(fnv64_init(), opcode) };
 
   return fetch.func(p, fetch.insn, pc);
 }
 static inline reg_t execute_insn_logged(processor_t* p, reg_t pc, insn_fetch_t fetch)
 {
   // Mojo-V: reset DFHASH tracker
-  p->get_state()->n_inputs = 0;
+  p->get_state()->n_inputs = 1;
+
+  // get the unambiguous opcode descriptor
+  uint64_t opcode = ((uint64_t)fetch.insn.bits() << 32) | (uint64_t)fetch.insn.bits();
+  p->get_state()->dfhash_input[0] = {-1, fnv64_hash64(fnv64_init(), opcode) };
 
   if (p->get_log_commits_enabled()) {
     commit_log_reset(p);

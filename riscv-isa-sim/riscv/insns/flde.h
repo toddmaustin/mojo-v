@@ -34,8 +34,9 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
   union mojov_mem_strong_t ptval;
 
   // Mojo-V: read 3rd-party encrypted ciphertext into MEMVAL
-  ctval.ct.ct_lo = MMU.load<uint128_t>(BASE_RS1 + insn.i_imm());
-  ctval.ct.ct_hi = MMU.load<uint128_t>((BASE_RS1 + insn.i_imm()) + 16);
+  auto __base = (BASE_RS1);
+  ctval.ct.ct_lo = MMU.load<uint128_t>(__base + insn.i_imm());
+  ctval.ct.ct_hi = MMU.load<uint128_t>((__base + insn.i_imm()) + 16);
 
   // decrypt the value with the processor-internal key
   simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
@@ -57,8 +58,9 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
   union mojov_mem_proofcarrying_t ptval;
 
   // Mojo-V: read 3rd-party encrypted ciphertext into MEMVAL
-  ctval.ct.ct_lo = MMU.load<uint128_t>(BASE_RS1 + insn.i_imm());
-  ctval.ct.ct_hi = MMU.load<uint128_t>((BASE_RS1 + insn.i_imm()) + 16);
+  auto __base = (BASE_RS1);
+  ctval.ct.ct_lo = MMU.load<uint128_t>(__base + insn.i_imm());
+  ctval.ct.ct_hi = MMU.load<uint128_t>((__base + insn.i_imm()) + 16);
 
   // decrypt the value with the processor-internal key
   simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);

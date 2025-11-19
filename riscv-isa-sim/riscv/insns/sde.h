@@ -35,8 +35,9 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
   simon_128_128_encrypt(&p->simon_state, (ptval.ct.ct_hi ^ ctval.ct.ct_lo), &ctval.ct.ct_hi);
 
   // Mojo-V: all good, store 3rd-party encrypted value to memory
-  MMU.store<uint128_t>(BASE_RS1 + insn.s_imm(), ctval.ct.ct_lo);
-  MMU.store<uint128_t>((BASE_RS1 + insn.s_imm()) + 16, ctval.ct.ct_hi);
+  auto __base = (BASE_RS1);
+  MMU.store<uint128_t>(__base + insn.s_imm(), ctval.ct.ct_lo);
+  MMU.store<uint128_t>((__base + insn.s_imm()) + 16, ctval.ct.ct_hi);
 }
 else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
 {
@@ -51,8 +52,9 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
   simon_128_128_encrypt(&p->simon_state, (ptval.ct.ct_hi ^ ctval.ct.ct_lo), &ctval.ct.ct_hi);
 
   // Mojo-V: all good, store 3rd-party encrypted value to memory
-  MMU.store<uint128_t>(BASE_RS1 + insn.s_imm(), ctval.ct.ct_lo);
-  MMU.store<uint128_t>((BASE_RS1 + insn.s_imm()) + 16, ctval.ct.ct_hi);
+  auto __base = (BASE_RS1);
+  MMU.store<uint128_t>(__base + insn.s_imm(), ctval.ct.ct_lo);
+  MMU.store<uint128_t>((__base + insn.s_imm()) + 16, ctval.ct.ct_hi);
 }
 else
 {
