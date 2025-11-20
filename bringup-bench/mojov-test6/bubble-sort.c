@@ -96,7 +96,7 @@ secret_decrypt(union mojov_mem_proofcarrying_t ctval)
   return ptval.pt.val;
 }
 
-inline extern double
+inline extern uint64_t
 secret_dfhash(union mojov_mem_proofcarrying_t ctval)
 {
   union mojov_mem_proofcarrying_t ptval;
@@ -163,10 +163,26 @@ genrand_fp64(void)
   return v;
 }
 
+union mojov_mem_proofcarrying_t
+secret_3rdparty(double dblval, uint64_t in_brand)
+{
+  union mojov_mem_proofcarrying_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), MOJOV_PT_SIG, in_brand}};
+  union mojov_mem_proofcarrying_t ctval;
+
+  // encrypt the memory packet with the processor's internal key
+  simon_128_128_encrypt(&simon_state, ptval.ct.ct_lo, &ctval.ct.ct_lo);
+  simon_128_128_encrypt(&simon_state, (ptval.ct.ct_hi ^ ctval.ct.ct_lo), &ctval.ct.ct_hi);
+
+  return ctval;
+}
+
 // supported sizes: 256 (default), 512, 1024, 2048
-#define DATASET_SIZE 128
+#define DATASET_SIZE 256
 double raw_data[DATASET_SIZE];
 SECRET union mojov_mem_proofcarrying_t secret_data[DATASET_SIZE];
+
+// now sum the array data to coalesce the dataflow hashes
+union mojov_mem_proofcarrying_t sum_enc;
 
 // total swaps executed so far
 union mojov_imem_proofcarrying_t swaps;
@@ -174,13 +190,16 @@ union mojov_imem_proofcarrying_t swaps;
 void
 print_data(double *data, unsigned size)
 {
+  double sum = 0.0;
   libmin_printf("DATA DUMP:\n");
   for (unsigned i=0; i < size; i++)
   {
+    sum += data[i];
     libmin_printf("  data[%4u] = %.20lf, ct =[", i, data[i]);
     secret_print(secret_data[i]);
     libmin_printf("]\n");
   }
+  libmin_printf("Total sum = %.20lf\n", sum);
 }
 
 void
@@ -227,6 +246,41 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
       );
     }
   }
+
+  // clean sum_enc
+  __asm__ volatile (
+    "fmv.d.x  f28, x0\n\t"
+    FSDE     (f28, %0, 0)
+    :
+    : "r" (&sum_enc)
+    : "f28" // clobbered registers
+  );
+
+  for (unsigned i=0; i < size; i++)
+  {
+    __asm__ volatile (
+      FLDE     (f29, %0, 0)         // load data[i]
+      "fadd.d   f28, f28, f29\n\t"  // add to sum_enc
+
+      // DFHASH TEST: change fadd.d to fsub.d
+      // "fsub.d   f28, f28, f29\n\t"  // add to sum_enc
+
+      // DFHASH TEST: change any operand order
+      // "fadd.d   f28, f29, f28\n\t"  // add to sum_enc
+      :
+      : "r" (&data[i])
+      : "f28", "f29" // clobbered registers
+    );
+  }
+
+  // save sum_enc to memory
+  __asm__ volatile (
+    FSDE  (f28, %0, 0)
+    :
+    : "r" (&sum_enc)
+    : "f28" // clobbered registers
+  );
+
 }
 
 int
@@ -269,21 +323,19 @@ main(void)
     : "t3" // clobbered registers
   );
 
-  // initialize the array to sort
+  // initialize the array to sort with 3rd party input-branded data
   for (unsigned i=0; i < DATASET_SIZE; i++)
   {
     raw_data[i] = genrand_fp64();
-    __asm__ volatile (
-      // secret_data[i] = raw_data[i];
-      "fld   f28, (%0)\n\t"
-      FSDE(  f28, %1, 0)
-      :
-      : "r" (&raw_data[i]), "r" (&secret_data[i])
-      : "f28" // clobbered registers
-    );
+
+    // DFHASH TEST: modifying input data should not affect dfhash
+    // raw_data[i] = genrand_fp64() * 0.67;
+
+    secret_data[i] = secret_3rdparty(raw_data[i], i);
   }
   print_data(raw_data, DATASET_SIZE);
 
+  // DFHASH
   {
     // performance monitoring
     uint64_t icnt_start = __instret();
@@ -310,7 +362,10 @@ main(void)
     }
   }
 
-  uint64_t dfhash = secret_dfhash(secret_data[DATASET_SIZE-1]);
+  double sum = secret_decrypt(sum_enc);
+  libmin_printf("INFO: final summary variable: %.20lf\n", sum);
+
+  uint64_t dfhash = secret_dfhash(sum_enc);
   libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
 
   libmin_printf("INFO: %lu swaps executed.\n", secret_idecrypt(swaps));
