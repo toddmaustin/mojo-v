@@ -5,6 +5,26 @@ typedef unsigned __int128 uint128_t;
 
 #define SECRET
 
+uint16_t mojov_arg;
+
+#define SM64_BASIS 0x9e3779b97f4a7c15ull
+
+extern inline uint64_t
+sm64_init(void)
+{
+  return SM64_BASIS;
+}
+
+extern inline uint64_t
+sm64_hash64(uint64_t h, uint64_t v)
+{
+  v += 0x9e3779b97f4a7c15ull;
+  v = (v ^ (v >> 30)) * 0xbf58476d1ce4e5b9ull;
+  v = (v ^ (v >> 27)) * 0x94d049bb133111ebull;
+  v ^= (v >> 31);
+  return h ^ v;
+}
+
 extern inline uint64_t
 __instret(void)
 {
@@ -166,7 +186,8 @@ genrand_fp64(void)
 union mojov_mem_proofcarrying_t
 secret_3rdparty(double dblval, uint64_t in_brand)
 {
-  union mojov_mem_proofcarrying_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), MOJOV_PT_SIG, in_brand}};
+  uint64_t dfhash = sm64_hash64(sm64_init(), in_brand);
+  union mojov_mem_proofcarrying_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), MOJOV_PT_SIG, dfhash} };
   union mojov_mem_proofcarrying_t ctval;
 
   // encrypt the memory packet with the processor's internal key
@@ -176,8 +197,8 @@ secret_3rdparty(double dblval, uint64_t in_brand)
   return ctval;
 }
 
-// supported sizes: 256 (default), 512, 1024, 2048
-#define DATASET_SIZE 256
+// supported sizes: 64, 128, 256 (default), 512, 1024, 2048
+#define DATASET_SIZE 64
 double raw_data[DATASET_SIZE];
 SECRET union mojov_mem_proofcarrying_t secret_data[DATASET_SIZE];
 
@@ -258,19 +279,40 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
 
   for (unsigned i=0; i < size; i++)
   {
-    __asm__ volatile (
-      FLDE     (f29, %0, 0)         // load data[i]
-      "fadd.d   f28, f28, f29\n\t"  // add to sum_enc
+    if (mojov_arg == 2) 
+    {
+      __asm__ volatile (
+        FLDE     (f29, %0, 0)         // load data[i]
 
-      // DFHASH TEST: change fadd.d to fsub.d
-      // "fsub.d   f28, f28, f29\n\t"  // add to sum_enc
+        // DFHASH TEST: change fadd.d to fsub.d
+        "fsub.d   f28, f28, f29\n\t"  // add to sum_enc
+        :
+        : "r" (&data[i])
+        : "f28", "f29" // clobbered registers
+      );
+    }
+    else if (mojov_arg == 3)
+    {
+      __asm__ volatile (
+        FLDE     (f29, %0, 0)         // load data[i]
 
-      // DFHASH TEST: change any operand order
-      // "fadd.d   f28, f29, f28\n\t"  // add to sum_enc
-      :
-      : "r" (&data[i])
-      : "f28", "f29" // clobbered registers
-    );
+        // DFHASH TEST: change any operand order
+        "fadd.d   f28, f29, f28\n\t"  // add to sum_enc
+        :
+        : "r" (&data[i])
+        : "f28", "f29" // clobbered registers
+      );
+    }
+    else
+    {
+      __asm__ volatile (
+        FLDE     (f29, %0, 0)         // load data[i]
+        "fadd.d   f28, f28, f29\n\t"  // add to sum_enc
+        :
+        : "r" (&data[i])
+        : "f28", "f29" // clobbered registers
+      );
+    }
   }
 
   // save sum_enc to memory
@@ -302,6 +344,9 @@ main(void)
   print_mprivregcfg(val);
   libmin_printf("\n");
 
+  // read the mojov_arg
+  mojov_arg = (val >> 12) & 0xffff;
+
   // enable private register semantics (bit 0 = 1)
   write_mprivregcfg(1);
 
@@ -326,16 +371,19 @@ main(void)
   // initialize the array to sort with 3rd party input-branded data
   for (unsigned i=0; i < DATASET_SIZE; i++)
   {
-    raw_data[i] = genrand_fp64();
-
-    // DFHASH TEST: modifying input data should not affect dfhash
-    // raw_data[i] = genrand_fp64() * 0.67;
+    if (mojov_arg == 1)
+    {
+      // DFHASH TEST: modifying input data should not affect dfhash
+      raw_data[i] = genrand_fp64() * 0.67;
+    }
+    else
+      raw_data[i] = genrand_fp64();
 
     secret_data[i] = secret_3rdparty(raw_data[i], i);
   }
   print_data(raw_data, DATASET_SIZE);
 
-  // DFHASH
+  // DFHASH baseline test
   {
     // performance monitoring
     uint64_t icnt_start = __instret();

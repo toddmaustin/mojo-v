@@ -511,6 +511,7 @@ public:
 //
 // Mojo-V: the dataflow hash (dfhash) function
 //
+#ifdef notdef
 #define FNV64_OFFSET_BASIS 0xcbf29ce484222325ULL
 #define FNV64_PRIME        1099511628211ULL  /* 0x100000001b3 */
 
@@ -527,6 +528,25 @@ fnv64_hash64(uint64_t h, uint64_t v)
   h ^= v;             // XOR in the whole 64-bit word
   h *= FNV64_PRIME;   // FNV-1a style multiply
   return h;
+}
+#endif
+
+#define SM64_BASIS 0x9e3779b97f4a7c15ull
+
+extern inline uint64_t
+sm64_init(void)
+{
+  return SM64_BASIS;
+}
+
+extern inline uint64_t
+sm64_hash64(uint64_t h, uint64_t v)
+{
+  v += 0x9e3779b97f4a7c15ull;
+  v = (v ^ (v >> 30)) * 0xbf58476d1ce4e5b9ull;
+  v = (v ^ (v >> 27)) * 0x94d049bb133111ebull;
+  v ^= (v >> 31);
+  return h ^ v;
 }
 
 //
@@ -551,7 +571,7 @@ dfhash_gen(processor_t *p, insn_t insn)
   for (unsigned i=1; i<p->get_state()->n_inputs; i++)
   {
     // hash in all of the inputs df hash values
-    hval = fnv64_hash64(hval, p->get_state()->dfhash_input[i].hash);
+    hval = sm64_hash64(hval, p->get_state()->dfhash_input[i].hash);
   }
 
   return hval;

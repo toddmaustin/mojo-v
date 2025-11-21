@@ -194,7 +194,7 @@ static inline reg_t execute_insn_fast(processor_t* p, reg_t pc, insn_fetch_t fet
 
   // get the unambiguous opcode descriptor
   uint64_t opcode = ((uint64_t)fetch.insn.bits() << 32) | (uint64_t)fetch.insn.bits();
-  p->get_state()->dfhash_input[0] = { -1, fnv64_hash64(fnv64_init(), opcode) };
+  p->get_state()->dfhash_input[0] = { -1, sm64_hash64(sm64_init(), opcode) };
 
   return fetch.func(p, fetch.insn, pc);
 }
@@ -205,7 +205,7 @@ static inline reg_t execute_insn_logged(processor_t* p, reg_t pc, insn_fetch_t f
 
   // get the unambiguous opcode descriptor
   uint64_t opcode = ((uint64_t)fetch.insn.bits() << 32) | (uint64_t)fetch.insn.bits();
-  p->get_state()->dfhash_input[0] = {-1, fnv64_hash64(fnv64_init(), opcode) };
+  p->get_state()->dfhash_input[0] = {-1, sm64_hash64(sm64_init(), opcode) };
 
   if (p->get_log_commits_enabled()) {
     commit_log_reset(p);
