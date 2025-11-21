@@ -3,6 +3,8 @@
 
 typedef unsigned __int128 uint128_t;
 
+volatile double iszero = 0.0;
+
 #define SECRET
 
 uint16_t mojov_arg;
@@ -235,35 +237,35 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
         // SECRET bool swap = (data[j] > data[j+1]);
         FLDE(  f28, %0, 0) // data[j]
         FLDE(  f29, %1, 0) // data[j+1]
-        "flt.d  t5, f29, f28\n\t" // swap
+        "flt.d  x30, f29, f28\n\t" // swap
         // fmv the values for the conditional swap
-        "fmv.x.d t3, f28\n\t"
-        "fmv.x.d t4, f29\n\t"
+        "fmv.x.d x28, f28\n\t"
+        "fmv.x.d x29, f29\n\t"
         // perform the swap
         // data[j] = secret_cmov(swap, data[j+1], data[j]);
-        "czero.eqz t6, t4, t5\n\t"
-        "czero.nez t5, t3, t5\n\t"
-        "or        t6, t5, t6\n\t"
-        "fmv.d.x f30, t6\n\t"
+        "czero.eqz x31, x29, x30\n\t"
+        "czero.nez x30, x28, x30\n\t"
+        "or        x31, x30, x31\n\t"
+        "fmv.d.x f30, x31\n\t"
         FSDE(       f30, %0, 0)
         // data[j+1] = secret_cmov(swap, tmp, data[j+1]);
-        "flt.d  t5, f29, f28\n\t" // swap
-        "czero.eqz t6, t3, t5\n\t"
-        "czero.nez t3, t4, t5\n\t"
-        "or        t6, t3, t6\n\t" 
-        "fmv.d.x f30, t6\n\t"
+        "flt.d  x30, f29, f28\n\t" // swap
+        "czero.eqz x31, x28, x30\n\t"
+        "czero.nez x28, x29, x30\n\t"
+        "or        x31, x28, x31\n\t" 
+        "fmv.d.x f30, x31\n\t"
         FSDE(       f30, %1, 0)
         // count the number of swaps executed
         // swaps = secret_cmov(swap, swaps+1, swaps);
-        LDE(  t3, %2, 0) // swaps
-        "add t4, t3, t5\n\t" // swaps+1
+        LDE(  x28, %2, 0) // swaps
+        "add x29, x28, x30\n\t" // swaps+1
         // "czero.eqz f31, f28, f30\n\t"
         // "czero.nez f30, f29, f30\n\t"
         // "or        f31, f30, f31\n\t"
-        SDE(  t4, %2, 0) // swaps
+        SDE(  x29, %2, 0) // swaps
         :
         : "r" (&data[j]), "r" (&data[j+1]), "r" (&swaps)
-        : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+        : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "f31" // clobbered registers
       );
     }
   }
@@ -279,7 +281,7 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
 
   for (unsigned i=0; i < size; i++)
   {
-    if (mojov_arg == 2) 
+    if (mojov_arg == 3) 
     {
       __asm__ volatile (
         FLDE     (f29, %0, 0)         // load data[i]
@@ -291,7 +293,7 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
         : "f28", "f29" // clobbered registers
       );
     }
-    else if (mojov_arg == 3)
+    else if (mojov_arg == 4)
     {
       __asm__ volatile (
         FLDE     (f29, %0, 0)         // load data[i]
@@ -376,12 +378,25 @@ main(void)
       // DFHASH TEST: modifying input data should not affect dfhash
       raw_data[i] = genrand_fp64() * 0.67;
     }
+    else if (mojov_arg == 2)
+    {
+      // DFHASH TEST: modifying input data should not affect dfhash
+      raw_data[i] = genrand_fp64() + genrand_fp64(); 
+    }
     else
       raw_data[i] = genrand_fp64();
 
     secret_data[i] = secret_3rdparty(raw_data[i], i);
   }
   print_data(raw_data, DATASET_SIZE);
+
+  if (mojov_arg == 5)
+  {
+    // swap array elements 12 and 13
+    union mojov_mem_proofcarrying_t tmp = secret_data[12];
+    secret_data[12] = secret_data[13];
+    secret_data[13] = tmp;
+  }
 
   // DFHASH baseline test
   {
@@ -413,8 +428,16 @@ main(void)
   double sum = secret_decrypt(sum_enc);
   libmin_printf("INFO: final summary variable: %.20lf\n", sum);
 
-  uint64_t dfhash = secret_dfhash(sum_enc);
-  libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
+  if (mojov_arg == 6)
+  {
+    uint64_t dfhash = secret_dfhash(secret_data[DATASET_SIZE-1]);
+    libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
+  }
+  else
+  {
+    uint64_t dfhash = secret_dfhash(sum_enc);
+    libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
+  }
 
   libmin_printf("INFO: %lu swaps executed.\n", secret_idecrypt(swaps));
   libmin_printf("INFO: data is properly sorted.\n");
