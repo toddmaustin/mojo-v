@@ -44,7 +44,7 @@
 
 // Mojo-V: DFHASH handling
 #define DFHASH_REG_R(reg) (assert(STATE.n_inputs < MAX_INPUTS), (STATE.dfhash_input[STATE.n_inputs].regID = (reg)), (STATE.dfhash_input[STATE.n_inputs++].hash = (SECREG_REF(reg) ? STATE.dfhash_xpr[reg] : STATE.XPR[reg])))
-#define DFHASH_REG_W(reg) ((STATE.dfhash_xpr[reg] = dfhash_gen(p, insn)), (void)0)
+#define DFHASH_REG_W(reg) ((STATE.dfhash_xpr[reg] = dfhash_gen(p, insn)), ({ if (SECREG_REF(reg)) dfhash_debug(p, reg, STATE.dfhash_xpr[reg]); }), (void)0)
 
 // Mojo-V: track the input dependencies
 #define CHECK_REG_R(reg) (DFHASH_REG_R(reg), insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
@@ -196,7 +196,7 @@ union mojov_mem_proofcarrying_t {
 // FPU macros
 // Mojo-V: DFHASH handling
 #define DFHASH_FREG_R(reg) (assert(STATE.n_inputs < MAX_INPUTS), (STATE.dfhash_input[STATE.n_inputs].regID = ((reg)+32)), (STATE.dfhash_input[STATE.n_inputs++].hash = (FP_SECREG_REF(reg) ? STATE.dfhash_fpr[reg] : STATE.FPR[reg].v[0])))
-#define DFHASH_FREG_W(reg) ((STATE.dfhash_fpr[reg] = dfhash_gen(p, insn)), (void)0)
+#define DFHASH_FREG_W(reg) ((STATE.dfhash_fpr[reg] = dfhash_gen(p, insn)), ({ if (FP_SECREG_REF(reg+32)) dfhash_debug(p, reg+32, STATE.dfhash_fpr[reg]); }), (void)0)
 
 // Mojo-V: track the input dependencies
 #define CHECK_FREG_R(reg) (DFHASH_FREG_R(reg), (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0))

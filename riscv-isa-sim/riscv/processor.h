@@ -577,4 +577,11 @@ dfhash_gen(processor_t *p, insn_t insn)
   return hval;
 }
 
+extern inline void
+dfhash_debug(processor_t *p, reg_t regID, dfhash_t hval)
+{
+  // fprintf(stderr, "hval: 0x%016lx\n", hval);
+}
+
+
 #endif
