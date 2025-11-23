@@ -281,7 +281,7 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
 
   for (unsigned i=0; i < size; i++)
   {
-    if (mojov_arg == 5) 
+    if (mojov_arg == 20) 
     {
       __asm__ volatile (
         FLDE     (f29, %0, 0)         // load data[i]
@@ -293,7 +293,7 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
         : "f28", "f29" // clobbered registers
       );
     }
-    else if (mojov_arg == 6)
+    else if (mojov_arg == 21)
     {
       __asm__ volatile (
         FLDE     (f29, %0, 0)         // load data[i]
@@ -386,12 +386,18 @@ main(void)
     else if (mojov_arg == 3)
     {
       // DFHASH TEST: modifying input data should not affect dfhash
-      raw_data[i] = genrand_fp64() + genrand_fp64(); 
+      raw_data[i] = 0.0; 
     }
     else
       raw_data[i] = genrand_fp64();
 
-    secret_data[i] = secret_3rdparty(raw_data[i], /* input type */91);
+    if (mojov_arg == 23 && i == 14)
+    {
+      // replay attack
+      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */90);
+    }
+    else
+      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */91);
   }
   print_data(raw_data, DATASET_SIZE);
 
@@ -433,7 +439,7 @@ main(void)
   double sum = secret_decrypt(sum_enc);
   libmin_printf("INFO: final summary variable: %.20lf\n", sum);
 
-  if (mojov_arg == 7)
+  if (mojov_arg == 22)
   {
     uint64_t dfhash = secret_dfhash(secret_data[DATASET_SIZE-1]);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);

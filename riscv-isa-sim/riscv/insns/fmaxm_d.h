@@ -1,12 +1,16 @@
 require_extension('D');
 require_extension(EXT_ZFA);
 require_fp;
-bool greater = f64_lt_quiet(FRS2_D, FRS1_D) ||
-               (f64_eq(FRS2_D, FRS1_D) && (FRS2_D.v & F64_SIGN));
-if (isNaNF64UI(FRS1_D.v) || isNaNF64UI(FRS2_D.v))
+
+auto __frs1_d = (FRS1_D);
+auto __frs2_d = (FRS2_D);
+
+bool greater = f64_lt_quiet(__frs2_d, __frs1_d) ||
+               (f64_eq(__frs2_d, __frs1_d) && (__frs2_d.v & F64_SIGN));
+if (isNaNF64UI(__frs1_d.v) || isNaNF64UI(__frs2_d.v))
   WRITE_FRD_D(f64(defaultNaNF64UI));
 else
-  WRITE_FRD_D(greater ? FRS1_D : FRS2_D);
+  WRITE_FRD_D(greater ? __frs1_d : __frs2_d);
 
 if (!FP_SECREG_REF(insn.rd()))
   set_fp_exceptions; // not a secret reg write, declare exceptions
