@@ -2,7 +2,7 @@ int csr = validate_csr(insn.csr(), true);
 
 if (SECREG_REF(insn.rs1()))
 { 
-  // cannot use secret register source RS1
+  // cannot use secret register source
   throw trap_security_exception(insn.bits());
 }
 

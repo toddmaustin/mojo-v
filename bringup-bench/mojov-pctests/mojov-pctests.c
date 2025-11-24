@@ -188,8 +188,17 @@ genrand_fp64(void)
 union mojov_mem_proofcarrying_t
 secret_3rdparty(double dblval, uint64_t in_brand)
 {
+  uint64_t auth_sig;
+  if (mojov_arg == 25)
+  {
+    // replay attack, using an old AUTH_SIG
+    auth_sig = MOJOV_PT_SIG-1;
+  }
+  else
+    auth_sig = MOJOV_PT_SIG;
+
   uint64_t dfhash = sm64_hash64(sm64_init(), in_brand);
-  union mojov_mem_proofcarrying_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), MOJOV_PT_SIG, dfhash} };
+  union mojov_mem_proofcarrying_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), auth_sig, dfhash} };
   union mojov_mem_proofcarrying_t ctval;
 
   // encrypt the memory packet with the processor's internal key
@@ -233,40 +242,80 @@ bubblesort(union mojov_mem_proofcarrying_t *data, unsigned size)
     for (unsigned j=0; j < size-1; j++)
     {
       // swap needed?
-      __asm__ volatile (
-        // SECRET bool swap = (data[j] > data[j+1]);
-        FLDE(  f28, %0, 0) // data[j]
-        FLDE(  f29, %1, 0) // data[j+1]
-        "flt.d  x30, f29, f28\n\t" // swap
-        // fmv the values for the conditional swap
-        "fmv.x.d x28, f28\n\t"
-        "fmv.x.d x29, f29\n\t"
-        // perform the swap
-        // data[j] = secret_cmov(swap, data[j+1], data[j]);
-        "czero.eqz x31, x29, x30\n\t"
-        "czero.nez x30, x28, x30\n\t"
-        "or        x31, x30, x31\n\t"
-        "fmv.d.x f30, x31\n\t"
-        FSDE(       f30, %0, 0)
-        // data[j+1] = secret_cmov(swap, tmp, data[j+1]);
-        "flt.d  x30, f29, f28\n\t" // swap
-        "czero.eqz x31, x28, x30\n\t"
-        "czero.nez x28, x29, x30\n\t"
-        "or        x31, x28, x31\n\t" 
-        "fmv.d.x f30, x31\n\t"
-        FSDE(       f30, %1, 0)
-        // count the number of swaps executed
-        // swaps = secret_cmov(swap, swaps+1, swaps);
-        LDE(  x28, %2, 0) // swaps
-        "add x29, x28, x30\n\t" // swaps+1
-        // "czero.eqz f31, f28, f30\n\t"
-        // "czero.nez f30, f29, f30\n\t"
-        // "or        f31, f30, f31\n\t"
-        SDE(  x29, %2, 0) // swaps
-        :
-        : "r" (&data[j]), "r" (&data[j+1]), "r" (&swaps)
-        : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "f31" // clobbered registers
-      );
+      if (mojov_arg == 26)
+      {
+        __asm__ volatile (
+          // SECRET bool swap = (data[j] > data[j+1]);
+          FLDE(  f28, %0, 0) // data[j]
+          FLDE(  f29, %1, 0) // data[j+1]
+          "flt.d  x30, f29, f28\n\t" // swap
+          // fmv the values for the conditional swap
+          "fmv.x.d x28, f28\n\t"
+          "fmv.x.d x29, f29\n\t"
+          // perform the swap
+          // data[j] = secret_cmov(swap, data[j+1], data[j]);
+          "czero.nez x31, x29, x30\n\t"
+          "czero.eqz x30, x28, x30\n\t"
+          "or        x31, x30, x31\n\t"
+          "fmv.d.x f30, x31\n\t"
+          FSDE(       f30, %0, 0)
+          // data[j+1] = secret_cmov(swap, tmp, data[j+1]);
+          "flt.d  x30, f29, f28\n\t" // swap
+          "czero.nez x31, x28, x30\n\t"
+          "czero.eqz x28, x29, x30\n\t"
+          "or        x31, x28, x31\n\t" 
+          "fmv.d.x f30, x31\n\t"
+          FSDE(       f30, %1, 0)
+          // count the number of swaps executed
+          // swaps = secret_cmov(swap, swaps+1, swaps);
+          LDE(  x28, %2, 0) // swaps
+          "add x29, x28, x30\n\t" // swaps+1
+          // "czero.eqz f31, f28, f30\n\t"
+          // "czero.nez f30, f29, f30\n\t"
+          // "or        f31, f30, f31\n\t"
+          SDE(  x29, %2, 0) // swaps
+          :
+          : "r" (&data[j]), "r" (&data[j+1]), "r" (&swaps)
+          : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "f31" // clobbered registers
+        );
+      }
+      else
+      {
+        __asm__ volatile (
+          // SECRET bool swap = (data[j] > data[j+1]);
+          FLDE(  f28, %0, 0) // data[j]
+          FLDE(  f29, %1, 0) // data[j+1]
+          "flt.d  x30, f29, f28\n\t" // swap
+          // fmv the values for the conditional swap
+          "fmv.x.d x28, f28\n\t"
+          "fmv.x.d x29, f29\n\t"
+          // perform the swap
+          // data[j] = secret_cmov(swap, data[j+1], data[j]);
+          "czero.eqz x31, x29, x30\n\t"
+          "czero.nez x30, x28, x30\n\t"
+          "or        x31, x30, x31\n\t"
+          "fmv.d.x f30, x31\n\t"
+          FSDE(       f30, %0, 0)
+          // data[j+1] = secret_cmov(swap, tmp, data[j+1]);
+          "flt.d  x30, f29, f28\n\t" // swap
+          "czero.eqz x31, x28, x30\n\t"
+          "czero.nez x28, x29, x30\n\t"
+          "or        x31, x28, x31\n\t" 
+          "fmv.d.x f30, x31\n\t"
+          FSDE(       f30, %1, 0)
+          // count the number of swaps executed
+          // swaps = secret_cmov(swap, swaps+1, swaps);
+          LDE(  x28, %2, 0) // swaps
+          "add x29, x28, x30\n\t" // swaps+1
+          // "czero.eqz f31, f28, f30\n\t"
+          // "czero.nez f30, f29, f30\n\t"
+          // "or        f31, f30, f31\n\t"
+          SDE(  x29, %2, 0) // swaps
+          :
+          : "r" (&data[j]), "r" (&data[j+1]), "r" (&swaps)
+          : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "f31" // clobbered registers
+        );
+      }
     }
   }
 
@@ -393,20 +442,26 @@ main(void)
 
     if (mojov_arg == 23 && i == 14)
     {
-      // replay attack
-      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */90);
+      // substitution attack
+      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */10000000);
     }
     else
-      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */91);
+      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */i);
   }
   print_data(raw_data, DATASET_SIZE);
 
-  if (mojov_arg == 4)
+  if (mojov_arg == 24)
   {
     // swap array elements 12 and 13
     union mojov_mem_proofcarrying_t tmp = secret_data[12];
     secret_data[12] = secret_data[13];
     secret_data[13] = tmp;
+  }
+
+  if (mojov_arg == 27)
+  {
+    // copy attack
+    secret_data[12] = secret_data[13];
   }
 
   // DFHASH baseline test
@@ -432,7 +487,7 @@ main(void)
     if (raw_data[i] > raw_data[i+1])
     {
       libmin_printf("ERROR: data is not properly sorted.\n");
-      return -1;
+      break;
     }
   }
 
