@@ -1,3 +1,13 @@
+** Mojo-V Reference Platform — Release 0.92
+
+  - Updated Mojo-V specification to v0.92
+  - Added support for Mojo-V proof-carrying computation, used to perform remove computational integrity checking.
+  - Added "mojov-pctests" benchmark for performing positive and negative testing of Mojo-V's proofcarrying encrpytion format.
+  - Expanded INT and FP secret register set size (from 4 regs) to 8 regs.
+  - Fixed input and output dependency marking for a range of RV64GC instruction implementations in Spike.
+
+--
+
 ** Mojo-V Reference Platform — Release 0.91
 
   - Update Mojo-V specification to v0.91
@@ -8,6 +18,7 @@
   - Added new integer and FP benchmarks, using fast and strong encryption.
   - Added RISC-V trap handling to Bringup-Bench to enable negative testing.
   - Added -fmojov-strong option to Spike to switch between fast/strong Mojo-V encryption.
+
 --
 
 ** Mojo-V Reference Platform — Release 0.90
