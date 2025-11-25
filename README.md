@@ -104,6 +104,10 @@ make
 All test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
 
 ---
+## Code Licensing
+All of the Mojo-V related code in this repo is released under the license of the tool it modified (e.g., Spike, LLVM, Bringup-Bench). Please see the tools' respective directories for licensing details.
+
+---
 
 ## 💬 Questions & Feedback
 We welcome contributions, bug reports, and suggestions!
