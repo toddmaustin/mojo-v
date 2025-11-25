@@ -1,8 +1,8 @@
 ** Mojo-V Reference Platform — Release 0.92
 
   - Updated Mojo-V specification to v0.92
-  - Added support for Mojo-V proof-carrying computation, used to perform remove computational integrity checking.
-  - Added "mojov-pctests" benchmark for performing positive and negative testing of Mojo-V's proofcarrying encrpytion format.
+  - Added support for Mojo-V proof-carrying computation, used to perform remote computational integrity checking.
+  - Added "mojov-pctests" benchmark for performing positive and negative testing of Mojo-V's proofcarrying encryption format.
   - Expanded INT and FP secret register set size (from 4 regs) to 8 regs.
   - Fixed input and output dependency marking for a range of RV64GC instruction implementations in Spike.
 
