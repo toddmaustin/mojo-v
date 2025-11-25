@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/MojoV-logo.jpg" alt="Mojo-V Logo" width="450"/>
+  <img src="./docs/MojoV-logo1.png" alt="Mojo-V Logo" width="450"/>
 </p>
 
 # Mojo-V: Secret Computation for RISC-V
