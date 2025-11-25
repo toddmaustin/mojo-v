@@ -90,56 +90,56 @@ main(void)
   // inline assembly block
   __asm__ volatile (
     // first encrypt the public X and MAX values
-    "ld t3, (%0)\n\t"
-    SDE(t3,%2,0)
-    "ld t3, (%1)\n\t"
-    SDE(t3,%3,0)
+    "ld  x24, (%0)\n\t"
+    SDE (x24,%2,0)
+    "ld  x24, (%1)\n\t"
+    SDE (x24,%3,0)
 
     // test-load a bogus ciphertext value -- it should get an exception
-    // LDE(t3, %4, 0)
+    // LDE  (x24, %4, 0)
 
     // cannot ld/sd a secret register
-    // "sd t3, (%0)\n\t"
-    // "sd t0, (%0)\n\t"
+    // "sd   x24, (%0)\n\t"
+    // "sd   x15, (%0)\n\t"
 
     // load third-party encrypted operands
-    LDE(t3, %2, 0)
-    LDE(t4, %3, 0)
+    LDE(x24, %2, 0)
+    LDE(x25, %3, 0)
 
     // Condition: (max < x)?
-    // "slt       /*p2*/t5, x1, x2\n\t" // Mojo-V test: no secret inputs
-    // "jalr         ra, 64(t4)\n\t"
-    // "sw        t5, (t3)\n\t"
-    // "bne       t3, t0, .+12\n\t"
-    // "bne       t0, t3, .+12\n\t"
-    // "slt       t0, /*p1*/t4, /*p0*/t3\n\t" // Mojo-V test: should have secret dest
-    "slt       /*p2*/t5, /*p1*/t4, /*p0*/t3\n\t" /* p2 = (p1 < p0) ? 1 : 0 */
+    // "slt       /*p2*/x26, x1, x2\n\t" // Mojo-V test: no secret inputs
+    // "jalr         ra, 64(x25)\n\t"
+    // "sw        x26, (x24)\n\t"
+    // "bne       x24, x15, .+12\n\t"
+    // "bne       x15, x24, .+12\n\t"
+    // "slt       x15, /*p1*/x25, /*p0*/x24\n\t" // Mojo-V test: should have secret dest
+    "slt   x26, x25, x24\n\t" /* p2 = (p1 < p0) ? 1 : 0 */
 
     // try to move the secret predicate, via integer to FP register/ moves/converts
     "fmv.w.x      f1, t2\n\t"
     "fcvt.s.w     f3, t2\n\t"
-    // "fmv.w.x      f1, t5\n\t"
-    // "fmv.d.x      f2, t5\n\t"
-    // "fcvt.s.w     f3, t5\n\t"
-    // "fcvt.s.wu    f3, t5\n\t"
-    // "fcvt.s.l     f5, t5\n\t"
-    // "fcvt.s.lu    f6, t5\n\t"
-    // "fcvt.d.w     f1, t5\n\t"
-    // "fcvt.d.wu    f2, t5\n\t"
-    // "fcvt.d.l     f3, t5\n\t"
-    // "fcvt.d.lu    f4, t5\n\t"
+    // "fmv.w.x      f1, x26\n\t"
+    // "fmv.d.x      f2, x26\n\t"
+    // "fcvt.s.w     f3, x26\n\t"
+    // "fcvt.s.wu    f3, x26\n\t"
+    // "fcvt.s.l     f5, x26\n\t"
+    // "fcvt.s.lu    f6, x26\n\t"
+    // "fcvt.d.w     f1, x26\n\t"
+    // "fcvt.d.wu    f2, x26\n\t"
+    // "fcvt.d.l     f3, x26\n\t"
+    // "fcvt.d.lu    f4, x26\n\t"
 
     // Build data-oblivious conditional result
-    "czero.eqz /*p0*/t3, /*p0*/t3, /*p2*/t5\n\t" // if p2==0 => p0=0, else p0=x
-    "czero.nez /*p1*/t4, /*p1*/t4, /*p2*/t5\n\t" // if p2!=0 => p1=0, else p1=max
-    "or        /*p3*/t6, /*p0*/t3, /*p1*/t4\n\t" // select: p3 = (x if x>max else max)
+    "czero.eqz x24, x24, x26\n\t" // if p2==0 => p0=0, else p0=x
+    "czero.nez x25, x25, x26\n\t" // if p2!=0 => p1=0, else p1=max
+    "or        x27, x24, x25\n\t" // select: p3 = (x if x>max else max)
 
     // Store third-party encrypted (potentially) new max value
-    SDE(t6,%3,0)
+    SDE(x27,%3,0)
 
     :
     : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
-    : "t3", "t4", "t5", "t6" // clobbered registers
+    : "x24", "x25", "x26", "x27", "x15" // clobbered registers
   );
 
   // decrypt results locally

@@ -567,8 +567,8 @@ main(void)
 
       // jump tests, always jump to the next instruction
       "jal    x28, .+4\n\t"
-      "auipc  x27, 0\n\t"
-      "jalr   x28, x27, 8\n\t"
+      "auipc  x15, 0\n\t"
+      "jalr   x28, x15, 8\n\t"
 
       // FP convert/move (secret-preserving)
       "fcvt.s.d f28, f29\n\t"
@@ -586,27 +586,27 @@ main(void)
 
       // atomic instructions
       "lr.d x28, (%0)\n\t"
-      "sc.d x28, x27, (%0)\n\t"
+      "sc.d x28, x15, (%0)\n\t"
       "lr.w x28, (%0)\n\t"
-      "sc.w x28, x27, (%0)\n\t"
-      "amoswap.d x28, x27, (%0)\n\t"
-      "amoswap.w x28, x27, (%0)\n\t"
-      "amoadd.d  x28, x27, (%0)\n\t"
-      "amoadd.w  x28, x27, (%0)\n\t"
-      "amoand.d  x28, x27, (%0)\n\t"
-      "amoand.w  x28, x27, (%0)\n\t"
-      "amoor.d  x28, x27, (%0)\n\t"
-      "amoor.w  x28, x27, (%0)\n\t"
-      "amoxor.d  x28, x27, (%0)\n\t"
-      "amoxor.w  x28, x27, (%0)\n\t"
-      "amomin.d  x28, x27, (%0)\n\t"
-      "amomin.w  x28, x27, (%0)\n\t"
-      "amomax.d  x28, x27, (%0)\n\t"
-      "amomax.w  x28, x27, (%0)\n\t"
-      "amominu.d  x28, x27, (%0)\n\t"
-      "amominu.w  x28, x27, (%0)\n\t"
-      "amomaxu.d  x28, x27, (%0)\n\t"
-      "amomaxu.w  x28, x27, (%0)\n\t"
+      "sc.w x28, x15, (%0)\n\t"
+      "amoswap.d x28, x15, (%0)\n\t"
+      "amoswap.w x28, x15, (%0)\n\t"
+      "amoadd.d  x28, x15, (%0)\n\t"
+      "amoadd.w  x28, x15, (%0)\n\t"
+      "amoand.d  x28, x15, (%0)\n\t"
+      "amoand.w  x28, x15, (%0)\n\t"
+      "amoor.d  x28, x15, (%0)\n\t"
+      "amoor.w  x28, x15, (%0)\n\t"
+      "amoxor.d  x28, x15, (%0)\n\t"
+      "amoxor.w  x28, x15, (%0)\n\t"
+      "amomin.d  x28, x15, (%0)\n\t"
+      "amomin.w  x28, x15, (%0)\n\t"
+      "amomax.d  x28, x15, (%0)\n\t"
+      "amomax.w  x28, x15, (%0)\n\t"
+      "amominu.d  x28, x15, (%0)\n\t"
+      "amominu.w  x28, x15, (%0)\n\t"
+      "amomaxu.d  x28, x15, (%0)\n\t"
+      "amomaxu.w  x28, x15, (%0)\n\t"
 
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
@@ -1703,10 +1703,10 @@ main(void)
       SDE(x28,%2,0)
 
       // load/store valid secrets into secret regs
-      LDE(x27,%2,0)
+      LDE(x15,%2,0)
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
-      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+      : "t3", "t4", "t5", "t6", "x15", "f28", "f29", "f30", "f31" // clobbered registers
     );
     negfailed();
     break;
@@ -1718,7 +1718,7 @@ main(void)
       FSDE(f28,%2,0)
 
       // load/store valid secrets into secret regs
-      FLDE(f27,%2,0)
+      FLDE(f15,%2,0)
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
       : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
@@ -1785,12 +1785,12 @@ main(void)
   case 214:
     __asm__ volatile (
       // first encrypt the public X and MAX values
-      "ld x27, (%0)\n\t"
-      SDE(x27,%2,0)
+      "ld x15, (%0)\n\t"
+      SDE(x15,%2,0)
 
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
-      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+      : "t3", "t4", "t5", "t6", "x15", "f28", "f29", "f30", "f31" // clobbered registers
     );
     negfailed();
     break;
@@ -1798,12 +1798,12 @@ main(void)
   case 215:
     __asm__ volatile (
       // first encrypt the public X and MAX values
-      "fld f27, (%0)\n\t"
-      FSDE(f27,%2,0)
+      "fld f15, (%0)\n\t"
+      FSDE(f15,%2,0)
 
       :
       : "r" (&x), "r" (&max), "r" (&x_enc), "r" (&max_enc), "r" (&bogus_enc) // input operands
-      : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
+      : "t3", "t4", "t5", "t6", "f15", "f29", "f30", "f31" // clobbered registers
     );
     negfailed();
     break;

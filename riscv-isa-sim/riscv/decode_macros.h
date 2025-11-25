@@ -23,24 +23,36 @@
   (((reg_deps_t)1 << X_P0) \
    | ((reg_deps_t)1 << X_P1) \
    | ((reg_deps_t)1 << X_P2) \
-   | ((reg_deps_t)1 << X_P3))
+   | ((reg_deps_t)1 << X_P3) \
+   | ((reg_deps_t)1 << X_P4) \
+   | ((reg_deps_t)1 << X_P5) \
+   | ((reg_deps_t)1 << X_P6) \
+   | ((reg_deps_t)1 << X_P7) \
+  )
 #define IS_SECREG(reg) (((reg_deps_t)1 << (reg)) & SECREGS)
 #define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(reg))
 #define SECREG_RESET \
-  { STATE.XPR.write(X_P0, 0); STATE.XPR.write(X_P1, 0); STATE.XPR.write(X_P2, 0); STATE.XPR.write(X_P3, 0); }
+  { STATE.XPR.write(X_P0, 0); STATE.XPR.write(X_P1, 0); STATE.XPR.write(X_P2, 0); STATE.XPR.write(X_P3, 0); \
+    STATE.XPR.write(X_P4, 0); STATE.XPR.write(X_P5, 0); STATE.XPR.write(X_P6, 0); STATE.XPR.write(X_P7, 0); }
 
 // Mojo-V architecturally defined secret FP registers
 #define FP_SECREGS \
   (((reg_deps_t)1 << (X_FP0 + 32)) \
    | ((reg_deps_t)1 << (X_FP1 + 32)) \
    | ((reg_deps_t)1 << (X_FP2 + 32)) \
-   | ((reg_deps_t)1 << (X_FP3 + 32)))
+   | ((reg_deps_t)1 << (X_FP3 + 32)) \
+   | ((reg_deps_t)1 << (X_FP4 + 32)) \
+   | ((reg_deps_t)1 << (X_FP5 + 32)) \
+   | ((reg_deps_t)1 << (X_FP6 + 32)) \
+   | ((reg_deps_t)1 << (X_FP7 + 32)) \
+  )
 #define IS_FP_SECREG(reg) (((reg_deps_t)1 << ((reg) + 32)) & FP_SECREGS)
 #define CHECK_LEAKY_FP(reg) ((p->get_secreg_mode() && IS_FP_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define FP_SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_FP_SECREG(reg))
 #define FP_SECREG_RESET \
-  { DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); }
+  { DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); \
+    DO_WRITE_FREG(X_FP4, freg(f64(0))); DO_WRITE_FREG(X_FP5, freg(f64(0))); DO_WRITE_FREG(X_FP6, freg(f64(0))); DO_WRITE_FREG(X_FP7, freg(f64(0))); }
 
 // Mojo-V: DFHASH handling
 #define DFHASH_REG_R(reg) (assert(STATE.n_inputs < MAX_INPUTS), (STATE.dfhash_input[STATE.n_inputs].regID = (reg)), (STATE.dfhash_input[STATE.n_inputs++].hash = (SECREG_REF(reg) ? STATE.dfhash_xpr[reg] : STATE.XPR[reg])))

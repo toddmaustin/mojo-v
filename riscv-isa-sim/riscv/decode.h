@@ -34,14 +34,22 @@ const int NCSR = 4096;
 #define X_Sn 16
 
 // Mojo-V secret registers
-#define X_P0 28
-#define X_P1 29
-#define X_P2 30
-#define X_P3 31
-#define X_FP0 28
-#define X_FP1 29
-#define X_FP2 30
-#define X_FP3 31
+#define X_P0 24
+#define X_P1 25
+#define X_P2 26
+#define X_P3 27
+#define X_P4 28
+#define X_P5 29
+#define X_P6 30
+#define X_P7 31
+#define X_FP0 24
+#define X_FP1 25
+#define X_FP2 26
+#define X_FP3 27
+#define X_FP4 28
+#define X_FP5 29
+#define X_FP6 30
+#define X_FP7 31
 
 #define VCSR_VXRM_SHIFT 1
 #define VCSR_VXRM  (0x3 << VCSR_VXRM_SHIFT)
