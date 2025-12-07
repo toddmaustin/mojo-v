@@ -39,7 +39,7 @@ OPT_CFLAGS = -O3 -g
 
 ifeq ($(TARGET), host)
 TARGET_CC = gcc
-#TARGET_CC = /opt/riscv-llvm/bin/clang-21 -target riscv64-unknown-elf
+#TARGET_CC = /opt/riscv/bin/clang-21 -target riscv64-unknown-elf
 TARGET_AR = ar
 TARGET_CFLAGS = -DTARGET_HOST -DTARGET_PERFHOOKS
 TARGET_LIBS =
@@ -77,7 +77,7 @@ TARGET_REFEXT = hash
 else ifeq ($(TARGET), hashalone-spike32)
 TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = riscv64-unknown-elf-clang
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_HASPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv32imczicsr -mabi=ilp32 -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -nostdlib -nostartfiles -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = -lgcc
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=RV32IMC --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
@@ -90,7 +90,7 @@ TARGET_REFEXT = hash
 else ifeq ($(TARGET), hashalone-spike64)
 TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = riscv64-unknown-elf-clang
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_HASPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc -mabi=lp64d -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -nostdlib -nostartfiles -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = -lgcc
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=rv64gc --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
@@ -103,7 +103,7 @@ TARGET_REFEXT = hash
 else ifeq ($(TARGET), simple)
 TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = riscv64-unknown-elf-clang
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_SIMPLE -march=rv32imczicsr -mabi=ilp32 -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -nostdlib -nostartfiles -ffreestanding # -MMD -mcmodel=medany
 TARGET_LIBS = -lgcc
 TARGET_SIM = ../target/simple_sim.sh ../../../Snowflake-IoT/ibex/build/lowrisc_ibex_ibex_simple_system_0/sim-verilator/Vibex_simple_system
@@ -115,8 +115,8 @@ TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
 else ifeq ($(TARGET), spike32)
 #TARGET_CC = riscv64-unknown-elf-gcc
-TARGET_CC = /opt/riscv-llvm/bin/clang-21 -target riscv64-unknown-elf
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_CC = /opt/riscv/bin/clang-21 -target riscv64-unknown-elf
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv32imczicsr_zicond -mabi=ilp32 -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -nostdlib -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=RV32IMC_zicond_zkmojov_zicntr --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
@@ -128,9 +128,9 @@ TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
 else ifeq ($(TARGET), spike64)
 #TARGET_CC = riscv64-unknown-elf-gcc
-#TARGET_CC = /opt/riscv-llvm/bin/clang-21
+#TARGET_CC = /opt/riscv/bin/clang-21
 TARGET_CC = ../../llvm-project/build/bin/clang-21
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -nostdlib -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
@@ -143,7 +143,7 @@ TARGET_REFEXT = out
 else ifeq ($(TARGET), spike32-pk)
 TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = riscv64-unknown-elf-clang
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_SPIKE_PK -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv32imczicsr -mabi=ilp32 -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = -lgcc
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=RV32IMC pk32
@@ -156,7 +156,7 @@ TARGET_REFEXT = out
 else ifeq ($(TARGET), spike64-pk)
 TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = riscv64-unknown-elf-clang
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_SPIKE_PK -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc -mabi=lp64d -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = -lgcc
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=rv64gc pk
@@ -167,9 +167,8 @@ TARGET_EXCLUDES =
 TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
 else ifeq ($(TARGET), mojov)
-#TARGET_CC = riscv64-unknown-elf-gcc
-#TARGET_CC = /opt/riscv-llvm/bin/clang-21
-TARGET_CC = /opt/riscv-llvm/bin/clang-21
+TARGET_CC = riscv64-unknown-elf-gcc
+#TARGET_CC = /opt/riscv/bin/clang-21
 TARGET_AR = riscv64-unknown-elf-ar
 TARGET_CFLAGS = -std=c23 -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -static -mcmodel=medlow -Wall -fvisibility=hidden -nostdlib -ffreestanding -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31 # -MMD -mcmodel=medany
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv64imac/lp64/libgcc.a
@@ -182,9 +181,9 @@ TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
 else ifeq ($(TARGET), mojov-llvm)
 #TARGET_CC = riscv64-unknown-elf-gcc
-#TARGET_CC = /opt/riscv-llvm/bin/clang-21
+#TARGET_CC = /opt/riscv/bin/clang-21
 TARGET_CC = ../../llvm-project/build/bin/clang-21
-TARGET_AR = riscv64-unknown-elf-ar
+TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -std=c23 -fmojov -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -mcmodel=medlow -Wall -fvisibility=hidden -nostdlib -ffreestanding -ferror-limit=250 # -MMD -mcmodel=medany
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000

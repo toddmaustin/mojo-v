@@ -210,7 +210,7 @@ main(void)
     bubblesort(secret_data, DATASET_SIZE);
 
     uint64_t icnt_end = __instret();
-    libmin_printf("INFO: bubblesort inst count = %lu.\n", icnt_end - icnt_start + 1);
+    // libmin_printf("INFO: bubblesort inst count = %lu.\n", icnt_end - icnt_start + 1);
   }
 
 

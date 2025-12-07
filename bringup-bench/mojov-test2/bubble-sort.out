@@ -258,7 +258,6 @@ DATA DUMP:
   data[ 253] = 1241618063, ct =[0x5b8863e3ad42a76f8759a0c3afd19fbb]
   data[ 254] =  514462864, ct =[0x93bddfb4ea74524b90706b6364b5fbbe]
   data[ 255] = 1726956146, ct =[0x9c912779c6055b1e137feafe0510c5a9]
-INFO: bubblesort inst count = 1236502.
 DATA DUMP:
   data[   0] =    2863982, ct =[0x1b875200bfd73eb68f81b3c2c38c8f26]
   data[   1] =   18097017, ct =[0x53d2c5fd46d8a9b0e5eb29feb9c3a0c8]
