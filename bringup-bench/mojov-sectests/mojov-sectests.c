@@ -625,7 +625,6 @@ main(void)
     __asm__ volatile ("addi x5, x28, 1");
     negfailed();
     break;
-
   case 2:
     __asm__ volatile ("slti x5, x28, 0");
     negfailed();

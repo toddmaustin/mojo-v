@@ -167,10 +167,10 @@ TARGET_EXCLUDES =
 TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
 else ifeq ($(TARGET), mojov)
-TARGET_CC = riscv64-unknown-elf-gcc
-#TARGET_CC = /opt/riscv/bin/clang-21
+#TARGET_CC = riscv64-unknown-elf-gcc
+TARGET_CC = /opt/riscv/bin/clang-21
 TARGET_AR = riscv64-unknown-elf-ar
-TARGET_CFLAGS = -std=c23 -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -static -mcmodel=medlow -Wall -fvisibility=hidden -nostdlib -ffreestanding -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31 # -MMD -mcmodel=medany
+TARGET_CFLAGS = -std=c23 -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -static -Wall -fvisibility=hidden -nostdlib -ffreestanding -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31 -mcmodel=medany # -Wl,--no-relax -MMD
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv64imac/lp64/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000 $(LOCAL_SIMOPTS)
 TARGET_DIFF = diff
@@ -184,7 +184,7 @@ else ifeq ($(TARGET), mojov-llvm)
 #TARGET_CC = /opt/riscv/bin/clang-21
 TARGET_CC = ../../llvm-project/build/bin/clang-21
 TARGET_AR = riscv64-unknown-linux-gnu-ar
-TARGET_CFLAGS = -std=c23 -fmojov -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -mcmodel=medlow -Wall -fvisibility=hidden -nostdlib -ffreestanding -ferror-limit=250 # -MMD -mcmodel=medany
+TARGET_CFLAGS = -std=c23 -fmojov -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -Wall -fvisibility=hidden -nostdlib -ffreestanding -ferror-limit=250 -mcmodel=medany # -MMD
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
 TARGET_DIFF = diff
