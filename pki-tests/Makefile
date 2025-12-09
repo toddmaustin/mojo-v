@@ -6,8 +6,8 @@
 #   make clean
 
 CC      = gcc
-CFLAGS  = -Wall -Wextra -O0 -g -I/usr/local/ssl/include
-LDFLAGS = -L/usr/local/ssl/lib64 -Wl,-rpath,/usr/local/ssl/lib64
+CFLAGS  = -Wall -Wextra -O0 -g -I/opt/ssl/include
+LDFLAGS = -L/opt/ssl/lib64 -Wl,-rpath,/opt/ssl/lib64
 LDLIBS  = -lssl -lcrypto
 
 TARGET  := mlkem-demo
@@ -16,7 +16,7 @@ OBJ     := $(SRC:.c=.o)
 
 .PHONY: all clean run-all init alice bob
 
-all: $(TARGET)
+build: $(TARGET)
 
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
