@@ -28,9 +28,9 @@
 #include <openssl/pem.h>
 #include <openssl/core_names.h>
 
-#define PK_FILE  "mlkem512_pk.pem"
-#define SK_FILE  "mlkem512_sk.pem"
-#define CT_FILE  "mlkem512-ct.txt"
+#define PK_FILE  "mlkem512-pk.pem"
+#define SK_FILE  "mlkem512-sk.pem"
+#define CT_FILE  "mlkem512-dc.txt"
 
 #define GCM_IV_LEN     12
 #define GCM_TAG_LEN    16
@@ -379,8 +379,7 @@ static void write_combined_file(const char *path,
                                 const unsigned char iv[GCM_IV_LEN],
                                 const unsigned char tag[GCM_TAG_LEN],
                                 const unsigned char *msg_ct, size_t msg_ct_len,
-                                const unsigned char pt_sha[32],
-                                uint8_t format_sel) {
+                                const unsigned char pt_sha[32]) {
     FILE *f = fopen(path, "wb");
     if (!f) die_msg("fopen(combined ct file) failed");
 
@@ -395,7 +394,6 @@ static void write_combined_file(const char *path,
 
     fprintf(f, "KEM=ML-KEM-512\n");
     fprintf(f, "AEAD=AES-128-GCM\n");
-    fprintf(f, "FORMAT_SEL=%u\n", (unsigned)format_sel);
     fprintf(f, "KEM_CT=%s\n", kem_ct_hex);
     fprintf(f, "IV=%s\n", iv_hex);
     fprintf(f, "TAG=%s\n", tag_hex);
@@ -484,9 +482,7 @@ static void step_alice(uint8_t format_sel) {
         die_openssl("ALICE: AES-128-GCM encrypt");
 
     write_combined_file(CT_FILE, kem_ct, kem_ct_len,
-                        iv, tag,
-                        msg_ct, sizeof(msg_ct),
-                        pt_sha, format_sel);
+                        iv, tag, msg_ct, sizeof(msg_ct), pt_sha);
 
     printf("ALICE: wrote combined KEM+contract file to %s\n", CT_FILE);
 
@@ -518,7 +514,6 @@ static void step_bob(void) {
     const char *tag_hex    = find_kv(text, "TAG");
     const char *msg_ct_hex = find_kv(text, "MSG_CT");
     const char *hsh_hex    = find_kv(text, "PT_SHA256");
-    const char *fmt_hex    = find_kv(text, "FORMAT_SEL");
 
     if (!kem_ct_hex || !iv_hex || !tag_hex || !msg_ct_hex || !hsh_hex)
         die_msg("BOB: missing fields in combined file");
@@ -540,14 +535,6 @@ static void step_bob(void) {
     if (iv_len != GCM_IV_LEN || tag_len != GCM_TAG_LEN ||
         msg_ct_len != DC_WIRE_LEN || hsh_len != 32)
         die_msg("BOB: invalid field lengths in combined file");
-
-    /* Optional: parse FORMAT_SEL (as integer) */
-    uint8_t format_sel = 0xff;
-    if (fmt_hex) {
-        /* Format is a decimal integer until end-of-line */
-        unsigned long v = strtoul(fmt_hex, NULL, 10);
-        if (v <= 255) format_sel = (uint8_t)v;
-    }
 
     /* Decapsulate KEM */
     EVP_PKEY_CTX *dctx = EVP_PKEY_CTX_new_from_pkey(NULL, sk, NULL);

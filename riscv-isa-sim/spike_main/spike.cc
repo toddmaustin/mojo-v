@@ -779,31 +779,31 @@ int main(int argc, char** argv)
 
     size_t ss_len = 0;
     if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_ct, kem_ct_len) != 1)
-        die_openssl("Mojo-V: ciphertext decapsulation failed, EVP_PKEY_decapsulate(size query)");
+        die_openssl("Mojo-V: ciphertext decapsulation size query failed, EVP_PKEY_decapsulate()");
 
     unsigned char *ss = (unsigned char *)OPENSSL_malloc(ss_len);
     if (!ss) die_openssl("Mojo-V: SS malloc failed");
 
     if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_ct, kem_ct_len) != 1)
-        die_openssl("BOB: EVP_PKEY_decapsulate");
+        die_openssl("Mojo-V: decapsulation failed, EVP_PKEY_decapsulate()");
 
     /* Derive AES-128 key and decrypt contract */
     unsigned char k[AES128_KEY_LEN];
     if (hkdf_sha256_key128(ss, ss_len, k) != 1)
-        die_openssl("BOB: HKDF derive key");
+        die_openssl("Mojo-V: HKDF key derivation failed");
 
     unsigned char pt[DC_WIRE_LEN];
     if (aes_128_gcm_decrypt(k, iv_b, msg_ct, msg_ct_len, tag_b, pt) != 1) {
-        fprintf(stderr, "BOB: AES-128-GCM decrypt FAILED (tag / key mismatch)\n");
+        fprintf(stderr, "Mojo-V: AES-128-GCM decrypt FAILED (tag / key mismatch)\n");
         goto cleanup;
     }
 
     unsigned char pt_sha[32];
     if (sha256_bytes(pt, sizeof(pt), pt_sha) != 1)
-        die_openssl("BOB: SHA256(pt)");
+        die_openssl("Mojo-V: SHA256(pt) failed");
 
     if (CRYPTO_memcmp(pt_sha, hsh_b, 32) != 0) {
-        fprintf(stderr, "BOB: validation FAILED (PT_SHA256 mismatch)\n");
+        fprintf(stderr, "Mojo-V: ciphertext authentication FAILED (PT_SHA256 mismatch)\n");
         goto cleanup;
     }
 
@@ -813,18 +813,14 @@ int main(int argc, char** argv)
     /* Check header signature */
     static const char sig_str[16+1] = "Mojo-V ver. #001";
     if (CRYPTO_memcmp(dc.sig, sig_str, 16) != 0) {
-        fprintf(stderr, "BOB: invalid data contract signature header\n");
+        fprintf(stderr, "Mojo-V: invalid data contract signature header\n");
         goto cleanup;
     }
 
-    printf("SUCCESS: ALICE -> BOB Mojo-V data_contract_t transfer validated.\n");
+    printf("SUCCESS: Mojo-V data contract transfer validated.\n");
     printf("Decrypted data_contract_t fields:\n");
-    printf("  sig         = \"");
-    for (int i = 0; i < 16; i++) putchar(dc.sig[i]);
-    printf("\"\n");
-    printf("  sym_key_128 = 0x");
-    for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]);
-    printf("\n");
+    printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(dc.sig[i]); printf("\"\n");
+    printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]); printf("\n");
     printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
     printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
     printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
@@ -832,7 +828,7 @@ int main(int argc, char** argv)
     if      (dc.format_sel == 0) printf(" (fast)\n");
     else if (dc.format_sel == 1) printf(" (strong)\n");
     else if (dc.format_sel == 2) printf(" (proofcarrying)\n");
-    else                         printf(" (unknown)\n");
+    else                         printf(" (?unknown?)\n");
 
 cleanup:
     OPENSSL_cleanse(k, sizeof(k));

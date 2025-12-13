@@ -37,5 +37,5 @@ bob: $(TARGET)
 	./$(TARGET) bob
 
 clean:
-	rm -f $(TARGET) $(OBJ) mlkem512-pk.pem mlkem512-sk.pem mlkem512-ct.txt my-msg-enc.txt
+	rm -f $(TARGET) $(OBJ) mlkem512-pk.pem mlkem512-sk.pem mlkem512-dc.txt my-msg-enc.txt
 
