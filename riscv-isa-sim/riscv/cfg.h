@@ -82,6 +82,7 @@ public:
   bool                    mojov_strong;
   bool                    mojov_proofcarrying;
   uint16_t                mojov_arg;
+  
   std::optional<abstract_sim_if_t*> external_simulator;
 
   size_t nprocs() const { return hartids.size(); }

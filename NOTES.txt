@@ -14,3 +14,8 @@ UPSTREAMS:
  - add the exception dump code for all RISC-V targets
  - to see all changes since start of project:
    git log d4251067d663e33df422b965e2137f67a7048baf..HEAD -p -- riscv-isa-sim/
+
+Conifgure commands:
+
+Spike: 
+  ../configure --prefix=$RISCV

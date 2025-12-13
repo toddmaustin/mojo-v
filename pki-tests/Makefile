@@ -8,7 +8,7 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -O0 -g -I/opt/ssl/include
 LDFLAGS = -L/opt/ssl/lib64 -Wl,-rpath,/opt/ssl/lib64
-LDLIBS  = -lssl -lcrypto
+LDLIBS  = -lcrypto
 
 TARGET  := mlkem-demo
 SRC     := mlkem-demo.c
