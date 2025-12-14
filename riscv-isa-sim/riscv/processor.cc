@@ -107,7 +107,7 @@ void state_t::reset(processor_t* const proc, reg_t max_isa)
   FPR.reset();
 
   // Mojo-V: reset the dfhash generation state
-  proc->dfhash_reset();
+  proc->mojov_reset();
 
   prv = prev_prv = PRV_M;
   v = prev_v = false;

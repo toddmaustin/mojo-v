@@ -51,6 +51,17 @@ const int NCSR = 4096;
 #define X_FP6 30
 #define X_FP7 31
 
+// data contract format
+typedef struct {
+    uint64_t salt;           // random 64-bit
+    uint8_t  sig[16];        // "Mojo-V ver. #001"
+    uint8_t  sym_key_128[16];// 128-bit symmetric key (bytes, not C uint128_t)
+    uint64_t contract_sig;   // unique 64-bit authentication signature
+    uint64_t ciphers;        // 64-bit mask (0 for now)
+    uint8_t  format_sel;     // 0=fast, 1=strong, 2=proofcarrying
+    uint8_t  pad[7];         // random padding to reach 64 bytes
+} data_contract_t;
+
 #define VCSR_VXRM_SHIFT 1
 #define VCSR_VXRM  (0x3 << VCSR_VXRM_SHIFT)
 

@@ -333,16 +333,6 @@ static std::vector<size_t> parse_hartids(const char *s)
 #define AES128_KEY_LEN 16
 #define DC_WIRE_LEN 64
 
-typedef struct {
-    uint8_t  sig[16];        // "Mojo-V ver. #001"
-    uint8_t  sym_key_128[16];// 128-bit symmetric key (bytes, not C uint128_t)
-    uint64_t contract_sig;   // random 64-bit
-    uint64_t salt;           // random 64-bit
-    uint64_t ciphers;        // 64-bit mask (0 for now)
-    uint8_t  format_sel;     // 0=fast, 1=strong, 2=proofcarrying
-    uint8_t  pad[7];         // random padding to reach 64 bytes
-} data_contract_t;
-
 /* ---- Utility / error ---- */
 static void die_openssl(const char *what) {
     fprintf(stderr, "ERROR: %s\n", what);
@@ -364,7 +354,7 @@ static int hkdf_sha256_key128(const unsigned char *ss, size_t ss_len,
     EVP_KDF *kdf = NULL;
     EVP_KDF_CTX *kctx = NULL;
 
-    static const unsigned char salt[] = "mlkem-demo-salt";
+    static const unsigned char salt[] = "dc-multitool-salt";
     static const unsigned char info[] = "mlkem512-aes128gcm-data_contract";
 
     char digest_name[] = "SHA256";
@@ -448,10 +438,10 @@ static uint64_t load_u64_be(const unsigned char *src) {
 }   
 
 static void dc_decode(data_contract_t *dc, const unsigned char in[DC_WIRE_LEN]) {
-    memcpy(dc->sig,         in + 0,  16);
-    memcpy(dc->sym_key_128, in + 16, 16);
-    dc->contract_sig = load_u64_be(in + 32);
-    dc->salt        = load_u64_be(in + 40);
+    dc->salt        = load_u64_be(in + 0);
+    memcpy(dc->sig,         in + 8,  16);
+    memcpy(dc->sym_key_128, in + 24, 16);
+    dc->contract_sig = load_u64_be(in + 40);
     dc->ciphers     = load_u64_be(in + 48);
     dc->format_sel  = in[56];
     memcpy(dc->pad, in + 57, 7);
@@ -738,7 +728,6 @@ int main(int argc, char** argv)
     const char *tag_hex    = find_kv(text, "TAG");
     const char *msg_ct_hex = find_kv(text, "MSG_CT");
     const char *hsh_hex    = find_kv(text, "PT_SHA256");
-    const char *fmt_hex    = find_kv(text, "FORMAT_SEL");
 
     if (!kem_ct_hex || !iv_hex || !tag_hex || !msg_ct_hex || !hsh_hex)
         die_openssl("Mojo-V: missing fields in data contract (DC) file");
@@ -760,16 +749,6 @@ int main(int argc, char** argv)
     if (iv_len != GCM_IV_LEN || tag_len != GCM_TAG_LEN ||
         msg_ct_len != DC_WIRE_LEN || hsh_len != 32)
         die_openssl("Mojo-V: invalid field lengths in data contract (DC) file");
-
-#if 0
-    // parse FORMAT_SEL (as integer)
-    uint8_t format_sel = 0xff;
-    if (fmt_hex) {
-        /* Format is a decimal integer until end-of-line */
-        unsigned long v = strtoul(fmt_hex, NULL, 10);
-        if (v <= 255) format_sel = (uint8_t)v;
-    }
-#endif
 
     /* Decapsulate KEM */
     EVP_PKEY_CTX *dctx = EVP_PKEY_CTX_new_from_pkey(NULL, sk, NULL);
@@ -793,44 +772,40 @@ int main(int argc, char** argv)
         die_openssl("Mojo-V: HKDF key derivation failed");
 
     unsigned char pt[DC_WIRE_LEN];
-    if (aes_128_gcm_decrypt(k, iv_b, msg_ct, msg_ct_len, tag_b, pt) != 1) {
-        fprintf(stderr, "Mojo-V: AES-128-GCM decrypt FAILED (tag / key mismatch)\n");
-        goto cleanup;
-    }
+    if (aes_128_gcm_decrypt(k, iv_b, msg_ct, msg_ct_len, tag_b, pt) != 1)
+        die_openssl("Mojo-V: AES-128-GCM decrypt FAILED (tag / key mismatch)");
 
     unsigned char pt_sha[32];
     if (sha256_bytes(pt, sizeof(pt), pt_sha) != 1)
         die_openssl("Mojo-V: SHA256(pt) failed");
 
-    if (CRYPTO_memcmp(pt_sha, hsh_b, 32) != 0) {
-        fprintf(stderr, "Mojo-V: ciphertext authentication FAILED (PT_SHA256 mismatch)\n");
-        goto cleanup;
-    }
+    if (CRYPTO_memcmp(pt_sha, hsh_b, 32) != 0)
+        die_openssl("Mojo-V: ciphertext authentication FAILED (PT_SHA256 mismatch)");
 
     data_contract_t dc;
     dc_decode(&dc, pt);
 
     /* Check header signature */
     static const char sig_str[16+1] = "Mojo-V ver. #001";
-    if (CRYPTO_memcmp(dc.sig, sig_str, 16) != 0) {
-        fprintf(stderr, "Mojo-V: invalid data contract signature header\n");
-        goto cleanup;
+    if (CRYPTO_memcmp(dc.sig, sig_str, 16) != 0)
+        die_openssl("Mojo-V: invalid data contract signature header");
+
+    if (1)
+    {
+      printf("SUCCESS: Mojo-V data contract transfer validated.\n");
+      printf("Decrypted data_contract_t fields:\n");
+      printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
+      printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(dc.sig[i]); printf("\"\n");
+      printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]); printf("\n");
+      printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
+      printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
+      printf("  format_sel  = %u", (unsigned)dc.format_sel);
+      if      (dc.format_sel == 0) printf(" (fast)\n");
+      else if (dc.format_sel == 1) printf(" (strong)\n");
+      else if (dc.format_sel == 2) printf(" (proofcarrying)\n");
+      else                         printf(" (?unknown?)\n");
     }
 
-    printf("SUCCESS: Mojo-V data contract transfer validated.\n");
-    printf("Decrypted data_contract_t fields:\n");
-    printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(dc.sig[i]); printf("\"\n");
-    printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]); printf("\n");
-    printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
-    printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
-    printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
-    printf("  format_sel  = %u", (unsigned)dc.format_sel);
-    if      (dc.format_sel == 0) printf(" (fast)\n");
-    else if (dc.format_sel == 1) printf(" (strong)\n");
-    else if (dc.format_sel == 2) printf(" (proofcarrying)\n");
-    else                         printf(" (?unknown?)\n");
-
-cleanup:
     OPENSSL_cleanse(k, sizeof(k));
     OPENSSL_cleanse(ss, ss_len);
 

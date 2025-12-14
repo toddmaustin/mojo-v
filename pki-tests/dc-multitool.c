@@ -4,10 +4,10 @@
 //   cc -Wall -Wextra -O2 mlkem_files_demo.c -o mlkem_demo -lcrypto
 //
 // Usage:
-//   ./mlkem_demo init
-//   ./mlkem_demo alice {fast,strong,proof-carrying}
-//   ./mlkem_demo bob
-//   ./mlkem_demo all     # = init + alice (fast) + bob
+//   ./dc-multitool keygen
+//   ./dc-multitool dcgen {fast,strong,proof-carrying}
+//   ./dc-multitool dcchk
+//   ./dc-multitool all     # = keygen + dcgen (fast) + dcchk
 //
 // Files:
 //   mlkem512_pk.pem   - ML-KEM-512 public key (PEM, text)
@@ -53,10 +53,10 @@
 #define DC_WIRE_LEN 64
 
 typedef struct {
+    uint64_t salt;           // random 64-bit
     uint8_t  sig[16];        // "Mojo-V ver. #001"
     uint8_t  sym_key_128[16];// 128-bit symmetric key (bytes, not C uint128_t)
-    uint64_t contract_sig;   // random 64-bit
-    uint64_t salt;           // random 64-bit
+    uint64_t contract_sig;   // unique 64-bit authentication signature
     uint64_t ciphers;        // 64-bit mask (0 for now)
     uint8_t  format_sel;     // 0=fast, 1=strong, 2=proofcarrying
     uint8_t  pad[7];         // random padding to reach 64 bytes
@@ -127,20 +127,20 @@ static void dc_init(data_contract_t *dc, uint8_t format_sel) {
 }
 
 static void dc_encode(unsigned char out[DC_WIRE_LEN], const data_contract_t *dc) {
-    memcpy(out + 0,  dc->sig,          16);
-    memcpy(out + 16, dc->sym_key_128,  16);
-    store_u64_be(out + 32, dc->contract_sig);
-    store_u64_be(out + 40, dc->salt);
+    store_u64_be(out + 0, dc->salt);
+    memcpy(out + 8,  dc->sig,          16);
+    memcpy(out + 24, dc->sym_key_128,  16);
+    store_u64_be(out + 40, dc->contract_sig);
     store_u64_be(out + 48, dc->ciphers);
     out[56] = dc->format_sel;
     memcpy(out + 57, dc->pad, 7);
 }
 
 static void dc_decode(data_contract_t *dc, const unsigned char in[DC_WIRE_LEN]) {
-    memcpy(dc->sig,         in + 0,  16);
-    memcpy(dc->sym_key_128, in + 16, 16);
-    dc->contract_sig = load_u64_be(in + 32);
-    dc->salt        = load_u64_be(in + 40);
+    dc->salt        = load_u64_be(in + 0);
+    memcpy(dc->sig,         in + 8,  16);
+    memcpy(dc->sym_key_128, in + 24, 16);
+    dc->contract_sig = load_u64_be(in + 40);
     dc->ciphers     = load_u64_be(in + 48);
     dc->format_sel  = in[56];
     memcpy(dc->pad, in + 57, 7);
@@ -269,7 +269,7 @@ static int hkdf_sha256_key128(const unsigned char *ss, size_t ss_len,
     EVP_KDF *kdf = NULL;
     EVP_KDF_CTX *kctx = NULL;
 
-    static const unsigned char salt[] = "mlkem-demo-salt";
+    static const unsigned char salt[] = "dc-multitool-salt";
     static const unsigned char info[] = "mlkem512-aes128gcm-data_contract";
 
     kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
@@ -410,7 +410,7 @@ static void write_combined_file(const char *path,
 
 /* ---- Steps ---- */
 
-static void step_init(void) {
+static void step_keygen(void) {
     OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
     if (!prov) die_openssl("OSSL_PROVIDER_load(default)");
 
@@ -432,7 +432,7 @@ static void step_init(void) {
 }
 
 /* format_sel: 0=fast, 1=strong, 2=proofcarrying */
-static void step_alice(uint8_t format_sel) {
+static void step_dcgen(uint8_t format_sel) {
     OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
     if (!prov) die_openssl("OSSL_PROVIDER_load(default)");
 
@@ -498,7 +498,7 @@ static void step_alice(uint8_t format_sel) {
     OSSL_PROVIDER_unload(prov);
 }
 
-static void step_bob(void) {
+static void step_dcchk(void) {
     OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
     if (!prov) die_openssl("OSSL_PROVIDER_load(default)");
 
@@ -620,10 +620,10 @@ cleanup:
 
 static void usage(const char *argv0) {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  %s init\n", argv0);
-    fprintf(stderr, "  %s alice {fast,strong,proof-carrying}\n", argv0);
-    fprintf(stderr, "  %s bob\n", argv0);
-    fprintf(stderr, "  %s all   # init + alice(fast) + bob\n", argv0);
+    fprintf(stderr, "  %s keygen\n", argv0);
+    fprintf(stderr, "  %s dcgen {fast,strong,proof-carrying}\n", argv0);
+    fprintf(stderr, "  %s dcchk\n", argv0);
+    fprintf(stderr, "  %s all   # init + dcgen(fast) + dcchk\n", argv0);
     fprintf(stderr, "\nFiles:\n");
     fprintf(stderr, "  %s  (public key PEM)\n", PK_FILE);
     fprintf(stderr, "  %s  (private key PEM)\n", SK_FILE);
@@ -631,7 +631,7 @@ static void usage(const char *argv0) {
     exit(2);
 }
 
-/* Map alice mode string to format_sel */
+/* Map dcgen mode string to format_sel */
 static uint8_t parse_format_sel(const char *mode) {
     if (strcmp(mode, "fast") == 0)
         return 0;
@@ -650,22 +650,22 @@ int main(int argc, char **argv) {
 
     ERR_load_crypto_strings();
 
-    if (strcmp(argv[1], "init") == 0) {
-        step_init();
-    } else if (strcmp(argv[1], "alice") == 0) {
+    if (strcmp(argv[1], "keygen") == 0) {
+        step_keygen();
+    } else if (strcmp(argv[1], "dcgen") == 0) {
         if (argc < 3) {
-            fprintf(stderr, "alice requires a mode: {fast,strong,proof-carrying}\n");
+            fprintf(stderr, "dcgen requires a mode: {fast,strong,proof-carrying}\n");
             usage(argv[0]);
         }
         uint8_t format_sel = parse_format_sel(argv[2]);
-        step_alice(format_sel);
-    } else if (strcmp(argv[1], "bob") == 0) {
-        step_bob();
+        step_dcgen(format_sel);
+    } else if (strcmp(argv[1], "dcchk") == 0) {
+        step_dcchk();
     } else if (strcmp(argv[1], "all") == 0) {
         /* Default all→fast */
-        step_init();
-        step_alice(0);
-        step_bob();
+        step_keygen();
+        step_dcgen(0);
+        step_dcchk();
     } else {
         usage(argv[0]);
     }

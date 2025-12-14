@@ -10,11 +10,11 @@ CFLAGS  = -Wall -Wextra -O0 -g -I/opt/ssl/include
 LDFLAGS = -L/opt/ssl/lib64 -Wl,-rpath,/opt/ssl/lib64
 LDLIBS  = -lcrypto
 
-TARGET  := mlkem-demo
-SRC     := mlkem-demo.c
+TARGET  := dc-multitool
+SRC     := dc-multitool.c
 OBJ     := $(SRC:.c=.o)
 
-.PHONY: all clean run-all init alice bob
+.PHONY: all clean run-all init gen bob
 
 build: $(TARGET)
 
@@ -37,5 +37,5 @@ bob: $(TARGET)
 	./$(TARGET) bob
 
 clean:
-	rm -f $(TARGET) $(OBJ) mlkem512-pk.pem mlkem512-sk.pem mlkem512-dc.txt my-msg-enc.txt
+	rm -f $(TARGET) $(OBJ) mlkem512-pk.pem mlkem512-sk.pem mlkem512-dc.txt
 
