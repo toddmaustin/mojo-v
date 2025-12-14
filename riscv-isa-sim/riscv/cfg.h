@@ -82,6 +82,8 @@ public:
   bool                    mojov_strong;
   bool                    mojov_proofcarrying;
   uint16_t                mojov_arg;
+  bool                    mojov_dcvalid;
+  data_contract_t         mojov_dc;
   
   std::optional<abstract_sim_if_t*> external_simulator;
 

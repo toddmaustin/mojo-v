@@ -584,6 +584,7 @@ static void step_dcchk(void) {
 
     printf("SUCCESS: ALICE -> BOB Mojo-V data_contract_t transfer validated.\n");
     printf("Decrypted data_contract_t fields:\n");
+    printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
     printf("  sig         = \"");
     for (int i = 0; i < 16; i++) putchar(dc.sig[i]);
     printf("\"\n");
@@ -591,7 +592,6 @@ static void step_dcchk(void) {
     for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]);
     printf("\n");
     printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
-    printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
     printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
     printf("  format_sel  = %u", (unsigned)dc.format_sel);
     if      (dc.format_sel == 0) printf(" (fast)\n");

@@ -51,4 +51,5 @@ cfg_t::cfg_t()
   mojov_strong     = false;
   mojov_proofcarrying = false;
   mojov_arg        = 0;
+  mojov_dcvalid    = false;
 }

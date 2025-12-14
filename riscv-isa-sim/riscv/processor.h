@@ -203,8 +203,8 @@ struct state_t
 
   // Mojo-V: processor state
   csr_t_p msecregcfg;
-  bool dc_valid;
-  data_contract_t dc;
+  bool mojov_dcvalid;
+  data_contract_t mojov_dc;
 
   bool serialized; // whether timer CSRs are in a well-defined state
 
@@ -417,7 +417,7 @@ public:
       secreg_mode = en;
       if (en)
       {
-        if (!state.dc_valid)
+        if (!cfg->mojov_dcvalid)
         {
           // Mojo-V: turning on SECRET regs, initialize the cipher core
           simon_128_128_keyexpand(&simon_state, simon_key);
@@ -432,9 +432,18 @@ public:
   //
   void mojov_reset()
   {
-    // zero out the data contract
-    state.dc_valid = false;
-    memset(&state.dc, 0, sizeof(state.dc));
+    // Mojo-V data contract installed?
+    if (cfg->mojov_dcvalid)
+    {
+      state.mojov_dcvalid = true;
+      state.mojov_dc = cfg->mojov_dc;
+    }
+    else
+    {
+      // zero out the data contract
+      state.mojov_dcvalid = false;
+      memset(&state.mojov_dc, 0, sizeof(state.mojov_dc));
+    }
 
     // reset the dfhash core
     state.n_inputs = 0;
@@ -595,6 +604,5 @@ dfhash_debug(processor_t *p, reg_t regID, dfhash_t hval)
 {
   // fprintf(stderr, "hval: 0x%016lx\n", hval);
 }
-
 
 #endif

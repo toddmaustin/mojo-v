@@ -782,27 +782,29 @@ int main(int argc, char** argv)
     if (CRYPTO_memcmp(pt_sha, hsh_b, 32) != 0)
         die_openssl("Mojo-V: ciphertext authentication FAILED (PT_SHA256 mismatch)");
 
-    data_contract_t dc;
-    dc_decode(&dc, pt);
+    dc_decode(&cfg.mojov_dc, pt);
 
     /* Check header signature */
     static const char sig_str[16+1] = "Mojo-V ver. #001";
-    if (CRYPTO_memcmp(dc.sig, sig_str, 16) != 0)
+    if (CRYPTO_memcmp(cfg.mojov_dc.sig, sig_str, 16) != 0)
         die_openssl("Mojo-V: invalid data contract signature header");
 
-    if (1)
+    // install the valid Mojo-V data contract in the simulator configuration
+    cfg.mojov_dcvalid = true;
+
+    // FIXME: should be quiet unless verbose
     {
-      printf("SUCCESS: Mojo-V data contract transfer validated.\n");
+      printf("SUCCESS: Mojo-V data contract validated and loaded.\n");
       printf("Decrypted data_contract_t fields:\n");
-      printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
-      printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(dc.sig[i]); printf("\"\n");
-      printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]); printf("\n");
-      printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
-      printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
-      printf("  format_sel  = %u", (unsigned)dc.format_sel);
-      if      (dc.format_sel == 0) printf(" (fast)\n");
-      else if (dc.format_sel == 1) printf(" (strong)\n");
-      else if (dc.format_sel == 2) printf(" (proofcarrying)\n");
+      printf("  salt        = 0x%016llx\n", (unsigned long long)cfg.mojov_dc.salt);
+      printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(cfg.mojov_dc.sig[i]); printf("\"\n");
+      printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", cfg.mojov_dc.sym_key_128[i]); printf("\n");
+      printf("  contract_sig= 0x%016llx\n", (unsigned long long)cfg.mojov_dc.contract_sig);
+      printf("  ciphers     = 0x%016llx\n", (unsigned long long)cfg.mojov_dc.ciphers);
+      printf("  format_sel  = %u", (unsigned)cfg.mojov_dc.format_sel);
+      if      (cfg.mojov_dc.format_sel == 0) printf(" (fast)\n");
+      else if (cfg.mojov_dc.format_sel == 1) printf(" (strong)\n");
+      else if (cfg.mojov_dc.format_sel == 2) printf(" (proofcarrying)\n");
       else                         printf(" (?unknown?)\n");
     }
 
@@ -821,6 +823,8 @@ int main(int argc, char** argv)
     EVP_PKEY_free(sk);
     OSSL_PROVIDER_unload(prov);
   }
+  else
+    cfg.mojov_dcvalid = false;
 
   if (kernel && check_file_exists(kernel)) {
     const char *isa = cfg.isa;
