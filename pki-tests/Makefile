@@ -11,10 +11,10 @@ LDFLAGS = -L/opt/ssl/lib64 -Wl,-rpath,/opt/ssl/lib64
 LDLIBS  = -lcrypto
 
 TARGET  := dc-multitool
-SRC     := dc-multitool.c
+SRC     := dc-multitool.c simon.c
 OBJ     := $(SRC:.c=.o)
 
-.PHONY: all clean run-all init gen bob
+.PHONY: all clean build test
 
 build: $(TARGET)
 
@@ -24,18 +24,20 @@ $(TARGET): $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-run-all: $(TARGET)
-	./$(TARGET) all
-
-init: $(TARGET)
-	./$(TARGET) init
-
-alice: $(TARGET)
-	./$(TARGET) alice
 
 bob: $(TARGET)
 	./$(TARGET) bob
 
+test:
+	-rm -f FOO
+	./$(TARGET) keygen pk-file.pem sk-file.pem >> FOO
+	./$(TARGET) dcgen pk-file.pem strong ct-file.txt >> FOO
+	./$(TARGET) dcchk sk-file.pem ct-file.txt >> FOO
+	@echo "#"
+	@echo "# NOTE: salt, sym_key_128, and contract_sig should NEVER match"
+	@echo "#"
+	diff FOO dc-multitool.out
+
 clean:
-	rm -f $(TARGET) $(OBJ) mlkem512-pk.pem mlkem512-sk.pem mlkem512-dc.txt
+	rm -f $(TARGET) $(OBJ) pk-file.pem sk-file.pem ct-file.txt FOO
 
