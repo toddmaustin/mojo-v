@@ -359,29 +359,29 @@ static int write_privkey_pem_unencrypted(const char *path, EVP_PKEY *pkey) {
     return ok;
 }
 
-/* ---- Combined text file writer: KEM_CT + AEAD(Mojo-V data contract) ---- */
+/* ---- Combined text file writer: KEM_DC + AEAD(Mojo-V data contract) ---- */
 static void write_combined_file(const char *path,
-                                const unsigned char *kem_ct, size_t kem_ct_len,
-                                const unsigned char *msg_ct, size_t msg_ct_len,
+                                const unsigned char *kem_dc, size_t kem_dc_len,
+                                const unsigned char *msg_dc, size_t msg_dc_len,
                                 const unsigned char pt_sha[32]) {
     FILE *f = fopen(path, "wb");
     if (!f) die_msg("fopen(combined ct file) failed");
 
-    char *kem_ct_hex = bytes_to_hex(kem_ct, kem_ct_len);
-    char *msg_ct_hex = bytes_to_hex(msg_ct, msg_ct_len);
+    char *kem_dc_hex = bytes_to_hex(kem_dc, kem_dc_len);
+    char *msg_dc_hex = bytes_to_hex(msg_dc, msg_dc_len);
     char *hash_hex   = bytes_to_hex(pt_sha, 32);
 
-    if (!kem_ct_hex || !msg_ct_hex || !hash_hex)
+    if (!kem_dc_hex || !msg_dc_hex || !hash_hex)
         die_msg("bytes_to_hex failed");
 
     fprintf(f, "KEM=ML-KEM-512\n");
     fprintf(f, "CIPHER=SIMON-128\n");
-    fprintf(f, "KEM_CT=%s\n", kem_ct_hex);
-    fprintf(f, "MSG_CT=%s\n", msg_ct_hex);
+    fprintf(f, "KEM_DC=%s\n", kem_dc_hex);
+    fprintf(f, "MSG_DC=%s\n", msg_dc_hex);
     fprintf(f, "PT_SHA256=%s\n", hash_hex);
 
-    OPENSSL_free(kem_ct_hex);
-    OPENSSL_free(msg_ct_hex);
+    OPENSSL_free(kem_dc_hex);
+    OPENSSL_free(msg_dc_hex);
     OPENSSL_free(hash_hex);
     fclose(f);
 }
@@ -426,21 +426,21 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
     if (!ectx) die_openssl("DCGEN: EVP_PKEY_CTX_new_from_pkey(encap)");
     if (EVP_PKEY_encapsulate_init(ectx, NULL) != 1) die_openssl("DCGEN: EVP_PKEY_encapsulate_init");
 
-    size_t kem_ct_len = 0, ss_len = 0;
-    if (EVP_PKEY_encapsulate(ectx, NULL, &kem_ct_len, NULL, &ss_len) != 1)
+    size_t kem_dc_len = 0, ss_len = 0;
+    if (EVP_PKEY_encapsulate(ectx, NULL, &kem_dc_len, NULL, &ss_len) != 1)
         die_openssl("DCGEN: EVP_PKEY_encapsulate(size query)");
 
-    unsigned char *kem_ct = (unsigned char *)OPENSSL_malloc(kem_ct_len);
+    unsigned char *kem_dc = (unsigned char *)OPENSSL_malloc(kem_dc_len);
     unsigned char *ss     = (unsigned char *)OPENSSL_malloc(ss_len);
-    if (!kem_ct || !ss) die_msg("DCGEN: malloc for KEM");
+    if (!kem_dc || !ss) die_msg("DCGEN: malloc for KEM");
 
-    if (EVP_PKEY_encapsulate(ectx, kem_ct, &kem_ct_len, ss, &ss_len) != 1)
+    if (EVP_PKEY_encapsulate(ectx, kem_dc, &kem_dc_len, ss, &ss_len) != 1)
         die_openssl("DCGEN: EVP_PKEY_encapsulate");
 
     /* Derive SIMON-128 key from ss */
     unsigned char k[SIMON128_KEY_LEN];
     if (hkdf_sha256_key128(ss, ss_len, k) != 1)
-        die_openssl("DCGEN: HKDF derive key");
+        die_openssl("DCGEN: HKDF key derivation failed");
 
     // simon key expansion
     simon_128_128_keyexpand(&simon_state, *((uint128_t *)k), 68);
@@ -457,11 +457,11 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
         die_openssl("DCGEN: SHA256(data_contract pt)");
 
     // encrypt the data contract with simon cipher
-    unsigned char msg_ct[DC_WIRE_LEN];
-    simon_encrypt(pt, sizeof(pt), msg_ct);
+    unsigned char msg_dc[DC_WIRE_LEN];
+    simon_encrypt(pt, sizeof(pt), msg_dc);
 
-    write_combined_file(ct_file, kem_ct, kem_ct_len,
-                        msg_ct, sizeof(msg_ct), pt_sha);
+    write_combined_file(ct_file, kem_dc, kem_dc_len,
+                        msg_dc, sizeof(msg_dc), pt_sha);
 
     printf("DCGEN: wrote combined KEM+contract file to '%s'\n", ct_file);
 
@@ -470,7 +470,7 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
     OPENSSL_cleanse(ss, ss_len);
 
     OPENSSL_free(ss);
-    OPENSSL_free(kem_ct);
+    OPENSSL_free(kem_dc);
 
     EVP_PKEY_CTX_free(ectx);
     EVP_PKEY_free(pk);
@@ -478,7 +478,7 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
 }
 
 static void
-step_dcchk(const char *sk_file, const char *ct_file)
+step_dcchk(const char *sk_file, const char *ct_file, bool verbose)
 {
     OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
     if (!prov) die_openssl("OSSL_PROVIDER_load(default)");
@@ -490,24 +490,24 @@ step_dcchk(const char *sk_file, const char *ct_file)
     char *text = read_all_text(ct_file);
     if (!text) die_msg("DCCHK: read combined file failed");
 
-    const char *kem_ct_hex = find_kv(text, "KEM_CT");
-    const char *msg_ct_hex = find_kv(text, "MSG_CT");
+    const char *kem_dc_hex = find_kv(text, "KEM_DC");
+    const char *msg_dc_hex = find_kv(text, "MSG_DC");
     const char *hsh_hex    = find_kv(text, "PT_SHA256");
 
-    if (!kem_ct_hex || !msg_ct_hex || !hsh_hex)
+    if (!kem_dc_hex || !msg_dc_hex || !hsh_hex)
         die_msg("DCCHK: missing fields in combined file");
 
-    unsigned char *kem_ct = NULL, *msg_ct = NULL, *hsh_b = NULL;
-    size_t kem_ct_len = 0, msg_ct_len = 0, hsh_len = 0;
+    unsigned char *kem_dc = NULL, *msg_dc = NULL, *hsh_b = NULL;
+    size_t kem_dc_len = 0, msg_dc_len = 0, hsh_len = 0;
 
-    if (hex_to_bytes(kem_ct_hex, &kem_ct, &kem_ct_len) != 1)
-        die_msg("DCCHK: parse KEM_CT hex failed");
-    if (hex_to_bytes(msg_ct_hex, &msg_ct, &msg_ct_len) != 1)
-        die_msg("DCCHK: parse MSG_CT hex failed");
+    if (hex_to_bytes(kem_dc_hex, &kem_dc, &kem_dc_len) != 1)
+        die_msg("DCCHK: parse KEM_DC hex failed");
+    if (hex_to_bytes(msg_dc_hex, &msg_dc, &msg_dc_len) != 1)
+        die_msg("DCCHK: parse MSG_DC hex failed");
     if (hex_to_bytes(hsh_hex, &hsh_b, &hsh_len) != 1)
         die_msg("DCCHK: parse PT_SHA256 hex failed");
 
-    if (msg_ct_len != DC_WIRE_LEN || hsh_len != 32)
+    if (msg_dc_len != DC_WIRE_LEN || hsh_len != 32)
         die_msg("DCCHK: invalid field lengths in combined file");
 
     /* Decapsulate KEM */
@@ -517,26 +517,26 @@ step_dcchk(const char *sk_file, const char *ct_file)
         die_openssl("DCCHK: EVP_PKEY_decapsulate_init");
 
     size_t ss_len = 0;
-    if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_ct, kem_ct_len) != 1)
+    if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_dc, kem_dc_len) != 1)
         die_openssl("DCCHK: EVP_PKEY_decapsulate(size query)");
 
     unsigned char *ss = (unsigned char *)OPENSSL_malloc(ss_len);
     if (!ss) die_msg("DCCHK: malloc ss");
 
-    if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_ct, kem_ct_len) != 1)
+    if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_dc, kem_dc_len) != 1)
         die_openssl("DCCHK: EVP_PKEY_decapsulate");
 
     /* Derive SIMON-128 key and decrypt contract */
     unsigned char k[SIMON128_KEY_LEN];
     if (hkdf_sha256_key128(ss, ss_len, k) != 1)
-        die_openssl("DCCHK: HKDF derive key");
+        die_openssl("DCCHK: HKDF key derivation failed");
 
     // simon key expansion
     simon_128_128_keyexpand(&simon_state, *((uint128_t *)k), 68);
 
     // encrypt the data contract with simon cipher
     unsigned char pt[DC_WIRE_LEN]; 
-    simon_decrypt(msg_ct, msg_ct_len, pt);
+    simon_decrypt(msg_dc, msg_dc_len, pt);
 
     unsigned char pt_sha[32];
     if (sha256_bytes(pt, sizeof(pt), pt_sha) != 1)
@@ -558,29 +558,32 @@ step_dcchk(const char *sk_file, const char *ct_file)
     }
 
     printf("SUCCESS: DCGEN -> DCCHK Mojo-V data_contract_t transfer validated.\n");
-    printf("Decrypted data_contract_t fields:\n");
-    printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
-    printf("  sig         = \"");
-    for (int i = 0; i < 16; i++) putchar(dc.sig[i]);
-    printf("\"\n");
-    printf("  sym_key_128 = 0x");
-    for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]);
-    printf("\n");
-    printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
-    printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
-    printf("  format_sel  = %u", (unsigned)dc.format_sel);
-    if      (dc.format_sel == 0) printf(" (fast)\n");
-    else if (dc.format_sel == 1) printf(" (strong)\n");
-    else if (dc.format_sel == 2) printf(" (proofcarrying)\n");
-    else                         printf(" (unknown)\n");
+    if (verbose)
+    {
+      printf("Decrypted data_contract_t fields:\n");
+      printf("  salt        = 0x%016llx\n", (unsigned long long)dc.salt);
+      printf("  sig         = \"");
+      for (int i = 0; i < 16; i++) putchar(dc.sig[i]);
+      printf("\"\n");
+      printf("  sym_key_128 = 0x");
+      for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]);
+      printf("\n");
+      printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
+      printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);
+      printf("  format_sel  = %u", (unsigned)dc.format_sel);
+      if      (dc.format_sel == 0) printf(" (fast)\n");
+      else if (dc.format_sel == 1) printf(" (strong)\n");
+      else if (dc.format_sel == 2) printf(" (proofcarrying)\n");
+      else                         printf(" (unknown)\n");
+    }
 
 cleanup:
     OPENSSL_cleanse(k, sizeof(k));
     OPENSSL_cleanse(ss, ss_len);
 
     OPENSSL_free(ss);
-    OPENSSL_free(kem_ct);
-    OPENSSL_free(msg_ct);
+    OPENSSL_free(kem_dc);
+    OPENSSL_free(msg_dc);
     OPENSSL_free(hsh_b);
     OPENSSL_free(text);
 
@@ -598,6 +601,7 @@ usage(const char *argv0)
     fprintf(stderr, "  %s keygen <pk_file> <sk_file>\n", argv0);
     fprintf(stderr, "  %s dcgen <pk_file> {fast,strong,proof-carrying} <ct_file>\n", argv0);
     fprintf(stderr, "  %s dcchk <sk_file> <ct_file>\n", argv0);
+    fprintf(stderr, "  %s dcchk-v <sk_file> <ct_file>\n", argv0);
     exit(2);
 }
 
@@ -615,7 +619,8 @@ static uint8_t parse_format_sel(const char *mode) {
     exit(2);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 
     assert(sizeof(data_contract_t) == 64);
@@ -659,7 +664,18 @@ int main(int argc, char **argv)
         }
         const char *sk_file = argv[2];
         const char *ct_file = argv[3];
-        step_dcchk(sk_file, ct_file);
+        step_dcchk(sk_file, ct_file, false);
+    }
+    else if (strcmp(argv[1], "dcchk-v") == 0)
+    {
+        if (argc != 4)
+        {
+            fprintf(stderr, "dcgen requires an <sk_file> and an <ct_file>\n");
+            usage(argv[0]);
+        }
+        const char *sk_file = argv[2];
+        const char *ct_file = argv[3];
+        step_dcchk(sk_file, ct_file, true);
     }
     else
     {

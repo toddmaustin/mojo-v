@@ -423,7 +423,7 @@ public:
           simon_128_128_keyexpand(&simon_state, simon_key);
         }
         else
-          abort();
+          fprintf(stderr, "INFO: running with loaded data contract.\n");
       }
     }
 

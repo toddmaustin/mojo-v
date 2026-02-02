@@ -28,6 +28,7 @@
 #include <openssl/kdf.h>
 #include <openssl/core_names.h>
 
+#include "simon.h"
 #include "../VERSION"
 
 static void help(int exit_code = 1)
@@ -330,7 +331,7 @@ static std::vector<size_t> parse_hartids(const char *s)
 // Mojo-V: helper routines
 #define GCM_IV_LEN     12
 #define GCM_TAG_LEN    16
-#define AES128_KEY_LEN 16
+#define SIMON128_KEY_LEN 16
 #define DC_WIRE_LEN 64
 
 /* ---- Utility / error ---- */
@@ -349,13 +350,13 @@ static EVP_PKEY *read_privkey_pem(const char *path) {
 
 /* ---- HKDF-SHA256 → AES-128 key from ss ---- */
 static int hkdf_sha256_key128(const unsigned char *ss, size_t ss_len,
-                              unsigned char key_out[AES128_KEY_LEN]) {
+                              unsigned char key_out[SIMON128_KEY_LEN]) {
     int ok = 0;
     EVP_KDF *kdf = NULL;
     EVP_KDF_CTX *kctx = NULL;
 
     static const unsigned char salt[] = "dc-multitool-salt";
-    static const unsigned char info[] = "mlkem512-aes128gcm-data_contract";
+    static const unsigned char info[] = "mlkem512-simon128-data_contract";
 
     char digest_name[] = "SHA256";
     OSSL_PARAM params[] = {
@@ -371,35 +372,11 @@ static int hkdf_sha256_key128(const unsigned char *ss, size_t ss_len,
     kctx = EVP_KDF_CTX_new(kdf);
     if (!kctx) goto end_exit;
 
-    ok = EVP_KDF_derive(kctx, key_out, AES128_KEY_LEN, params);
+    ok = EVP_KDF_derive(kctx, key_out, SIMON128_KEY_LEN, params);
 
 end_exit:
     EVP_KDF_CTX_free(kctx);
     EVP_KDF_free(kdf);
-    return ok;
-}
-
-static int aes_128_gcm_decrypt(const unsigned char key[AES128_KEY_LEN],
-                               const unsigned char iv[GCM_IV_LEN],
-                               const unsigned char *ct, size_t ct_len,
-                               const unsigned char tag[GCM_TAG_LEN],
-                               unsigned char *pt_out) {
-    int ok = 0, len = 0, fin = 0;
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if (!ctx) return 0;
-
-    if (EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL) != 1) goto end;
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, GCM_IV_LEN, NULL) != 1) goto end;
-    if (EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv) != 1) goto end;
-
-    if (EVP_DecryptUpdate(ctx, pt_out, &len, ct, (int)ct_len) != 1) goto end;
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, GCM_TAG_LEN, (void *)tag) != 1) goto end;
-
-    if (EVP_DecryptFinal_ex(ctx, pt_out + len, &fin) != 1) goto end;
-
-    ok = 1;
-end:
-    EVP_CIPHER_CTX_free(ctx);
     return ok;
 }
 
@@ -424,6 +401,25 @@ end:
     EVP_MD_CTX_free(mctx);
     EVP_MD_free(md);
     return ok;
+}
+
+static void
+simon_decrypt(simon_state_t *simon_state,
+              const unsigned char *ct, size_t ct_len,
+              unsigned char *pt)
+{   
+  // expecting not to pad this encryption
+  assert(ct_len % (128/8) == 0);
+    
+  uint128_t *psrc = (uint128_t *)ct, *pdst = (uint128_t *)pt;
+    
+  uint128_t iv = 0;
+  for (unsigned i=0; i < ct_len/(128/8); i++)
+  {     
+    simon_128_128_decrypt(simon_state, psrc[i], &pdst[i]);
+    pdst[i] = pdst[i] ^ iv;
+    iv = psrc[i];
+  } 
 }
 
 static uint64_t load_u64_be(const unsigned char *src) {
@@ -716,38 +712,31 @@ int main(int argc, char** argv)
     // load the secret key (SK) PEM file 
     EVP_PKEY *sk = read_privkey_pem(mojov_sk);
     if (!sk) die_openssl("Mojo-V: Unable to read secret key (SK) PEM file");
-
     
     // load the data contract (DC) file
     char *text = read_all_text(mojov_dc);
     if (!text) die_openssl("Mojo-V: unable to read data contract (DC) file");
 
     // parse the encrypted data contract file fields
-    const char *kem_ct_hex = find_kv(text, "KEM_CT");
-    const char *iv_hex     = find_kv(text, "IV");
-    const char *tag_hex    = find_kv(text, "TAG");
-    const char *msg_ct_hex = find_kv(text, "MSG_CT");
+    const char *kem_dc_hex = find_kv(text, "KEM_DC");
+    const char *msg_dc_hex = find_kv(text, "MSG_DC");
     const char *hsh_hex    = find_kv(text, "PT_SHA256");
 
-    if (!kem_ct_hex || !iv_hex || !tag_hex || !msg_ct_hex || !hsh_hex)
+    if (!kem_dc_hex || !msg_dc_hex || !hsh_hex)
         die_openssl("Mojo-V: missing fields in data contract (DC) file");
 
-    unsigned char *kem_ct = NULL, *iv_b = NULL, *tag_b = NULL, *msg_ct = NULL, *hsh_b = NULL;
-    size_t kem_ct_len = 0, iv_len = 0, tag_len = 0, msg_ct_len = 0, hsh_len = 0;
+    unsigned char *kem_dc = NULL, *msg_dc = NULL, *hsh_b = NULL;
+    size_t kem_dc_len = 0, msg_dc_len = 0, hsh_len = 0;
+    simon_state_t simon_state; // simon cipher state
 
-    if (hex_to_bytes(kem_ct_hex, &kem_ct, &kem_ct_len) != 1)
-        die_openssl("BOB: parse KEM_CT hex failed");
-    if (hex_to_bytes(iv_hex, &iv_b, &iv_len) != 1)
-        die_openssl("BOB: parse IV hex failed");
-    if (hex_to_bytes(tag_hex, &tag_b, &tag_len) != 1)
-        die_openssl("BOB: parse TAG hex failed");
-    if (hex_to_bytes(msg_ct_hex, &msg_ct, &msg_ct_len) != 1)
-        die_openssl("BOB: parse MSG_CT hex failed");
+    if (hex_to_bytes(kem_dc_hex, &kem_dc, &kem_dc_len) != 1)
+        die_openssl("Mojo-V: parse KEM_DC hex failed");
+    if (hex_to_bytes(msg_dc_hex, &msg_dc, &msg_dc_len) != 1)
+        die_openssl("Mojo-V: parse MSG_DC hex failed");
     if (hex_to_bytes(hsh_hex, &hsh_b, &hsh_len) != 1)
-        die_openssl("BOB: parse PT_SHA256 hex failed");
+        die_openssl("Mojo-V: parse PT_SHA256 hex failed");
 
-    if (iv_len != GCM_IV_LEN || tag_len != GCM_TAG_LEN ||
-        msg_ct_len != DC_WIRE_LEN || hsh_len != 32)
+    if (msg_dc_len != DC_WIRE_LEN || hsh_len != 32)
         die_openssl("Mojo-V: invalid field lengths in data contract (DC) file");
 
     /* Decapsulate KEM */
@@ -757,23 +746,25 @@ int main(int argc, char** argv)
         die_openssl("Mojo-V: failed to initialize decapsulation, EVP_PKEY_decapsulate_init");
 
     size_t ss_len = 0;
-    if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_ct, kem_ct_len) != 1)
+    if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_dc, kem_dc_len) != 1)
         die_openssl("Mojo-V: ciphertext decapsulation size query failed, EVP_PKEY_decapsulate()");
 
     unsigned char *ss = (unsigned char *)OPENSSL_malloc(ss_len);
     if (!ss) die_openssl("Mojo-V: SS malloc failed");
 
-    if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_ct, kem_ct_len) != 1)
+    if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_dc, kem_dc_len) != 1)
         die_openssl("Mojo-V: decapsulation failed, EVP_PKEY_decapsulate()");
 
-    /* Derive AES-128 key and decrypt contract */
-    unsigned char k[AES128_KEY_LEN];
+    /* Derive SIMON-128 key and decrypt contract */
+    unsigned char k[SIMON128_KEY_LEN];
     if (hkdf_sha256_key128(ss, ss_len, k) != 1)
         die_openssl("Mojo-V: HKDF key derivation failed");
 
+    // simon key expansion
+    simon_128_128_keyexpand(&simon_state, *((uint128_t *)k), 68);
+
     unsigned char pt[DC_WIRE_LEN];
-    if (aes_128_gcm_decrypt(k, iv_b, msg_ct, msg_ct_len, tag_b, pt) != 1)
-        die_openssl("Mojo-V: AES-128-GCM decrypt FAILED (tag / key mismatch)");
+    simon_decrypt(&simon_state, msg_dc, msg_dc_len, pt);
 
     unsigned char pt_sha[32];
     if (sha256_bytes(pt, sizeof(pt), pt_sha) != 1)
@@ -812,10 +803,8 @@ int main(int argc, char** argv)
     OPENSSL_cleanse(ss, ss_len);
 
     OPENSSL_free(ss);
-    OPENSSL_free(kem_ct);
-    OPENSSL_free(iv_b);
-    OPENSSL_free(tag_b);
-    OPENSSL_free(msg_ct);
+    OPENSSL_free(kem_dc);
+    OPENSSL_free(msg_dc);
     OPENSSL_free(hsh_b);
     OPENSSL_free(text);
 
