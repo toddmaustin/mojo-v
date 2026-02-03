@@ -1,5 +1,6 @@
 #include "libmin.h"
 #include "simon.h"
+#include "dc-fast.h"
 
 typedef unsigned __int128 uint128_t;
 
@@ -95,7 +96,7 @@ main(void)
       uint32_t sig;     // fixed signature
     } pt;
   };
-  uint128_t simon_key = GEN128(0x0f0e0d0c0b0a0908, 0x0706050403020100);
+  uint128_t simon_key = SIMON128_KEY;
   simon_state_t simon_state;
   simon_128_128_keyexpand(&simon_state, simon_key, 68);
 

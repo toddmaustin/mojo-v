@@ -79,6 +79,8 @@ public:
   bool                    real_time_clint;
   reg_t                   trigger_count;
   reg_t                   cache_blocksz;
+  bool                    mojov_verbose;
+  bool                    mojov_fast;
   bool                    mojov_strong;
   bool                    mojov_proofcarrying;
   uint16_t                mojov_arg;

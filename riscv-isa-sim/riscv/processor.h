@@ -423,7 +423,33 @@ public:
           simon_128_128_keyexpand(&simon_state, simon_key);
         }
         else
-          fprintf(stderr, "INFO: running with loaded data contract.\n");
+        {
+          if (cfg->mojov_verbose)
+            fprintf(stderr, "INFO: running with loaded data contract.\n");
+
+          // perform simon key expansion on the decrypted SIMON128 key
+          simon_128_128_keyexpand(&simon_state, *((uint128_t *)cfg->mojov_dc.sym_key_128), 68);
+          if (cfg->mojov_verbose)
+          {
+            printf("INFO: simon_key = 0x"); for (int i = 0; i < 16; i++) printf("%02x", cfg->mojov_dc.sym_key_128[i]); printf("\n");
+          }
+
+          if (cfg->mojov_verbose)
+          {
+            printf("SUCCESS: Mojo-V data contract validated and loaded.\n");
+            printf("Decrypted data_contract_t fields:\n");
+            printf("  salt        = 0x%016llx\n", (unsigned long long)cfg->mojov_dc.salt);
+            printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(cfg->mojov_dc.sig[i]); printf("\"\n");
+            printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", cfg->mojov_dc.sym_key_128[i]); printf("\n");
+            printf("  contract_sig= 0x%016llx\n", (unsigned long long)cfg->mojov_dc.contract_sig);
+            printf("  ciphers     = 0x%016llx\n", (unsigned long long)cfg->mojov_dc.ciphers);
+            printf("  format_sel  = %u", (unsigned)cfg->mojov_dc.format_sel);
+            if      (cfg->mojov_dc.format_sel == 0) printf(" (fast)\n");
+            else if (cfg->mojov_dc.format_sel == 1) printf(" (strong)\n");
+            else if (cfg->mojov_dc.format_sel == 2) printf(" (proofcarrying)\n");
+            else                         printf(" (?unknown?)\n");
+          }
+        }
       }
     }
 

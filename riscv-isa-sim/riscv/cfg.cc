@@ -48,6 +48,8 @@ cfg_t::cfg_t()
   real_time_clint  = false;
   trigger_count    = 4;
   cache_blocksz    = 64;
+  mojov_verbose    = false;
+  mojov_fast       = false;
   mojov_strong     = false;
   mojov_proofcarrying = false;
   mojov_arg        = 0;

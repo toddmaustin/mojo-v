@@ -8,7 +8,7 @@ PROG=mojov-test
 include ../Makefile
 
 test: $(TARGET_EXE)
-	-$(TARGET_SIM) ./$(TARGET_EXE) > FOO 
+	-$(TARGET_SIM) --mojov-dc=../target/dc-fast.txt ./$(TARGET_EXE) > FOO 
 	$(TARGET_DIFF) FOO mojov-test.$(TARGET_REFEXT)
 	rm -f FOO
 

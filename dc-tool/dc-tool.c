@@ -566,7 +566,7 @@ step_dcchk(const char *sk_file, const char *ct_file, bool verbose)
       for (int i = 0; i < 16; i++) putchar(dc.sig[i]);
       printf("\"\n");
       printf("  sym_key_128 = 0x");
-      for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[i]);
+      for (int i = 0; i < 16; i++) printf("%02x", dc.sym_key_128[15-i]);
       printf("\n");
       printf("  contract_sig= 0x%016llx\n", (unsigned long long)dc.contract_sig);
       printf("  ciphers     = 0x%016llx\n", (unsigned long long)dc.ciphers);

@@ -94,8 +94,10 @@ static void help(int exit_code = 1)
   fprintf(stderr, "  --dm-no-impebreak     Debug module won't support implicit ebreak in program buffer\n");
   fprintf(stderr, "  --blocksz=<size>      Cache block size (B) for CMO operations(powers of 2) [default 64]\n");
   fprintf(stderr, "  --instructions=<n>    Stop after n instructions\n");
-  fprintf(stderr, "  --mojov-strong        Use Mojo-V strong encryption format (otherwise fast format)\n");
-  fprintf(stderr, "  --mojov-proofcarrying Use Mojo-V proof-carrying encryption format (otherwise fast format)\n");
+  fprintf(stderr, "  --mojov-verbose       Mojo-V setup processing is verbose\n");
+  fprintf(stderr, "  --mojov-fast          Use Mojo-V fast encryption mode (default mode)\n");
+  fprintf(stderr, "  --mojov-strong        Use Mojo-V strong encryption format (otherwise using data contract specified mode)\n");
+  fprintf(stderr, "  --mojov-proofcarrying Use Mojo-V proof-carrying encryption format (otherwise use data contract specified mode)\n");
   fprintf(stderr, "  --mojov-arg=<n>       Pass a numeric argument to a Mojo-V test code\n");
   fprintf(stderr, "  --mojov-sk=<pem_file> Load Mojo-V CPU secret key from <pem_file>\n");
   fprintf(stderr, "  --mojov-dc=<dc_file>  Load Mojo-V data contract from <dc_file>\n");
@@ -670,6 +672,8 @@ int main(int argc, char** argv)
   parser.option(0, "instructions", 1, [&](const char* s){
     instructions = strtoull(s, 0, 0);
   });
+  parser.option(0, "mojov-verbose", 0, [&](const char UNUSED *s){cfg.mojov_verbose = true;});
+  parser.option(0, "mojov-fast", 0, [&](const char UNUSED *s){cfg.mojov_fast = true;});
   parser.option(0, "mojov-strong", 0, [&](const char UNUSED *s){cfg.mojov_strong = true;});
   parser.option(0, "mojov-proofcarrying", 0, [&](const char UNUSED *s){cfg.mojov_proofcarrying = true;});
   parser.option(0, "mojov-arg", 1, [&](const char *s){
@@ -780,10 +784,22 @@ int main(int argc, char** argv)
     if (CRYPTO_memcmp(cfg.mojov_dc.sig, sig_str, 16) != 0)
         die_openssl("Mojo-V: invalid data contract signature header");
 
+    // perform simon key expansion on the decrypted SIMON128 key
+    // simon_128_128_keyexpand(&simon_state, *((uint128_t *)cfg.mojov_dc.sym_key_128), 68);
+    // printf("INFO: simon_key = 0x"); for (int i = 0; i < 16; i++) printf("%02x", cfg.mojov_dc.sym_key_128[i]); printf("\n");
+
+    // override the data contract (DC) memory mode, if the command line specified one
+    if (cfg.mojov_fast)
+      cfg.mojov_dc.format_sel = 0;
+    if (cfg.mojov_strong)
+      cfg.mojov_dc.format_sel = 1;
+    if (cfg.mojov_proofcarrying)
+      cfg.mojov_dc.format_sel = 2;
+
     // install the valid Mojo-V data contract in the simulator configuration
     cfg.mojov_dcvalid = true;
 
-    // FIXME: should be quiet unless verbose
+    if (cfg.mojov_verbose)
     {
       printf("SUCCESS: Mojo-V data contract validated and loaded.\n");
       printf("Decrypted data_contract_t fields:\n");
@@ -797,6 +813,16 @@ int main(int argc, char** argv)
       else if (cfg.mojov_dc.format_sel == 1) printf(" (strong)\n");
       else if (cfg.mojov_dc.format_sel == 2) printf(" (proofcarrying)\n");
       else                         printf(" (?unknown?)\n");
+    }
+
+    // sync up the memory mode config options
+    if      (cfg.mojov_dc.format_sel == 0) cfg.mojov_fast = true;
+    else if (cfg.mojov_dc.format_sel == 1) cfg.mojov_strong = true;
+    else if (cfg.mojov_dc.format_sel == 2) cfg.mojov_proofcarrying = true;
+    else
+    {
+      fprintf(stderr, "ERROR: invalid Mojo-V memory mode.\n");
+      abort();
     }
 
     OPENSSL_cleanse(k, sizeof(k));
