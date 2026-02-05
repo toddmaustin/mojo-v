@@ -11,7 +11,7 @@ test: $(TARGET_EXE)
 	rm -f FOO
 	for i in $(shell seq 0 246); do \
 	  echo "--- Test $$i ---" >> FOO; \
-	  $(TARGET_SIM) --mojov-arg=$$i --mojov-dc=../target/dc-fast.txt ./$(TARGET_EXE) >> FOO; \
+	  $(TARGET_SIM) --mojov-arg=$$i --mojov-dc=../target/dc-fast.txt --mojov-verbose ./$(TARGET_EXE) >> FOO; \
 	done
 	$(TARGET_DIFF) FOO mojov-sectests.$(TARGET_REFEXT)
 	rm -f FOO

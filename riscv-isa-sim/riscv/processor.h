@@ -425,7 +425,7 @@ public:
         else
         {
           if (cfg->mojov_verbose)
-            fprintf(stderr, "INFO: running with loaded data contract.\n");
+            printf("INFO: running with loaded data contract.\n");
 
           // perform simon key expansion on the decrypted SIMON128 key
           simon_128_128_keyexpand(&simon_state, *((uint128_t *)cfg->mojov_dc.sym_key_128), 68);

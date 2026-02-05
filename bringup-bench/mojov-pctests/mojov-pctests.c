@@ -1,5 +1,6 @@
 #include "libmin.h"
 #include "simon.h"
+#include "dc-proof.h"
 
 typedef unsigned __int128 uint128_t;
 
@@ -105,7 +106,7 @@ union mojov_imem_proofcarrying_t {
   } pt;
 };
 
-uint128_t simon_key = GEN128(0x0f0e0d0c0b0a0908, 0x0706050403020100);
+uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
 inline extern double
@@ -467,11 +468,11 @@ main(void)
   // DFHASH baseline test
   {
     // performance monitoring
-    uint64_t icnt_start = __instret();
+    // uint64_t icnt_start = __instret();
 
     bubblesort(secret_data, DATASET_SIZE);
 
-    uint64_t icnt_end = __instret();
+    // uint64_t icnt_end = __instret();
     // libmin_printf("INFO: bubblesort inst count = %lu.\n", icnt_end - icnt_start + 1);
   }
 
@@ -481,32 +482,39 @@ main(void)
     raw_data[i] = secret_decrypt(secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
+  libmin_printf("INFO: %lu swaps executed.\n", secret_idecrypt(swaps));
+
   // check the array
+  bool sorted = true;
   for (unsigned i=0; i < DATASET_SIZE-1; i++)
   {
     if (raw_data[i] > raw_data[i+1])
     {
-      libmin_printf("ERROR: data is not properly sorted.\n");
+      sorted = false;
       break;
     }
   }
+  libmin_printf("ERROR: data is %sproperly sorted.\n", sorted ? "" : "not ");
 
   double sum = secret_decrypt(sum_enc);
   libmin_printf("INFO: final summary variable: %.20lf\n", sum);
 
+  uint64_t dfhash;
   if (mojov_arg == 22)
   {
-    uint64_t dfhash = secret_dfhash(secret_data[DATASET_SIZE-1]);
+    dfhash = secret_dfhash(secret_data[DATASET_SIZE-1]);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
   }
   else
   {
-    uint64_t dfhash = secret_dfhash(sum_enc);
+    dfhash = secret_dfhash(sum_enc);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
   }
+  if (dfhash == 0xc928d654cf18433e)
+    libmin_printf("INFO: secret computation integrity is INTACT.\n");
+  else
+    libmin_printf("INFO: secret computation integrity is CORRUPTED! (expected: 0xc928d654cf18433e)\n");
 
-  libmin_printf("INFO: %lu swaps executed.\n", secret_idecrypt(swaps));
-  libmin_printf("INFO: data is properly sorted.\n");
 
   libmin_success();
   return 0;

@@ -277,11 +277,11 @@ main(void)
 
   {
     // performance monitoring
-    uint64_t icnt_start = __instret();
+    // uint64_t icnt_start = __instret();
 
     bubblesort(secret_data, DATASET_SIZE);
 
-    uint64_t icnt_end = __instret();
+    // uint64_t icnt_end = __instret();
     // libmin_printf("INFO: bubblesort inst count = %lu.\n", icnt_end - icnt_start + 1);
   }
 
