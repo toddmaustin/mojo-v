@@ -10,32 +10,45 @@ To learn more...
 - Here is an intro video describing Mojo-V: https://www.youtube.com/watch?v=HUT46TcNyyM
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
-The current Mojo-V ISA Extension Specification (release 0.92):
-- [In PDF format.] (https://drive.google.com/file/d/1pargKATFoQdy94i6bI3P_9mfNA_GsYSw)
+The current Mojo-V ISA Extension Specification (release 0.93):
+- [In PDF format.] (https://drive.google.com/file/d/1UuaZvgpbdWOfQjF1D-9r0aCrPs590F5L)
 
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
-# 🧩 Mojo-V Reference Platform — Release 0.92
+# 🧩 Mojo-V Reference Platform — Release 0.93
 
 ## 🚧 Project Status
 
-The Mojo-V reference platform release 0.92 implements secret integer and floating-point computation using a fixed symmetric key cipher. Mojo-V supports three encryption modes: fast, strong, and proof-carrying. As of this release, 64-bit secret computation is fully secretized and this early reference platform can be used for software development and red-teaming. Additional capabilities will be rolled out in future releases, including PKI support, LLVM compiler support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
+The Mojo-V reference platform release 0.93 implements secret integer and floating-point computation using a fixed symmetric key cipher. Mojo-V supports three encryption modes: fast, strong, and proof-carrying. As of this release, 64-bit secret computation is fully secretized and this early reference platform can be used for software development and red-teaming. Additional capabilities will be rolled out in future releases, including LLVM compiler support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
 
-**Specification Version:** 0.92  (November 2025)  
+**Specification Version:** 0.93  (February 2026)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
 ## Current components
 
-1. **Mojo-V ISA Spec v0.92**
+1. **Mojo-V ISA Spec v0.93**
+
    - released in `doc/`
-2. **Spike (Instruction Set Simulator) Implementation**
+
+2. **Spike (Instruction Set Simulator) with Mojo-V Extensions**
+
    - Mojo-V integrated into `riscv-isa-sim`, nearly feature-complete
-   - Missing only: Public-Key Infrastructure (PKI) support (currently uses fixed keys with a Simon-128 cipher)
+   - Missing only: instruction-level key management (KM) infrastructure; currently, all key management is done through Spike command line options; current implementation: key exchange with ML-KEM512, bulk encryption with SIMON128.
    - To run Spike with Mojo-V extensions enabled, add the `--isa=rv64gc_zicond_zkmojov_zicntr` flag when running `spike`
-3. **Mojo-V Bringup-Bench Benchmarks**
+
+3. **Data Contract Multi-tool**
+
+   Data contracts are encrypted packets that allow a Mojo-V CPU's hardware to access the data access key and configuration information (e.g., memory encryption mode) for a Mojo-V encrypted data set. The DC Multi-tool enables the following capabilities:
+
+   * Hardware developers can create public/private ML-KEM512 key pairs: public keys are shared with service providers, private keys are embedded into the Mojo-V hardware implementation.
+   * Data owners can create data contracts and encrypt them under the public ML-KEM512 keys of service providers. The matching Mojo-V hardware can then perform secret computation on the protected 3rd-party encrypted data.
+
+4. **Mojo-V Bringup-Bench Benchmarks**
+
    - Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
    - Full battery of security tests for RV64GC+Mojo-V
+   - Full battery of integrity attack tests for RV64GC+Mojo-V
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
 
@@ -44,15 +57,22 @@ Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo
 ### A. Install a RISC-V LLVM Compiler
 You’ll need an LLVM-based RISC-V cross-compiler capable of producing `RV64GC` binaries.
 
+Here is a good place to start: https://github.com/openssl/openssl
+
+### B. Install OpenSSL version 3.6 or newer
+
+You’ll need a developer's installation of OpenSSL version 3.6 or newer. This provides libraries that implement ML-KEM512, used by Spike for protected key exchange.
+
 Here is a good place to start: https://clang.llvm.org/get_started.html
 
-### B. Clone the Mojo-V Repository
+### C. Clone the Mojo-V Repository
+
 ```bash
 git clone https://github.com/toddmaustin/mojo-v.git
 cd mojo-v
 ```
 
-### C. Build the RISC-V Spike simulator with Mojo-V Support
+### D. Build the RISC-V Spike simulator with Mojo-V Support
 ```bash
 sudo apt-get install device-tree-compiler libboost-regex-dev libboost-system-dev
 cd riscv-isa-sim
@@ -62,7 +82,16 @@ cd build
 make
 ```
 
-### D. Build and Run Mojo-V Bringup-Bench Benchmark Tests
+### **E. Build and test the Data Contract Multi-tool**
+
+Data contracts are encrypted packets that allow a Mojo-V CPU's hardware to access the data access key and configuration information (e.g., memory encryption mode) for a Mojo-V encrypted data set.
+
+```
+cd dc-tool
+make clean build test
+```
+
+### **E. Build and Run Mojo-V Bringup-Bench Benchmark Tests**
 
 1. **Build the Spike device driver**
 
@@ -75,7 +104,7 @@ make
 
    Edit `../Makefile` and set `TARGET_CC` for the `mojov` target to the location of your LVM Clang-based RISC-V compiler.
 
-3. **Build and test**
+3. **Build and test the Bringup-Bench test programs**
 
    ```bash
    cd ..                # go to the top-level bringup-bench directory
@@ -88,6 +117,8 @@ make
    cd ../mojov-test
    make TARGET=mojov clean build test
    ```
+
+
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
@@ -103,6 +134,47 @@ make
 | `mojov-sectests` | Hand-coded security test suite for RV64GC+Mojo-V that includes 130 pos + 245 neg tests == 375 total (int,fp,fast,strong) |
 
 All test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
+
+
+
+## 🛠️ Mojo-V Data Contract Multi-tool Usage
+
+The data contact multi-tool "dc-tool" is used to create and validate Mojo-V data contracts. 
+
+To create an ML-KEM512 public/private key pair, execute the following command. Note that the public key is to be shared with 3rd-party data providers to prepare data contracts. Private keys are installed into the hardware (or simulator).
+
+```bash
+./dc-tool keygen <pk_file> <sk_file>          # public key in <pk_file>, private key in <sk_file>
+```
+
+Once a public/private key pair exists, it is then possible to create encrypted data contracts. A data contract contains an encrypted data access key (for Mojo-V hardware to access 3rd-party data) and an encrypted memory mode configuration. Execute the following command to created an encrypted data contract.
+
+```bash
+./dc-tool dcgen <pk_file> {fast,strong,proof-carrying} <ct_file>    # specify mem mode, contract in <ct_file>
+```
+
+Sharing an encrypted data contract with the Mojo-V hardware that corresponds to the public ML-KEM512 key used to encrypt the contract will allow the Mojo-V enabled CPU to perform secret computation on the protected 3rd-party data. To validate that the encrypted contract is valid, use the following commands.
+
+```bash
+./dc-tool dcchk <sk_file> <ct_file>           # decrypt contract <ct_file> with secret key <sk_file>
+./dc-tool dcchk-v <sk_file> <ct_file>         # same as above, but also dump decrypted contents of <ct_file>
+```
+
+
+
+## 🛠️ Mojo-V Specific Options Added to RISC-V Spike ISA Simulator
+
+The following options have been added to Spike, the standard RISC-V ISA simulator.
+
+```bash
+  --mojov-verbose       Mojo-V setup processing is verbose
+  --mojov-fast          Use Mojo-V fast encryption mode (default mode)
+  --mojov-strong        Use Mojo-V strong encryption format (otherwise using data contract specified mode)
+  --mojov-proofcarrying Use Mojo-V proof-carrying encryption format (otherwise use data contract specified mode)
+  --mojov-arg=<n>       Pass a numeric argument to a Mojo-V test code
+  --mojov-sk=<pem_file> Load Mojo-V CPU secret key from <pem_file>
+  --mojov-dc=<dc_file>  Load Mojo-V data contract from <dc_file>
+```
 
 ---
 ## Code Licensing
