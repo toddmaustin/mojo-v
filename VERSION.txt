@@ -1,3 +1,11 @@
+** Mojo-V Reference Platform — Release 0.93
+
+  - Updated Mojo-V specification to v0.93
+  - added "dc-tool", the data contract multi-tool, used to create and validate Mojo-V data contracts
+  - added ML-KEM 513 key exchange support to Spike Mojo-V extensions, so now the simulator can open an encrypted data contract
+
+--
+
 ** Mojo-V Reference Platform — Release 0.92
 
   - Updated Mojo-V specification to v0.92
