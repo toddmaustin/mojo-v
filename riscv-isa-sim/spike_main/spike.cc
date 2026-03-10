@@ -647,12 +647,11 @@ int main(int argc, char** argv)
   if (mojov_sk)
     cfg.mojov_sk_pem_path = mojov_sk;
 
-  if (mojov_sk || mojov_dc)
+  if (mojov_dc)
   {
-    // need both parameters
-    if (!mojov_sk || !mojov_dc)
+    if (!mojov_sk)
     {
-      fprintf(stderr, "Mojo-V: Both --mojov-sk and --mojov-dc are required to configure Mojo-V PKI engine\n");
+      fprintf(stderr, "Mojo-V: When --mojov-dc is used, --mojov-sk is also required to configure Mojo-V\n");
       exit(-1);
     }
 
@@ -765,14 +764,13 @@ int main(int argc, char** argv)
     else
     {
       fprintf(stderr, "ERROR: invalid Mojo-V memory mode.\n");
-      abort();
+      exit(-1);
     }
 
     OPENSSL_free(kem_dc);
     OPENSSL_free(msg_dc);
     OPENSSL_free(hsh_b);
     OPENSSL_free(text);
-
   }
   else
     cfg.mojov_dcvalid = false;

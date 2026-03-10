@@ -138,29 +138,51 @@ bool mojov_open_contract_from_components(const char *sk_pem_path,
   EVP_PKEY *sk = nullptr;
   EVP_PKEY_CTX *dctx = nullptr;
   unsigned char *ss = nullptr;
+  size_t ss_len = 0;
 
   sk = mojov_read_privkey_pem(sk_pem_path);
-  if (!sk) { if (status) *status = mojov_open_status_t::SK_LOAD; goto out; }
+  if (!sk) {
+    if (status)
+      *status = mojov_open_status_t::SK_LOAD;
+    goto out;
+  }
 
   dctx = EVP_PKEY_CTX_new_from_pkey(NULL, sk, NULL);
-  if (!dctx) { if (status) *status = mojov_open_status_t::DECAP_CTX; goto out; }
-  if (EVP_PKEY_decapsulate_init(dctx, NULL) != 1) { if (status) *status = mojov_open_status_t::DECAP_INIT; goto out; }
+  if (!dctx) {
+    if (status)
+      *status = mojov_open_status_t::DECAP_CTX;
+    goto out;
+  }
+  if (EVP_PKEY_decapsulate_init(dctx, NULL) != 1) {
+    if (status)
+      *status = mojov_open_status_t::DECAP_INIT;
+    goto out;
+  }
 
-  size_t ss_len = 0;
   if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_dc, kem_dc_len) != 1) {
-    if (status) *status = mojov_open_status_t::DECAP_SIZE; goto out;
+    if (status)
+      *status = mojov_open_status_t::DECAP_SIZE;
+    goto out;
   }
 
   ss = (unsigned char *)OPENSSL_malloc(ss_len);
-  if (!ss) { if (status) *status = mojov_open_status_t::SS_MALLOC; goto out; }
+  if (!ss) {
+    if (status)
+      *status = mojov_open_status_t::SS_MALLOC;
+    goto out;
+  }
 
   if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_dc, kem_dc_len) != 1) {
-    if (status) *status = mojov_open_status_t::DECAP; goto out;
+    if (status)
+      *status = mojov_open_status_t::DECAP;
+    goto out;
   }
 
   unsigned char k[SIMON128_KEY_LEN];
   if (mojov_hkdf_sha256_key128(ss, ss_len, k) != 1) {
-    if (status) *status = mojov_open_status_t::HKDF; goto out;
+    if (status)
+      *status = mojov_open_status_t::HKDF;
+    goto out;
   }
 
   simon_state_t local_simon_state;
@@ -170,18 +192,24 @@ bool mojov_open_contract_from_components(const char *sk_pem_path,
   mojov_simon_decrypt(&local_simon_state, msg_dc, msg_dc_len, pt);
 
   if (mojov_sha256_bytes(pt, sizeof(pt), out_pt_sha) != 1) {
-    if (status) *status = mojov_open_status_t::SHA256; goto out;
+    if (status)
+      *status = mojov_open_status_t::SHA256;
+    goto out;
   }
 
   if (expected_pt_sha_or_null && CRYPTO_memcmp(out_pt_sha, expected_pt_sha_or_null, 32) != 0) {
-    if (status) *status = mojov_open_status_t::PT_HASH_MISMATCH; goto out;
+    if (status)
+      *status = mojov_open_status_t::PT_HASH_MISMATCH;
+    goto out;
   }
 
   mojov_dc_decode(out_dc, pt);
 
   static const char sig_str[16+1] = "Mojo-V ver. #001";
   if (CRYPTO_memcmp(out_dc->sig, sig_str, 16) != 0) {
-    if (status) *status = mojov_open_status_t::BAD_SIGNATURE; goto out;
+    if (status)
+      *status = mojov_open_status_t::BAD_SIGNATURE;
+    goto out;
   }
 
   OPENSSL_cleanse(k, sizeof(k));
