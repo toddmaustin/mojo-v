@@ -25,10 +25,8 @@
 #include <openssl/provider.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
-#include <openssl/kdf.h>
-#include <openssl/core_names.h>
 
-#include "simon.h"
+#include "../riscv/mojov_crypto.h"
 #include "../VERSION"
 
 static void help(int exit_code = 1)
@@ -100,6 +98,7 @@ static void help(int exit_code = 1)
   fprintf(stderr, "  --mojov-proofcarrying Use Mojo-V proof-carrying encryption format (otherwise use data contract specified mode)\n");
   fprintf(stderr, "  --mojov-arg=<n>       Pass a numeric argument to a Mojo-V test code\n");
   fprintf(stderr, "  --mojov-sk=<pem_file> Load Mojo-V CPU secret key from <pem_file>\n");
+  fprintf(stderr, "  --mojov-pk=<pem_file> Load Mojo-V CPU public key from <pem_file>\n");
   fprintf(stderr, "  --mojov-dc=<dc_file>  Load Mojo-V data contract from <dc_file>\n");
 
   exit(exit_code);
@@ -333,117 +332,17 @@ static std::vector<size_t> parse_hartids(const char *s)
 // Mojo-V: helper routines
 #define GCM_IV_LEN     12
 #define GCM_TAG_LEN    16
-#define SIMON128_KEY_LEN 16
 #define DC_WIRE_LEN 64
 
 /* ---- Utility / error ---- */
-static void die_openssl(const char *what) {
-    fprintf(stderr, "ERROR: %s\n", what);
-    exit(-1);
-}
 
-static EVP_PKEY *read_privkey_pem(const char *path) {
+static EVP_PKEY *read_pubkey_pem(const char *path) {
     BIO *bio = BIO_new_file(path, "rb");
     if (!bio) return NULL;
-    EVP_PKEY *pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+    EVP_PKEY *pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
     BIO_free(bio);
     return pkey;
 }
-
-/* ---- HKDF-SHA256 → AES-128 key from ss ---- */
-static int hkdf_sha256_key128(const unsigned char *ss, size_t ss_len,
-                              unsigned char key_out[SIMON128_KEY_LEN]) {
-    int ok = 0;
-    EVP_KDF *kdf = NULL;
-    EVP_KDF_CTX *kctx = NULL;
-
-    static const unsigned char salt[] = "dc-multitool-salt";
-    static const unsigned char info[] = "mlkem512-simon128-data_contract";
-
-    char digest_name[] = "SHA256";
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, digest_name, 0),
-        OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, (void *)ss, ss_len),
-        OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, (void *)salt, sizeof(salt) - 1),
-        OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, (void *)info, sizeof(info) - 1),
-        OSSL_PARAM_construct_end()
-    };
-
-    kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
-    if (!kdf) goto end_exit;
-    kctx = EVP_KDF_CTX_new(kdf);
-    if (!kctx) goto end_exit;
-
-    ok = EVP_KDF_derive(kctx, key_out, SIMON128_KEY_LEN, params);
-
-end_exit:
-    EVP_KDF_CTX_free(kctx);
-    EVP_KDF_free(kdf);
-    return ok;
-}
-
-/* ---- SHA256 ---- */
-static int sha256_bytes(const unsigned char *in, size_t inlen, unsigned char out32[32]) {
-    int ok = 0;
-    EVP_MD *md = NULL;
-    EVP_MD_CTX *mctx = NULL;
-    unsigned int outlen = 0;
-        
-    md = EVP_MD_fetch(NULL, "SHA256", NULL);
-    if (!md) goto end;
-    mctx = EVP_MD_CTX_new();
-    if (!mctx) goto end;
-    if (EVP_DigestInit_ex(mctx, md, NULL) != 1) goto end;
-    if (EVP_DigestUpdate(mctx, in, inlen) != 1) goto end;
-    if (EVP_DigestFinal_ex(mctx, out32, &outlen) != 1) goto end;
-    if (outlen != 32) goto end;
-        
-    ok = 1;
-end:
-    EVP_MD_CTX_free(mctx);
-    EVP_MD_free(md);
-    return ok;
-}
-
-static void
-simon_decrypt(simon_state_t *simon_state,
-              const unsigned char *ct, size_t ct_len,
-              unsigned char *pt)
-{   
-  // expecting not to pad this encryption
-  assert(ct_len % (128/8) == 0);
-    
-  uint128_t *psrc = (uint128_t *)ct, *pdst = (uint128_t *)pt;
-    
-  uint128_t iv = 0;
-  for (unsigned i=0; i < ct_len/(128/8); i++)
-  {     
-    simon_128_128_decrypt(simon_state, psrc[i], &pdst[i]);
-    pdst[i] = pdst[i] ^ iv;
-    iv = psrc[i];
-  } 
-}
-
-static uint64_t load_u64_be(const unsigned char *src) {
-    return ((uint64_t)src[0] << 56) |
-           ((uint64_t)src[1] << 48) |
-           ((uint64_t)src[2] << 40) | 
-           ((uint64_t)src[3] << 32) |
-           ((uint64_t)src[4] << 24) |
-           ((uint64_t)src[5] << 16) |
-           ((uint64_t)src[6] <<  8) |
-           ((uint64_t)src[7] <<  0);
-}   
-
-static void dc_decode(data_contract_t *dc, const unsigned char in[DC_WIRE_LEN]) {
-    dc->salt        = load_u64_be(in + 0);
-    memcpy(dc->sig,         in + 8,  16);
-    memcpy(dc->sym_key_128, in + 24, 16);
-    dc->contract_sig = load_u64_be(in + 40);
-    dc->ciphers     = load_u64_be(in + 48);
-    dc->format_sel  = in[56];
-    memcpy(dc->pad, in + 57, 7);
-}   
 
 /* ---- Read whole file into NUL-terminated buffer ---- */
 static char *read_all_text(const char *path) {
@@ -555,6 +454,7 @@ int main(int argc, char** argv)
 
   // Mojo-V: crypto parameters
   const char *mojov_sk = NULL;
+  const char *mojov_pk = NULL;
   const char *mojov_dc = NULL;
 
   cfg_arg_t<size_t> nprocs(1);
@@ -688,6 +588,7 @@ int main(int argc, char** argv)
 
   // Mojo-V: crypto parameters
   parser.option(0, "mojov-sk", 1, [&](const char* s){mojov_sk = s;});
+  parser.option(0, "mojov-pk", 1, [&](const char* s){mojov_pk = s;});
   parser.option(0, "mojov-dc", 1, [&](const char* s){mojov_dc = s;});
 
   auto argv1 = parser.parse(argv);
@@ -699,90 +600,148 @@ int main(int argc, char** argv)
   std::vector<std::pair<reg_t, abstract_mem_t*>> mems =
       make_mems(cfg.mem_layout);
 
+  if ((mojov_sk && !mojov_pk) || (!mojov_sk && mojov_pk))
+  {
+    fprintf(stderr, "Mojo-V: --mojov-sk and --mojov-pk must be specified together\n");
+    exit(-1);
+  }
+
+  if (mojov_dc && (!mojov_sk || !mojov_pk))
+  {
+    fprintf(stderr, "Mojo-V: --mojov-dc requires both --mojov-sk and --mojov-pk\n");
+    exit(-1);
+  }
+
+  if (mojov_pk)
+  {
+    OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
+    if (!prov) {
+      fprintf(stderr, "Mojo-V: Unable to OSSL_PROVIDER_load(default)\n");
+      exit(-1);
+    }
+
+    EVP_PKEY *pk = read_pubkey_pem(mojov_pk);
+    if (!pk) {
+      fprintf(stderr, "Mojo-V: Unable to read public key (PK) PEM file\n");
+      exit(-1);
+    }
+
+    int der_len = i2d_PUBKEY(pk, NULL);
+    if (der_len <= 0) {
+      fprintf(stderr, "Mojo-V: Unable to encode public key to DER\n");
+      exit(-1);
+    }
+
+    cfg.mojov_pk_der.resize((size_t)der_len);
+    unsigned char *der_ptr = cfg.mojov_pk_der.data();
+    if (i2d_PUBKEY(pk, &der_ptr) != der_len) {
+      fprintf(stderr, "Mojo-V: Unable to write public key DER bytes\n");
+      exit(-1);
+    }
+
+    EVP_PKEY_free(pk);
+    OSSL_PROVIDER_unload(prov);
+  }
+
   // Mojo-V: crypto parameters
+  if (mojov_sk)
+    cfg.mojov_sk_pem_path = mojov_sk;
+
   if (mojov_sk || mojov_dc)
   {
     // need both parameters
     if (!mojov_sk || !mojov_dc)
     {
-      fprintf(stderr, "Mojo-V: Both --mojov-sk and --mojov-ct are required to configure Mojo-V PKI engine\n");
+      fprintf(stderr, "Mojo-V: Both --mojov-sk and --mojov-dc are required to configure Mojo-V PKI engine\n");
       exit(-1);
     }
 
-    // initialize OpenSSL
-    OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
-    if (!prov) die_openssl("Mojo-V: Unable to OSSL_PROVIDER_load(default)");
-
-    // load the secret key (SK) PEM file 
-    EVP_PKEY *sk = read_privkey_pem(mojov_sk);
-    if (!sk) die_openssl("Mojo-V: Unable to read secret key (SK) PEM file");
-    
     // load the data contract (DC) file
     char *text = read_all_text(mojov_dc);
-    if (!text) die_openssl("Mojo-V: unable to read data contract (DC) file");
+    if (!text) {
+      fprintf(stderr, "Mojo-V: unable to read data contract (DC) file\n");
+      exit(-1);
+    }
 
     // parse the encrypted data contract file fields
     const char *kem_dc_hex = find_kv(text, "KEM_DC");
     const char *msg_dc_hex = find_kv(text, "MSG_DC");
     const char *hsh_hex    = find_kv(text, "PT_SHA256");
 
-    if (!kem_dc_hex || !msg_dc_hex || !hsh_hex)
-        die_openssl("Mojo-V: missing fields in data contract (DC) file");
+    if (!kem_dc_hex || !msg_dc_hex || !hsh_hex) {
+      fprintf(stderr, "Mojo-V: missing fields in data contract (DC) file\n");
+      exit(-1);
+    }
 
     unsigned char *kem_dc = NULL, *msg_dc = NULL, *hsh_b = NULL;
     size_t kem_dc_len = 0, msg_dc_len = 0, hsh_len = 0;
-    simon_state_t simon_state; // simon cipher state
 
-    if (hex_to_bytes(kem_dc_hex, &kem_dc, &kem_dc_len) != 1)
-        die_openssl("Mojo-V: parse KEM_DC hex failed");
-    if (hex_to_bytes(msg_dc_hex, &msg_dc, &msg_dc_len) != 1)
-        die_openssl("Mojo-V: parse MSG_DC hex failed");
-    if (hex_to_bytes(hsh_hex, &hsh_b, &hsh_len) != 1)
-        die_openssl("Mojo-V: parse PT_SHA256 hex failed");
+    if (hex_to_bytes(kem_dc_hex, &kem_dc, &kem_dc_len) != 1) {
+      fprintf(stderr, "Mojo-V: parse KEM_DC hex failed\n");
+      exit(-1);
+    }
+    if (hex_to_bytes(msg_dc_hex, &msg_dc, &msg_dc_len) != 1) {
+      fprintf(stderr, "Mojo-V: parse MSG_DC hex failed\n");
+      exit(-1);
+    }
+    if (hex_to_bytes(hsh_hex, &hsh_b, &hsh_len) != 1) {
+      fprintf(stderr, "Mojo-V: parse PT_SHA256 hex failed\n");
+      exit(-1);
+    }
 
-    if (msg_dc_len != DC_WIRE_LEN || hsh_len != 32)
-        die_openssl("Mojo-V: invalid field lengths in data contract (DC) file");
-
-    /* Decapsulate KEM */
-    EVP_PKEY_CTX *dctx = EVP_PKEY_CTX_new_from_pkey(NULL, sk, NULL);
-    if (!dctx) die_openssl("Mojo-V: failed to initialize context, EVP_PKEY_CTX_new_from_pkey(decap)");
-    if (EVP_PKEY_decapsulate_init(dctx, NULL) != 1)
-        die_openssl("Mojo-V: failed to initialize decapsulation, EVP_PKEY_decapsulate_init");
-
-    size_t ss_len = 0;
-    if (EVP_PKEY_decapsulate(dctx, NULL, &ss_len, kem_dc, kem_dc_len) != 1)
-        die_openssl("Mojo-V: ciphertext decapsulation size query failed, EVP_PKEY_decapsulate()");
-
-    unsigned char *ss = (unsigned char *)OPENSSL_malloc(ss_len);
-    if (!ss) die_openssl("Mojo-V: SS malloc failed");
-
-    if (EVP_PKEY_decapsulate(dctx, ss, &ss_len, kem_dc, kem_dc_len) != 1)
-        die_openssl("Mojo-V: decapsulation failed, EVP_PKEY_decapsulate()");
-
-    /* Derive SIMON-128 key and decrypt contract */
-    unsigned char k[SIMON128_KEY_LEN];
-    if (hkdf_sha256_key128(ss, ss_len, k) != 1)
-        die_openssl("Mojo-V: HKDF key derivation failed");
-
-    // simon key expansion
-    simon_128_128_keyexpand(&simon_state, *((uint128_t *)k), 68);
-
-    unsigned char pt[DC_WIRE_LEN];
-    simon_decrypt(&simon_state, msg_dc, msg_dc_len, pt);
+    if (msg_dc_len != DC_WIRE_LEN || hsh_len != 32) {
+      fprintf(stderr, "Mojo-V: invalid field lengths in data contract (DC) file\n");
+      exit(-1);
+    }
 
     unsigned char pt_sha[32];
-    if (sha256_bytes(pt, sizeof(pt), pt_sha) != 1)
-        die_openssl("Mojo-V: SHA256(pt) failed");
-
-    if (CRYPTO_memcmp(pt_sha, hsh_b, 32) != 0)
-        die_openssl("Mojo-V: ciphertext authentication FAILED (PT_SHA256 mismatch)");
-
-    dc_decode(&cfg.mojov_dc, pt);
-
-    /* Check header signature */
-    static const char sig_str[16+1] = "Mojo-V ver. #001";
-    if (CRYPTO_memcmp(cfg.mojov_dc.sig, sig_str, 16) != 0)
-        die_openssl("Mojo-V: invalid data contract signature header");
+    mojov_open_status_t open_status = mojov_open_status_t::OK;
+    if (!mojov_open_contract_from_components(mojov_sk, kem_dc, kem_dc_len,
+                                             msg_dc, msg_dc_len,
+                                             hsh_b,
+                                             &cfg.mojov_dc,
+                                             pt_sha,
+                                             &open_status)) {
+      switch (open_status) {
+        case mojov_open_status_t::MISSING_SK_PATH:
+        case mojov_open_status_t::SK_LOAD:
+          fprintf(stderr, "Mojo-V: Unable to read secret key (SK) PEM file\n");
+          exit(-1);
+        case mojov_open_status_t::OSSL_PROVIDER_LOAD:
+          fprintf(stderr, "Mojo-V: Unable to OSSL_PROVIDER_load(default)\n");
+          exit(-1);
+        case mojov_open_status_t::DECAP_CTX:
+          fprintf(stderr, "Mojo-V: failed to initialize context, EVP_PKEY_CTX_new_from_pkey(decap)\n");
+          exit(-1);
+        case mojov_open_status_t::DECAP_INIT:
+          fprintf(stderr, "Mojo-V: failed to initialize decapsulation, EVP_PKEY_decapsulate_init\n");
+          exit(-1);
+        case mojov_open_status_t::DECAP_SIZE:
+          fprintf(stderr, "Mojo-V: ciphertext decapsulation size query failed, EVP_PKEY_decapsulate()\n");
+          exit(-1);
+        case mojov_open_status_t::SS_MALLOC:
+          fprintf(stderr, "Mojo-V: SS malloc failed\n");
+          exit(-1);
+        case mojov_open_status_t::DECAP:
+          fprintf(stderr, "Mojo-V: decapsulation failed, EVP_PKEY_decapsulate()\n");
+          exit(-1);
+        case mojov_open_status_t::HKDF:
+          fprintf(stderr, "Mojo-V: HKDF key derivation failed\n");
+          exit(-1);
+        case mojov_open_status_t::SHA256:
+          fprintf(stderr, "Mojo-V: SHA256(pt) failed\n");
+          exit(-1);
+        case mojov_open_status_t::PT_HASH_MISMATCH:
+          fprintf(stderr, "Mojo-V: ciphertext authentication FAILED (PT_SHA256 mismatch)\n");
+          exit(-1);
+        case mojov_open_status_t::BAD_SIGNATURE:
+          fprintf(stderr, "Mojo-V: invalid data contract signature header\n");
+          exit(-1);
+        default:
+          fprintf(stderr, "Mojo-V: open contract failed\n");
+          exit(-1);
+      }
+    }
 
     // perform simon key expansion on the decrypted SIMON128 key
     // simon_128_128_keyexpand(&simon_state, *((uint128_t *)cfg.mojov_dc.sym_key_128), 68);
@@ -809,18 +768,11 @@ int main(int argc, char** argv)
       abort();
     }
 
-    OPENSSL_cleanse(k, sizeof(k));
-    OPENSSL_cleanse(ss, ss_len);
-
-    OPENSSL_free(ss);
     OPENSSL_free(kem_dc);
     OPENSSL_free(msg_dc);
     OPENSSL_free(hsh_b);
     OPENSSL_free(text);
 
-    EVP_PKEY_CTX_free(dctx);
-    EVP_PKEY_free(sk);
-    OSSL_PROVIDER_unload(prov);
   }
   else
     cfg.mojov_dcvalid = false;

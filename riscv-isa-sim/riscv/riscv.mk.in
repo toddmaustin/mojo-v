@@ -47,6 +47,7 @@ riscv_install_hdrs = \
 	triggers.h \
 	vector_unit.h \
 	simon.h \
+	mojov_crypto.h \
 	simon_internal.h \
 
 riscv_precompiled_hdrs = \
@@ -78,6 +79,7 @@ riscv_srcs = \
 	socketif.cc \
 	cfg.cc \
 	simon.cc \
+	mojov_crypto.cc \
 	$(riscv_gen_srcs) \
 
 riscv_test_srcs = \

@@ -9,6 +9,8 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
+#include <array>
+#include <algorithm>
 #include <cassert>
 #include "debug_rom_defines.h"
 #include "entropy_source.h"
@@ -203,6 +205,9 @@ struct state_t
 
   // Mojo-V: processor state
   csr_t_p msecregcfg;
+  csr_t_p mojov_kmsm_addr;
+  csr_t_p mojov_kmsm_data;
+  csr_t_p mojov_kmsm_ctrl;
   bool mojov_dcvalid;
   data_contract_t mojov_dc;
 
@@ -417,7 +422,7 @@ public:
       secreg_mode = en;
       if (en)
       {
-        if (!cfg->mojov_dcvalid)
+        if (!state.mojov_dcvalid)
         {
           // Mojo-V: turning on SECRET regs, initialize the cipher core
           simon_128_128_keyexpand(&simon_state, simon_key);
@@ -428,30 +433,67 @@ public:
             printf("INFO: running with loaded data contract.\n");
 
           // perform simon key expansion on the decrypted SIMON128 key
-          simon_128_128_keyexpand(&simon_state, *((uint128_t *)cfg->mojov_dc.sym_key_128), 68);
+          simon_128_128_keyexpand(&simon_state, *((uint128_t *)state.mojov_dc.sym_key_128), 68);
           if (cfg->mojov_verbose)
           {
-            printf("INFO: simon_key = 0x"); for (int i = 0; i < 16; i++) printf("%02x", cfg->mojov_dc.sym_key_128[i]); printf("\n");
+            printf("INFO: simon_key = 0x"); for (int i = 0; i < 16; i++) printf("%02x", state.mojov_dc.sym_key_128[i]); printf("\n");
           }
 
           if (cfg->mojov_verbose)
           {
             printf("SUCCESS: Mojo-V data contract validated and loaded.\n");
             printf("Decrypted data_contract_t fields:\n");
-            printf("  salt        = 0x%016llx\n", (unsigned long long)cfg->mojov_dc.salt);
-            printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(cfg->mojov_dc.sig[i]); printf("\"\n");
-            printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", cfg->mojov_dc.sym_key_128[i]); printf("\n");
-            printf("  contract_sig= 0x%016llx\n", (unsigned long long)cfg->mojov_dc.contract_sig);
-            printf("  ciphers     = 0x%016llx\n", (unsigned long long)cfg->mojov_dc.ciphers);
-            printf("  format_sel  = %u", (unsigned)cfg->mojov_dc.format_sel);
-            if      (cfg->mojov_dc.format_sel == 0) printf(" (fast)\n");
-            else if (cfg->mojov_dc.format_sel == 1) printf(" (strong)\n");
-            else if (cfg->mojov_dc.format_sel == 2) printf(" (proofcarrying)\n");
+            printf("  salt        = 0x%016llx\n", (unsigned long long)state.mojov_dc.salt);
+            printf("  sig         = \""); for (int i = 0; i < 16; i++) putchar(state.mojov_dc.sig[i]); printf("\"\n");
+            printf("  sym_key_128 = 0x"); for (int i = 0; i < 16; i++) printf("%02x", state.mojov_dc.sym_key_128[i]); printf("\n");
+            printf("  contract_sig= 0x%016llx\n", (unsigned long long)state.mojov_dc.contract_sig);
+            printf("  ciphers     = 0x%016llx\n", (unsigned long long)state.mojov_dc.ciphers);
+            printf("  format_sel  = %u", (unsigned)state.mojov_dc.format_sel);
+            if      (state.mojov_dc.format_sel == 0) printf(" (fast)\n");
+            else if (state.mojov_dc.format_sel == 1) printf(" (strong)\n");
+            else if (state.mojov_dc.format_sel == 2) printf(" (proofcarrying)\n");
             else                         printf(" (?unknown?)\n");
           }
         }
       }
     }
+
+  void mojov_kmsm_set_addr(reg_t addr) { kmsm_addr = addr; }
+  reg_t mojov_kmsm_read_addr() const { return kmsm_addr; }
+  void mojov_kmsm_write_data(reg_t val)
+  {
+    size_t idx = static_cast<size_t>(kmsm_addr);
+    if (idx >= kmsm_words.size())
+      return;
+
+    if (idx < pubkey_words)
+      return;
+
+    kmsm_words[idx] = val;
+
+    if (idx >= pubkey_words && idx < (pubkey_words + enckey_words))
+      kmsm_enckey_bytes = std::max(kmsm_enckey_bytes, (idx - pubkey_words + 1) * sizeof(reg_t));
+    else if (idx >= (pubkey_words + enckey_words) && idx < kmsm_words.size())
+      kmsm_encdc_bytes = std::max(kmsm_encdc_bytes, (idx - (pubkey_words + enckey_words) + 1) * sizeof(reg_t));
+
+    kmsm_addr = (idx + 1) % kmsm_words.size();
+  }
+
+  reg_t mojov_kmsm_read_data() const
+  {
+    size_t idx = static_cast<size_t>(kmsm_addr);
+    if (idx >= kmsm_words.size())
+      return 0;
+    return kmsm_words[idx];
+  }
+
+  reg_t mojov_kmsm_read_ctrl() const { return kmsm_ctrl; }
+
+  void mojov_kmsm_write_ctrl(reg_t val);
+
+  bool mojov_kmsm_open_contract();
+
+  const std::array<reg_t, 4>& mojov_kmsm_status() const { return kmsm_status; }
 
   //
   // Mojo-V: dfhash reset
@@ -469,6 +511,22 @@ public:
       // zero out the data contract
       state.mojov_dcvalid = false;
       memset(&state.mojov_dc, 0, sizeof(state.mojov_dc));
+    }
+
+    kmsm_addr = 0;
+    kmsm_ctrl = 0;
+    kmsm_status = {0, 0, 0, 0};
+    kmsm_enckey_bytes = 0;
+    kmsm_encdc_bytes = 0;
+    kmsm_words.fill(0);
+
+    const size_t max_pk_bytes = pubkey_words * sizeof(reg_t);
+    const size_t pk_bytes = std::min(cfg->mojov_pk_der.size(), max_pk_bytes);
+    for (size_t off = 0; off < pk_bytes; off += sizeof(reg_t)) {
+      reg_t w = 0;
+      const size_t rem = std::min(sizeof(reg_t), pk_bytes - off);
+      memcpy(&w, cfg->mojov_pk_der.data() + off, rem);
+      kmsm_words[off / sizeof(reg_t)] = w;
     }
 
     // reset the dfhash core
@@ -545,6 +603,18 @@ public:
   bool secreg_mode = false;
   uint128_t simon_key = GEN128(0x0f0e0d0c0b0a0908, 0x0706050403020100);
   simon_state_t simon_state;
+
+  static constexpr size_t pubkey_words = 256;
+  static constexpr size_t enckey_words = 128;
+  static constexpr size_t encdc_words = 64;
+  static constexpr size_t kmsm_words_total = pubkey_words + enckey_words + encdc_words;
+
+  std::array<reg_t, kmsm_words_total> kmsm_words = {};
+  reg_t kmsm_addr = 0;
+  reg_t kmsm_ctrl = 0;
+  std::array<reg_t, 4> kmsm_status = {0, 0, 0, 0};
+  size_t kmsm_enckey_bytes = 0;
+  size_t kmsm_encdc_bytes = 0;
 
   entropy_source es; // Crypto ISE Entropy source.
 

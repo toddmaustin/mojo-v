@@ -54,4 +54,6 @@ cfg_t::cfg_t()
   mojov_proofcarrying = false;
   mojov_arg        = 0;
   mojov_dcvalid    = false;
+  mojov_pk_der     = {};
+  mojov_sk_pem_path = "";
 }
