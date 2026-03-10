@@ -21,7 +21,7 @@ timer_handler:
   jal x0, simple_timer_handler
 
 reset_handler:
-  /* set all registers to zero */
+  /* set all registers to zero (preserve incoming x10/x11 as argc/argv) */
   mv  x1, x0
   mv  x2, x1
   mv  x3, x1
@@ -31,8 +31,6 @@ reset_handler:
   mv  x7, x1
   mv  x8, x1
   mv  x9, x1
-  mv x10, x1
-  mv x11, x1
   mv x12, x1
   mv x13, x1
   mv x14, x1
@@ -80,9 +78,7 @@ zero_loop_end:
 
 
 main_entry:
-  /* jump to main program entry point (argc = argv = 0) */
-  addi x10, x0, 0
-  addi x11, x0, 0
+  /* jump to main program entry point */
   jal x1, __main
 
   /* Halt simulation */

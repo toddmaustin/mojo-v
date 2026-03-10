@@ -8,7 +8,7 @@ PROG=bubble-sort
 include ../Makefile
 
 test: $(TARGET_EXE)
-	-$(TARGET_SIM) --mojov-dc=../target/dc-fast.txt --mojov-verbose ./$(TARGET_EXE) > FOO 
+	-$(TARGET_SIM) --mojov-verbose ./$(TARGET_EXE) > FOO 
 	$(TARGET_DIFF) FOO bubble-sort.$(TARGET_REFEXT)
 	rm -f FOO
 
