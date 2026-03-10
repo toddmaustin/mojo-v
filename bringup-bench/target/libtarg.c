@@ -340,10 +340,10 @@ trap_handler(void)
 #endif /* TARGET_SPIKE */
 
 // some targets use a pre-main function __main, for additional setup
-extern void main(void);
+extern int main(int argc, char **argv);
 
 void
-__main(void)
+__main(int argc, char **argv)
 {
 #ifdef TARGET_SPIKE
   // install the trap vector (direct for M-mode), NOTE: bits [1:0] MUST BE
@@ -352,7 +352,7 @@ __main(void)
   // libmin_printf("INFO: Trap vector installed @ 0x%08lx.\n", (uint64_t)trap_handler);
 #endif /* TARGET_SPIKE */
 
-  // call main main()
-  main();
+  // call main()
+  (void)main(argc, argv);
 }
 
