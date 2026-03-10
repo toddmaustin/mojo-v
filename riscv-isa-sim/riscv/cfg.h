@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <vector>
+#include <string>
 #include "decode.h"
 #include <cassert>
 class abstract_sim_if_t;
@@ -86,6 +87,8 @@ public:
   uint16_t                mojov_arg;
   bool                    mojov_dcvalid;
   data_contract_t         mojov_dc;
+  std::vector<uint8_t>    mojov_pk_der;
+  std::string             mojov_sk_pem_path;
   
   std::optional<abstract_sim_if_t*> external_simulator;
 

@@ -1008,4 +1008,35 @@ protected:
   bool unlogged_write(const reg_t val) noexcept override;
 };
 
+
+class mojov_kmsm_addr_csr_t : public basic_csr_t {
+public:
+  mojov_kmsm_addr_csr_t(processor_t* const proc, reg_t addr);
+
+  reg_t read() const noexcept override;
+
+protected:
+  bool unlogged_write(const reg_t val) noexcept override;
+};
+
+class mojov_kmsm_data_csr_t : public basic_csr_t {
+public:
+  mojov_kmsm_data_csr_t(processor_t* const proc, reg_t addr);
+
+  reg_t read() const noexcept override;
+
+protected:
+  bool unlogged_write(const reg_t val) noexcept override;
+};
+
+class mojov_kmsm_ctrl_csr_t : public basic_csr_t {
+public:
+  mojov_kmsm_ctrl_csr_t(processor_t* const proc, reg_t addr);
+
+  reg_t read() const noexcept override;
+
+protected:
+  bool unlogged_write(const reg_t val) noexcept override;
+};
+
 #endif

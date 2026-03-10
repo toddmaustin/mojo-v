@@ -11,6 +11,7 @@
 #include "disasm.h"
 #include "platform.h"
 #include "vector_unit.h"
+#include "mojov_crypto.h"
 #include "debug_defines.h"
 #include <cinttypes>
 #include <cmath>
@@ -22,6 +23,7 @@
 #include <stdexcept>
 #include <string>
 #include <algorithm>
+#include <cstring>
 
 #ifdef __GNUC__
 # pragma GCC diagnostic ignored "-Wunused-variable"
@@ -99,6 +101,74 @@ processor_t::~processor_t()
   delete mmu;
   delete disassembler;
 }
+
+
+bool processor_t::mojov_kmsm_open_contract()
+{
+  constexpr size_t DC_WIRE_LEN = 64;
+
+  kmsm_status = {0, 0, 0, 0};
+  state.mojov_dcvalid = false;
+
+  if (cfg->mojov_sk_pem_path.empty()) {
+    kmsm_status[0] = (reg_t)mojov_open_status_t::MISSING_SK_PATH;
+    return false;
+  }
+
+  if (kmsm_encdc_bytes != DC_WIRE_LEN || kmsm_enckey_bytes == 0) {
+    kmsm_status[0] = (reg_t)mojov_open_status_t::BAD_INPUT;
+    return false;
+  }
+
+  std::vector<unsigned char> kem_dc(kmsm_enckey_bytes, 0);
+  std::vector<unsigned char> msg_dc(kmsm_encdc_bytes, 0);
+
+  for (size_t i = 0; i < enckey_words && (i * sizeof(reg_t)) < kem_dc.size(); i++) {
+    reg_t w = kmsm_words[pubkey_words + i];
+    memcpy(kem_dc.data() + i * sizeof(reg_t), &w, std::min(sizeof(reg_t), kem_dc.size() - i * sizeof(reg_t)));
+  }
+  for (size_t i = 0; i < encdc_words && (i * sizeof(reg_t)) < msg_dc.size(); i++) {
+    reg_t w = kmsm_words[pubkey_words + enckey_words + i];
+    memcpy(msg_dc.data() + i * sizeof(reg_t), &w, std::min(sizeof(reg_t), msg_dc.size() - i * sizeof(reg_t)));
+  }
+
+  unsigned char pt_sha[32];
+  mojov_open_status_t status = mojov_open_status_t::OK;
+  const bool ok = mojov_open_contract_from_components(
+      cfg->mojov_sk_pem_path.c_str(),
+      kem_dc.data(), kem_dc.size(),
+      msg_dc.data(), msg_dc.size(),
+      nullptr,
+      &state.mojov_dc,
+      pt_sha,
+      &status);
+
+  kmsm_status[0] = (reg_t)status;
+  memcpy(&kmsm_status[2], pt_sha, sizeof(reg_t));
+
+  if (!ok) {
+    kmsm_status[1] = 0;
+    return false;
+  }
+
+  state.mojov_dcvalid = true;
+  simon_128_128_keyexpand(&simon_state, *((uint128_t *)state.mojov_dc.sym_key_128), 68);
+  kmsm_status[1] = 1;
+  return true;
+}
+
+void processor_t::mojov_kmsm_write_ctrl(reg_t val)
+{
+  kmsm_ctrl = val;
+  if (val & 1) {
+    const bool opened = mojov_kmsm_open_contract();
+    if (opened)
+      kmsm_ctrl |= (reg_t)1 << 1;
+    else
+      kmsm_ctrl |= (reg_t)1 << 2;
+  }
+}
+
 
 void state_t::reset(processor_t* const proc, reg_t max_isa)
 {

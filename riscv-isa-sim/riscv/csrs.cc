@@ -2241,6 +2241,47 @@ msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
                | (/* key_valid:1 */(reg_t)1 << 1)
                | (/*mojov_en:off(0)*/0))) { }
 
+
+
+mojov_kmsm_addr_csr_t::mojov_kmsm_addr_csr_t(processor_t* const proc, const reg_t addr):
+  basic_csr_t(proc, addr, 0) {
+}
+
+reg_t mojov_kmsm_addr_csr_t::read() const noexcept {
+  return proc->mojov_kmsm_read_addr();
+}
+
+bool mojov_kmsm_addr_csr_t::unlogged_write(const reg_t val) noexcept {
+  proc->mojov_kmsm_set_addr(val);
+  return basic_csr_t::unlogged_write(val);
+}
+
+mojov_kmsm_data_csr_t::mojov_kmsm_data_csr_t(processor_t* const proc, const reg_t addr):
+  basic_csr_t(proc, addr, 0) {
+}
+
+reg_t mojov_kmsm_data_csr_t::read() const noexcept {
+  return proc->mojov_kmsm_read_data();
+}
+
+bool mojov_kmsm_data_csr_t::unlogged_write(const reg_t val) noexcept {
+  proc->mojov_kmsm_write_data(val);
+  return basic_csr_t::unlogged_write(proc->mojov_kmsm_read_data());
+}
+
+mojov_kmsm_ctrl_csr_t::mojov_kmsm_ctrl_csr_t(processor_t* const proc, const reg_t addr):
+  basic_csr_t(proc, addr, 0) {
+}
+
+reg_t mojov_kmsm_ctrl_csr_t::read() const noexcept {
+  return proc->mojov_kmsm_read_ctrl();
+}
+
+bool mojov_kmsm_ctrl_csr_t::unlogged_write(const reg_t val) noexcept {
+  proc->mojov_kmsm_write_ctrl(val);
+  return basic_csr_t::unlogged_write(proc->mojov_kmsm_read_ctrl());
+}
+
 bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   reg_t masked_secreg = (read() & ~(reg_t)1);
   reg_t new_secreg = masked_secreg | (val & 1);
