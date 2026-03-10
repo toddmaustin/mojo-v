@@ -1,35 +1,3 @@
-
-<div align="right">
-  <details>
-    <summary >🌐 Language</summary>
-    <div>
-      <div align="center">
-        <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=en">English</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=zh-CN">简体中文</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=zh-TW">繁體中文</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=ja">日本語</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=ko">한국어</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=hi">हिन्दी</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=th">ไทย</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=fr">Français</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=de">Deutsch</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=es">Español</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=it">Italiano</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=ru">Русский</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=pt">Português</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=nl">Nederlands</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=pl">Polski</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=ar">العربية</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=fa">فارسی</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=tr">Türkçe</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=vi">Tiếng Việt</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=id">Bahasa Indonesia</a>
-        | <a href="https://openaitx.github.io/view.html?user=toddmaustin&project=mojo-v&lang=as">অসমীয়া</
-      </div>
-    </div>
-  </details>
-</div>
-
 <p align="center">
   <img src="./docs/MojoV-logo1.png" alt="Mojo-V Logo" width="550"/>
 </p>
