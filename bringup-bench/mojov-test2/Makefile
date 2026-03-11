@@ -1,7 +1,7 @@
 
 LOCAL_CFLAGS=
 LOCAL_LIBS=
-LOCAL_OBJS=bubble-sort.o ../common/simon.o
+LOCAL_OBJS=bubble-sort.o ../common/simon.o ../target/mojov-utils.o
 
 PROG=bubble-sort
 
