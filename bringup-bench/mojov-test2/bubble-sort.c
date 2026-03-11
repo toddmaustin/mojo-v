@@ -91,27 +91,41 @@ static int hex_nibble(char c)
 static int load_hex_words_to_kmsm(const char *hex, uint64_t start_addr)
 {
   uint64_t word = 0;
-  unsigned nibs = 0;
+  unsigned byte_idx = 0;
+  int hi_nibble = -1;
+
   write_kmsm_addr(start_addr);
 
   for (unsigned i = 0; hex[i] != '\0'; i++) {
     int hv = hex_nibble(hex[i]);
-    if (hv < 0) {
+    if (hv < 0)
+      continue;
+
+    if (hi_nibble < 0) {
+      hi_nibble = hv;
       continue;
     }
-    word = (word << 4) | (uint64_t)hv;
-    nibs++;
-    if (nibs == 16) {
+
+    uint8_t byte = (uint8_t)((hi_nibble << 4) | hv);
+    word |= ((uint64_t)byte) << (byte_idx * 8); // little-endian packing
+    byte_idx++;
+    hi_nibble = -1;
+
+    if (byte_idx == 8) {
       write_kmsm_data(word);
-      nibs = 0;
       word = 0;
+      byte_idx = 0;
     }
   }
 
-  if (nibs != 0) {
-    word <<= (16 - nibs) * 4;
-    write_kmsm_data(word);
+  if (hi_nibble >= 0) {
+    uint8_t byte = (uint8_t)(hi_nibble << 4);
+    word |= ((uint64_t)byte) << (byte_idx * 8);
+    byte_idx++;
   }
+
+  if (byte_idx != 0)
+    write_kmsm_data(word);
 
   return 0;
 }
