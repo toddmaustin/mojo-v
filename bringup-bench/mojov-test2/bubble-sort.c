@@ -3,22 +3,7 @@
 #include "mojov-utils.h"
 #include "dc-fast.h"
 
-typedef unsigned __int128 uint128_t;
-
 #define SECRET
-
-extern inline uint64_t
-__instret(void)
-{
-  uint64_t insts;
-  __asm__ volatile ("rdinstret %0" : "=r"(insts));
-
-  return insts;
-}
-
-// Mojo-V asm instruction definitions (using the format-friendly .insn directive in GNU AS
-#define LDE(rd,base,ofs) ".insn i 0xb, 0x0, " #rd ", " #base ", " #ofs "\n\t"
-#define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
 
 // SECRET int
 // secret_cmov(SECRET bool p, SECRET int x, SECRET int y)
@@ -26,38 +11,10 @@ __instret(void)
 //   return (int)p*x + (int)!p*y;
 // }
 
-#define MOJOV_PT_SIG   0xdeadbeef
-union mojov_memfmt_t {
-  uint128_t ct;     // ciphertext
-
-  struct {          // plaintext
-    uint64_t val;     // register plaintext value
-    uint32_t salt;    // random salt
-    uint32_t sig;     // fixed signature
-  } pt;
-};
 
 uint128_t simon_key = SIMON128_KEY;
 
 simon_state_t simon_state;
-
-inline extern uint64_t
-secret_decrypt(uint128_t ct)
-{
-  union mojov_memfmt_t mempkt;
-  simon_128_128_decrypt(&simon_state, ct, &mempkt.ct);
-  return mempkt.pt.val;
-}
-
-inline extern void
-secret_print(uint128_t ct)
-{
-  libmin_printf("0x%08x%08x%08x%08x",
-    (uint32_t)(ct >> 96),
-    (uint32_t)(ct >> 64),
-    (uint32_t)(ct >> 32),
-    (uint32_t)ct);
-}
 
 
 // supported sizes: 256 (default), 512, 1024, 2048
@@ -194,7 +151,7 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = secret_decrypt(secret_data[i]);
+    raw_data[i] = secret_decrypt(&simon_state, secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
   // check the array
@@ -206,7 +163,7 @@ main(void)
       return -1;
     }
   }
-  libmin_printf("INFO: %lu swaps executed.\n", secret_decrypt(swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", secret_decrypt(&simon_state, swaps));
   libmin_printf("INFO: data is properly sorted.\n");
 
   libmin_success();
