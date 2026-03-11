@@ -40,6 +40,12 @@ secret_fps_cleared(void)
   );
 }
 
+void negfailed(void)
+{
+  libmin_printf("ERROR: negative test failed because NO exception occurred!\n");
+  libmin_fail(2);
+}
+
 // Predefined memory values
 uint64_t x = 35;
 uint64_t max = 25;
