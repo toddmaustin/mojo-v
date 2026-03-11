@@ -3,22 +3,7 @@
 #include "mojov-utils.h"
 #include "dc-strong.h"
 
-typedef unsigned __int128 uint128_t;
-
 #define SECRET
-
-extern inline uint64_t
-__instret(void)
-{
-  uint64_t insts;
-  __asm__ volatile ("rdinstret %0" : "=r"(insts));
-
-  return insts;
-}
-
-// Mojo-V asm instruction definitions (using the format-friendly .insn directive in GNU AS
-#define LDE(rd,base,ofs) ".insn i 0xb, 0x0, " #rd ", " #base ", " #ofs "\n\t"
-#define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
 
 // SECRET int
 // secret_cmov(SECRET bool p, SECRET int x, SECRET int y)
@@ -26,58 +11,17 @@ __instret(void)
 //   return (int)p*x + (int)!p*y;
 // }
 
-#define MOJOV_PT_SIG   0xdeadbeef
-
-// strong memory format
-union mojov_mem_strong_t {
-  struct {               // ciphertext
-    uint128_t ct_lo;       // ciphertext low 128-bits
-    uint128_t ct_hi;       // ciphertext high 128-bits
-  } ct;
-  struct { // 256-bits in size, 128-bit alignment
-    uint64_t val; // register plaintext value
-    uint64_t salt; // random salt
-    uint64_t auth_sig; // authentication signature (from contract)
-    uint64_t metadata; // target-specific metadata (e.g., device hash, overflow flag)
-  } pt;
-};
-
 uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
-
-inline extern uint64_t
-secret_decrypt(union mojov_mem_strong_t ctval)
-{
-  union mojov_mem_strong_t ptval;
-  simon_128_128_decrypt(&simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
-  simon_128_128_decrypt(&simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
-  ptval.ct.ct_hi = ptval.ct.ct_hi ^ ctval.ct.ct_lo;
-  return ptval.pt.val;
-}
-
-inline extern void
-secret_print(union mojov_mem_strong_t ct)
-{
-  libmin_printf("0x%08x%08x%08x%08x",
-    (uint32_t)(ct.ct.ct_hi >> 96),
-    (uint32_t)(ct.ct.ct_hi >> 64),
-    (uint32_t)(ct.ct.ct_hi >> 32),
-    (uint32_t)ct.ct.ct_hi);
-  libmin_printf("%08x%08x%08x%08x",
-    (uint32_t)(ct.ct.ct_lo >> 96),
-    (uint32_t)(ct.ct.ct_lo >> 64),
-    (uint32_t)(ct.ct.ct_lo >> 32),
-    (uint32_t)ct.ct.ct_lo);
-}
 
 
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
-SECRET union mojov_mem_strong_t secret_data[DATASET_SIZE];
+SECRET mojov_mem_strong_u64_t secret_data[DATASET_SIZE];
 
 // total swaps executed so far
-union mojov_mem_strong_t swaps;
+mojov_mem_strong_u64_t swaps;
 
 void
 print_data(uint64_t *data, unsigned size)
@@ -92,7 +36,7 @@ print_data(uint64_t *data, unsigned size)
 }
 
 void
-bubblesort(union mojov_mem_strong_t *data, unsigned size)
+bubblesort(mojov_mem_strong_u64_t *data, unsigned size)
 {
   for (unsigned i=0; i < size-1; i++)
   {
@@ -205,7 +149,7 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = secret_decrypt(secret_data[i]);
+    raw_data[i] = mojov_decrypt_strong_u64(&simon_state, secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
   // check the array
@@ -217,7 +161,7 @@ main(void)
       return -1;
     }
   }
-  libmin_printf("INFO: %lu swaps executed.\n", secret_decrypt(swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_strong_u64(&simon_state, swaps));
   libmin_printf("INFO: data is properly sorted.\n");
 
   libmin_success();
