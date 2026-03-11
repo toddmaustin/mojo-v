@@ -20,10 +20,10 @@ simon_state_t simon_state;
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
-SECRET uint128_t secret_data[DATASET_SIZE];
+SECRET mojov_mem_fast_u64_t secret_data[DATASET_SIZE];
 
 // total swaps executed so far
-uint128_t swaps;
+mojov_mem_fast_u64_t swaps;
 
 void
 print_data(uint64_t *data, unsigned size)
@@ -38,7 +38,7 @@ print_data(uint64_t *data, unsigned size)
 }
 
 void
-bubblesort(uint128_t *data, unsigned size)
+bubblesort(mojov_mem_fast_u64_t *data, unsigned size)
 {
   for (unsigned i=0; i < size-1; i++)
   {
@@ -151,7 +151,7 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = secret_decrypt(&simon_state, secret_data[i]);
+    raw_data[i] = mojov_decrypt_fast_u64(&simon_state, secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
   // check the array
@@ -163,7 +163,7 @@ main(void)
       return -1;
     }
   }
-  libmin_printf("INFO: %lu swaps executed.\n", secret_decrypt(&simon_state, swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_fast_u64(&simon_state, swaps));
   libmin_printf("INFO: data is properly sorted.\n");
 
   libmin_success();

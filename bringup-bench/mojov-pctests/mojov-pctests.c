@@ -52,7 +52,7 @@ genrand_fp64(void)
   return v;
 }
 
-mojov_mem_proofcarrying_t
+mojov_mem_proofcarrying_fp64_t
 secret_3rdparty(double dblval, uint64_t in_brand)
 {
   uint64_t auth_sig;
@@ -65,8 +65,8 @@ secret_3rdparty(double dblval, uint64_t in_brand)
     auth_sig = MOJOV_PT_SIG;
 
   uint64_t dfhash = mojov_hash64(mojov_hash64_init(), in_brand);
-  mojov_mem_proofcarrying_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), auth_sig, dfhash} };
-  mojov_mem_proofcarrying_t ctval;
+  mojov_mem_proofcarrying_fp64_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), auth_sig, dfhash} };
+  mojov_mem_proofcarrying_fp64_t ctval;
 
   // encrypt the memory packet with the processor's internal key
   simon_128_128_encrypt(&simon_state, ptval.ct.ct_lo, &ctval.ct.ct_lo);
@@ -78,13 +78,13 @@ secret_3rdparty(double dblval, uint64_t in_brand)
 // supported sizes: 64, 128, 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 64
 double raw_data[DATASET_SIZE];
-SECRET mojov_mem_proofcarrying_t secret_data[DATASET_SIZE];
+SECRET mojov_mem_proofcarrying_fp64_t secret_data[DATASET_SIZE];
 
 // now sum the array data to coalesce the dataflow hashes
-mojov_mem_proofcarrying_t sum_enc;
+mojov_mem_proofcarrying_fp64_t sum_enc;
 
 // total swaps executed so far
-mojov_imem_proofcarrying_t swaps;
+mojov_mem_proofcarrying_u64_t swaps;
 
 void
 print_data(double *data, unsigned size)
@@ -102,7 +102,7 @@ print_data(double *data, unsigned size)
 }
 
 void
-bubblesort(mojov_mem_proofcarrying_t *data, unsigned size)
+bubblesort(mojov_mem_proofcarrying_fp64_t *data, unsigned size)
 {
   for (unsigned i=0; i < size-1; i++)
   {
@@ -323,7 +323,7 @@ main(void)
   if (mojov_arg == 24)
   {
     // swap array elements 12 and 13
-    mojov_mem_proofcarrying_t tmp = secret_data[12];
+    mojov_mem_proofcarrying_fp64_t tmp = secret_data[12];
     secret_data[12] = secret_data[13];
     secret_data[13] = tmp;
   }
@@ -348,10 +348,10 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = secret_decrypt(&simon_state, secret_data[i]);
+    raw_data[i] = mojov_decrypt_proofcarrying_fp64(&simon_state, secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
-  libmin_printf("INFO: %lu swaps executed.\n", secret_idecrypt(&simon_state, swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_proofcarrying_u64(&simon_state, swaps));
 
   // check the array
   bool sorted = true;
@@ -365,18 +365,18 @@ main(void)
   }
   libmin_printf("ERROR: data is %sproperly sorted.\n", sorted ? "" : "not ");
 
-  double sum = secret_decrypt(&simon_state, sum_enc);
+  double sum = mojov_decrypt_proofcarrying_fp64(&simon_state, sum_enc);
   libmin_printf("INFO: final summary variable: %.20lf\n", sum);
 
   uint64_t dfhash;
   if (mojov_arg == 22)
   {
-    dfhash = secret_dfhash(&simon_state, secret_data[DATASET_SIZE-1]);
+    dfhash = mojov_dfhash_proofcarrying_fp64(&simon_state, secret_data[DATASET_SIZE-1]);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
   }
   else
   {
-    dfhash = secret_dfhash(&simon_state, sum_enc);
+    dfhash = mojov_dfhash_proofcarrying_fp64(&simon_state, sum_enc);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
   }
   if (dfhash == 0xc928d654cf18433e)
