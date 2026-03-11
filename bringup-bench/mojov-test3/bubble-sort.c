@@ -186,7 +186,7 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = secret_decrypt(&simon_state, secret_data[i]);
+    raw_data[i] = secret_decrypt_fp64(&simon_state, secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
   // check the array
