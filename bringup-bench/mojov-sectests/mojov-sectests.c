@@ -1,5 +1,6 @@
 #include "libmin.h"
 #include "simon.h"
+#include "mojov-utils.h"
 #include "dc-fast.h"
 
 typedef unsigned __int128 uint128_t;
@@ -9,40 +10,6 @@ typedef unsigned __int128 uint128_t;
 #define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
 #define FLDE(rd,base,ofs) ".insn i 0xb, 0x2, " #rd ", " #base ", " #ofs "\n\t"
 #define FSDE(src,base,ofs) ".insn s 0xb, 0x3, " #src ", " #ofs "(" #base ")\n\t"
-
-// Define your custom CSR number
-#define CSR_MPRIVREGCFG 0x0a0
-
-static void
-print_mprivregcfg(uint64_t val)
-{
-  libmin_printf("(mojov_en:%s, key_valid:%s, format_sel:%s, mojov_ver:%u)",
-                (val & 0x01) ? "t" : "f",
-                (val & 0x02) ? "t" : "f",
-                ((val >> 2) & 0x03) == 2 ? "proof-carrying" : ((((val >> 2) & 0x03) == 1) ? "strong" : "fast"),
-                (val >> 4) & 0xff);
-}
-
-void negfailed(void)
-{
-  libmin_printf("ERROR: negative test failed because NO exception occurred!\n");
-  libmin_fail(2);
-}
-
-// Inline helpers
-static inline uint64_t
-read_mprivregcfg(void)
-{
-  uint64_t value;
-  __asm__ volatile ("csrr %0, %1" : "=r"(value) : "i"(CSR_MPRIVREGCFG));
-  return value;
-}
-
-static inline void
-write_mprivregcfg(uint64_t value)
-{
-  __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MPRIVREGCFG), "rK"(value));
-}
 
 // check that the SECRET INT registers have been cleared (after Mojo-V disabled)
 __attribute__((naked)) uint64_t
@@ -84,6 +51,9 @@ uint128_t bogus_enc = 42;
 int
 main(void)
 {
+  if (mojov_configure_kmsm_from_dc_fast() != 0)
+    return -1;
+
 
   // initilize cipher engine, for checking results
   #define MOJOV_PT_SIG   0xdeadbeef
@@ -108,20 +78,20 @@ main(void)
   uint64_t val;
 
   // read reset value
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   // read the mojov_arg
   uint16_t mojov_arg = (val >> 12) & 0xffff;
 
   // enable private register semantics (bit 0 = 1)
-  write_mprivregcfg(1);
+  mojov_write_mprivregcfg(1);
 
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   libmin_printf("INFO: Running Mojo-V test %u...\n", (uint32_t)mojov_arg);
@@ -1997,7 +1967,7 @@ main(void)
   }
 
   // disable private register semantics (write 0)
-  write_mprivregcfg(0);
+  mojov_write_mprivregcfg(0);
 
   // check that the secret registers were cleared
   if (secret_ints_cleared() == 0 && secret_fps_cleared() == 0)
@@ -2008,9 +1978,9 @@ main(void)
     libmin_fail(1);
   }
 
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("After disable, mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   libmin_success();

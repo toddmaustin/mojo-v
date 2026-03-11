@@ -1,5 +1,6 @@
 #include "libmin.h"
 #include "simon.h"
+#include "mojov-utils.h"
 #include "dc-strong.h"
 
 typedef unsigned __int128 uint128_t;
@@ -20,34 +21,6 @@ __instret(void)
 #define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
 #define FLDE(rd,base,ofs) ".insn i 0xb, 0x2, " #rd ", " #base ", " #ofs "\n\t"
 #define FSDE(src,base,ofs) ".insn s 0xb, 0x3, " #src ", " #ofs "(" #base ")\n\t"
-
-// Define your custom CSR number
-#define CSR_MPRIVREGCFG 0x0a0
-
-static void
-print_mprivregcfg(uint64_t val)
-{
-  libmin_printf("(mojov_en:%s, key_valid:%s, format_sel:%s, mojov_ver:%u)",
-                (val & 0x01) ? "t" : "f",
-                (val & 0x02) ? "t" : "f",
-                ((val >> 2) & 0x03) == 2 ? "proof-carrying" : ((((val >> 2) & 0x03) == 1) ? "strong" : "fast"),
-                (val >> 4) & 0xff);
-}
-
-// Inline helpers
-static inline uint64_t
-read_mprivregcfg(void)
-{
-  uint64_t value;
-  __asm__ volatile ("csrr %0, %1" : "=r"(value) : "i"(CSR_MPRIVREGCFG));
-  return value;
-}
-
-static inline void
-write_mprivregcfg(uint64_t value)
-{
-  __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MPRIVREGCFG), "rK"(value));
-}
 
 // SECRET int
 // secret_cmov(SECRET bool p, SECRET int x, SECRET int y)
@@ -223,6 +196,9 @@ bubblesort(union mojov_mem_strong_t *data, unsigned size)
 int
 main(void)
 {
+  if (mojov_configure_kmsm_from_dc_strong() != 0)
+    return -1;
+
   // initilize cipher engine, for checking results
   simon_128_128_keyexpand(&simon_state, simon_key, 68);
 
@@ -234,17 +210,17 @@ main(void)
   uint64_t val;
 
   // read reset value
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   // enable private register semantics (bit 0 = 1)
-  write_mprivregcfg(1);
+  mojov_write_mprivregcfg(1);
 
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   // initialize the pseudo-RNG
