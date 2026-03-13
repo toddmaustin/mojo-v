@@ -1,4 +1,4 @@
-INFO: KMSM contract open succeeded (kmsm_ctrl=0x3).
+INFO: KMSM contract open succeeded.
 ** Running CSR[privreg] tests...
 Initial mprivregcfg = 0x12, (mojov_en:f, key_valid:t, format_sel:fast, mojov_ver:1)
 INFO: running with loaded data contract.

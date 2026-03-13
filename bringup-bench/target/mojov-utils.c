@@ -129,7 +129,7 @@ static int mojov_configure_kmsm_from_dc(const char *kem_hex, const char *msg_hex
   const uint64_t status = (ctrl >> 2) & 0x7;
 
   if (status == 0) {
-    libmin_printf("INFO: KMSM contract open succeeded (kmsm_ctrl=0x%lx).\n", ctrl);
+    libmin_printf("INFO: KMSM contract open succeeded.\n");
     return 0;
   }
 
