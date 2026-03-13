@@ -103,20 +103,43 @@ processor_t::~processor_t()
 }
 
 
+namespace {
+reg_t mojov_kmsm_status_to_ctrl_field(const mojov_open_status_t status)
+{
+  switch (status) {
+    case mojov_open_status_t::OK:
+      return 0;
+    case mojov_open_status_t::BAD_INPUT:
+      return 1;
+    case mojov_open_status_t::DECAP:
+    case mojov_open_status_t::DECAP_CTX:
+    case mojov_open_status_t::DECAP_INIT:
+    case mojov_open_status_t::DECAP_SIZE:
+    case mojov_open_status_t::SS_MALLOC:
+      return 3;
+    case mojov_open_status_t::PT_HASH_MISMATCH:
+      return 4;
+    case mojov_open_status_t::BAD_SIGNATURE:
+      return 5;
+    default:
+      return 5;
+  }
+}
+} // namespace
+
 bool processor_t::mojov_kmsm_open_contract()
 {
   constexpr size_t DC_WIRE_LEN = 64;
 
-  kmsm_status = {0, 0, 0, 0};
   state.mojov_dcvalid = false;
 
   if (cfg->mojov_sk_pem_path.empty()) {
-    kmsm_status[0] = (reg_t)mojov_open_status_t::MISSING_SK_PATH;
+    kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(mojov_open_status_t::BAD_SIGNATURE);
     return false;
   }
 
   if (kmsm_encdc_bytes != DC_WIRE_LEN || kmsm_enckey_bytes == 0) {
-    kmsm_status[0] = (reg_t)mojov_open_status_t::BAD_INPUT;
+    kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(mojov_open_status_t::BAD_INPUT);
     return false;
   }
 
@@ -143,30 +166,21 @@ bool processor_t::mojov_kmsm_open_contract()
       pt_sha,
       &status);
 
-  kmsm_status[0] = (reg_t)status;
-  memcpy(&kmsm_status[2], pt_sha, sizeof(reg_t));
+  kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(status);
 
   if (!ok) {
-    kmsm_status[1] = 0;
     return false;
   }
 
   state.mojov_dcvalid = true;
   simon_128_128_keyexpand(&simon_state, *((uint128_t *)state.mojov_dc.sym_key_128), 68);
-  kmsm_status[1] = 1;
   return true;
 }
 
 void processor_t::mojov_kmsm_write_ctrl(reg_t val)
 {
-  kmsm_ctrl = val;
-  if (val & 1) {
-    const bool opened = mojov_kmsm_open_contract();
-    if (opened)
-      kmsm_ctrl |= (reg_t)1 << 1;
-    else
-      kmsm_ctrl |= (reg_t)1 << 2;
-  }
+  if (val & 1)
+    mojov_kmsm_open_contract();
 }
 
 

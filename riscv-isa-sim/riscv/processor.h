@@ -487,7 +487,7 @@ public:
     return kmsm_words[idx];
   }
 
-  reg_t mojov_kmsm_read_ctrl() const { return kmsm_ctrl; }
+  reg_t mojov_kmsm_read_ctrl() const { return (kmsm_ctrl_status & 0x7) << 2; }
 
   void mojov_kmsm_write_ctrl(reg_t val);
 
@@ -514,7 +514,7 @@ public:
     }
 
     kmsm_addr = 0;
-    kmsm_ctrl = 0;
+    kmsm_ctrl_status = 0;
     kmsm_status = {0, 0, 0, 0};
     kmsm_enckey_bytes = 0;
     kmsm_encdc_bytes = 0;
@@ -611,7 +611,7 @@ public:
 
   std::array<reg_t, kmsm_words_total> kmsm_words = {};
   reg_t kmsm_addr = 0;
-  reg_t kmsm_ctrl = 0;
+  reg_t kmsm_ctrl_status = 0;
   std::array<reg_t, 4> kmsm_status = {0, 0, 0, 0};
   size_t kmsm_enckey_bytes = 0;
   size_t kmsm_encdc_bytes = 0;
