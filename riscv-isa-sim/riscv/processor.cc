@@ -131,15 +131,18 @@ bool processor_t::mojov_kmsm_open_contract()
 {
   constexpr size_t DC_WIRE_LEN = 64;
 
+  kmsm_ctrl_busy = true;
   state.mojov_dcvalid = false;
 
   if (cfg->mojov_sk_pem_path.empty()) {
     kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(mojov_open_status_t::BAD_SIGNATURE);
+    kmsm_ctrl_busy = false;
     return false;
   }
 
   if (kmsm_encdc_bytes != DC_WIRE_LEN || kmsm_enckey_bytes == 0) {
     kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(mojov_open_status_t::BAD_INPUT);
+    kmsm_ctrl_busy = false;
     return false;
   }
 
@@ -169,11 +172,13 @@ bool processor_t::mojov_kmsm_open_contract()
   kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(status);
 
   if (!ok) {
+    kmsm_ctrl_busy = false;
     return false;
   }
 
   state.mojov_dcvalid = true;
   simon_128_128_keyexpand(&simon_state, *((uint128_t *)state.mojov_dc.sym_key_128), 68);
+  kmsm_ctrl_busy = false;
   return true;
 }
 

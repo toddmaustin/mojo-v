@@ -122,7 +122,10 @@ static int mojov_configure_kmsm_from_dc(const char *kem_hex, const char *msg_hex
 
   write_kmsm_ctrl(1);
 
-  const uint64_t ctrl = read_kmsm_ctrl();
+  uint64_t ctrl = read_kmsm_ctrl();
+  while ((ctrl & 0x2) != 0)
+    ctrl = read_kmsm_ctrl();
+
   const uint64_t status = (ctrl >> 2) & 0x7;
 
   if (status == 0) {
