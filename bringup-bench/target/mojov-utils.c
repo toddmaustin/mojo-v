@@ -121,17 +121,16 @@ static int mojov_configure_kmsm_from_dc(const char *kem_hex, const char *msg_hex
   load_hex_words_to_kmsm(msg_hex, KMSM_PUBKEY_WORDS + KMSM_ENCKEY_WORDS);
 
   write_kmsm_ctrl(1);
-  uint64_t ctrl;
-  do {
-    ctrl = read_kmsm_ctrl();
-  } while ((ctrl & 0x6) == 0);
 
-  if (ctrl & 0x2) {
+  const uint64_t ctrl = read_kmsm_ctrl();
+  const uint64_t status = (ctrl >> 2) & 0x7;
+
+  if (status == 0) {
     libmin_printf("INFO: KMSM contract open succeeded (kmsm_ctrl=0x%lx).\n", ctrl);
     return 0;
   }
 
-  libmin_printf("ERROR: KMSM contract open failed (kmsm_ctrl=0x%lx, err=0x%lx).\n", ctrl, (ctrl >> 32));
+  libmin_printf("ERROR: KMSM contract open failed (kmsm_ctrl=0x%lx, status=%lu).\n", ctrl, status);
   return -1;
 }
 
