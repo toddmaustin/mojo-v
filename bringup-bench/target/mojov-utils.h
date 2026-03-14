@@ -220,6 +220,12 @@ static inline void mojov_print_proofcarrying_fp64(mojov_mem_proofcarrying_fp64_t
 
 #define secret_print(ct) _Generic((ct),   uint128_t: mojov_print_fast_128,   mojov_mem_fast_u64_t: mojov_print_fast_u64,   mojov_mem_fast_fp64_t: mojov_print_fast_fp64,   mojov_mem_strong_u64_t: mojov_print_strong_u64,   mojov_mem_strong_fp64_t: mojov_print_strong_fp64,   mojov_mem_proofcarrying_u64_t: mojov_print_proofcarrying_u64,   mojov_mem_proofcarrying_fp64_t: mojov_print_proofcarrying_fp64 )(ct)
 
+void mojov_print_mojov_cfg(uint64_t val);
+uint64_t mojov_read_mojov_cfg(void);
+void mojov_write_mojov_cfg(uint64_t value);
+uint64_t mojov_read_mojov_ciphers(void);
+
+/* Backward compatibility aliases. */
 void mojov_print_mprivregcfg(uint64_t val);
 uint64_t mojov_read_mprivregcfg(void);
 void mojov_write_mprivregcfg(uint64_t value);

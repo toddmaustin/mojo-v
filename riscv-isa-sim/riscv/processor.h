@@ -204,7 +204,8 @@ struct state_t
   csr_t_p vstopi;
 
   // Mojo-V: processor state
-  csr_t_p msecregcfg;
+  csr_t_p mojov_cfg;
+  csr_t_p mojov_ciphers;
   csr_t_p mojov_kmsm_addr;
   csr_t_p mojov_kmsm_data;
   csr_t_p mojov_kmsm_ctrl;
@@ -462,29 +463,40 @@ public:
   reg_t mojov_kmsm_read_addr() const { return kmsm_addr; }
   void mojov_kmsm_write_data(reg_t val)
   {
-    size_t idx = static_cast<size_t>(kmsm_addr);
-    if (idx >= kmsm_words.size())
+    const size_t idx = static_cast<size_t>(kmsm_addr);
+    if (idx >= kmsm_bytes.size())
       return;
 
-    if (idx < pubkey_words)
+    if ((idx & (kmsm_window_bytes - 1)) != 0) {
+      // Byte-addressable KMSM with 64-bit transfer alignment requirement.
+      kmsm_ctrl_status = 1; // BAD_INPUT
+      return;
+    }
+
+    if (idx < pubkey_bytes)
       return;
 
-    kmsm_words[idx] = val;
+    for (size_t b = 0; b < kmsm_window_bytes && (idx + b) < kmsm_bytes.size(); ++b)
+      kmsm_bytes[idx + b] = (uint8_t)((val >> (8 * b)) & 0xff);
 
-    if (idx >= pubkey_words && idx < (pubkey_words + enckey_words))
-      kmsm_enckey_bytes = std::max(kmsm_enckey_bytes, (idx - pubkey_words + 1) * sizeof(reg_t));
-    else if (idx >= (pubkey_words + enckey_words) && idx < kmsm_words.size())
-      kmsm_encdc_bytes = std::max(kmsm_encdc_bytes, (idx - (pubkey_words + enckey_words) + 1) * sizeof(reg_t));
+    if (idx >= pubkey_bytes && idx < (pubkey_bytes + enckey_bytes))
+      kmsm_enckey_bytes = std::max(kmsm_enckey_bytes, std::min((idx - pubkey_bytes) + kmsm_window_bytes, enckey_bytes));
+    else if (idx >= (pubkey_bytes + enckey_bytes) && idx < kmsm_bytes.size())
+      kmsm_encdc_bytes = std::max(kmsm_encdc_bytes, std::min((idx - (pubkey_bytes + enckey_bytes)) + kmsm_window_bytes, encdc_bytes));
 
-    kmsm_addr = (idx + 1) % kmsm_words.size();
+    kmsm_addr = (idx + kmsm_window_bytes) % kmsm_bytes.size();
   }
 
   reg_t mojov_kmsm_read_data() const
   {
-    size_t idx = static_cast<size_t>(kmsm_addr);
-    if (idx >= kmsm_words.size())
+    const size_t idx = static_cast<size_t>(kmsm_addr);
+    if (idx >= kmsm_bytes.size())
       return 0;
-    return kmsm_words[idx];
+
+    reg_t val = 0;
+    for (size_t b = 0; b < kmsm_window_bytes && (idx + b) < kmsm_bytes.size(); ++b)
+      val |= (reg_t(kmsm_bytes[idx + b]) << (8 * b));
+    return val;
   }
 
   reg_t mojov_kmsm_read_ctrl() const { return (reg_t(kmsm_ctrl_busy) << 1) | ((kmsm_ctrl_status & 0x7) << 2); }
@@ -519,16 +531,11 @@ public:
     kmsm_status = {0, 0, 0, 0};
     kmsm_enckey_bytes = 0;
     kmsm_encdc_bytes = 0;
-    kmsm_words.fill(0);
+    kmsm_bytes.fill(0);
 
-    const size_t max_pk_bytes = pubkey_words * sizeof(reg_t);
+    const size_t max_pk_bytes = pubkey_bytes;
     const size_t pk_bytes = std::min(cfg->mojov_pk_der.size(), max_pk_bytes);
-    for (size_t off = 0; off < pk_bytes; off += sizeof(reg_t)) {
-      reg_t w = 0;
-      const size_t rem = std::min(sizeof(reg_t), pk_bytes - off);
-      memcpy(&w, cfg->mojov_pk_der.data() + off, rem);
-      kmsm_words[off / sizeof(reg_t)] = w;
-    }
+    memcpy(kmsm_bytes.data(), cfg->mojov_pk_der.data(), pk_bytes);
 
     // reset the dfhash core
     state.n_inputs = 0;
@@ -605,12 +612,13 @@ public:
   uint128_t simon_key = GEN128(0x0f0e0d0c0b0a0908, 0x0706050403020100);
   simon_state_t simon_state;
 
-  static constexpr size_t pubkey_words = 256;
-  static constexpr size_t enckey_words = 128;
-  static constexpr size_t encdc_words = 64;
-  static constexpr size_t kmsm_words_total = pubkey_words + enckey_words + encdc_words;
+  static constexpr size_t kmsm_window_bytes = 8;
+  static constexpr size_t pubkey_bytes = 800;
+  static constexpr size_t enckey_bytes = 768;
+  static constexpr size_t encdc_bytes = 64;
+  static constexpr size_t kmsm_bytes_total = pubkey_bytes + enckey_bytes + encdc_bytes;
 
-  std::array<reg_t, kmsm_words_total> kmsm_words = {};
+  std::array<uint8_t, kmsm_bytes_total> kmsm_bytes = {};
   reg_t kmsm_addr = 0;
   bool kmsm_ctrl_busy = false;
   reg_t kmsm_ctrl_status = 0;

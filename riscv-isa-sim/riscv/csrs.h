@@ -999,12 +999,22 @@ class aia_csr_t: public masked_csr_t {
 };
 
 /* Mojo-V configuration CSR register */
-class msecregcfg_csr_t : public basic_csr_t {
+class mojov_cfg_csr_t : public basic_csr_t {
 public:
-  msecregcfg_csr_t(processor_t* const proc, reg_t addr);
+  mojov_cfg_csr_t(processor_t* const proc, reg_t addr);
 
 protected:
   // Called after permission checks; return true if write actually applied.
+  bool unlogged_write(const reg_t val) noexcept override;
+};
+
+class mojov_ciphers_csr_t : public basic_csr_t {
+public:
+  mojov_ciphers_csr_t(processor_t* const proc, reg_t addr);
+
+  reg_t read() const noexcept override;
+
+protected:
   bool unlogged_write(const reg_t val) noexcept override;
 };
 
