@@ -149,14 +149,8 @@ bool processor_t::mojov_kmsm_open_contract()
   std::vector<unsigned char> kem_dc(kmsm_enckey_bytes, 0);
   std::vector<unsigned char> msg_dc(kmsm_encdc_bytes, 0);
 
-  for (size_t i = 0; i < enckey_words && (i * sizeof(reg_t)) < kem_dc.size(); i++) {
-    reg_t w = kmsm_words[pubkey_words + i];
-    memcpy(kem_dc.data() + i * sizeof(reg_t), &w, std::min(sizeof(reg_t), kem_dc.size() - i * sizeof(reg_t)));
-  }
-  for (size_t i = 0; i < encdc_words && (i * sizeof(reg_t)) < msg_dc.size(); i++) {
-    reg_t w = kmsm_words[pubkey_words + enckey_words + i];
-    memcpy(msg_dc.data() + i * sizeof(reg_t), &w, std::min(sizeof(reg_t), msg_dc.size() - i * sizeof(reg_t)));
-  }
+  memcpy(kem_dc.data(), kmsm_bytes.data() + pubkey_bytes, kmsm_enckey_bytes);
+  memcpy(msg_dc.data(), kmsm_bytes.data() + pubkey_bytes + enckey_bytes, kmsm_encdc_bytes);
 
   unsigned char pt_sha[32];
   mojov_open_status_t status = mojov_open_status_t::OK;

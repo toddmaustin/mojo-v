@@ -555,7 +555,8 @@ void state_t::csr_init(processor_t* const proc, reg_t max_isa)
   {
     // Create and install the new CSR at 0xBC0.
     // Use the macro if you added it; otherwise use the literal 0xBC0.
-    add_csr(CSR_MSECREGCFG, msecregcfg = std::make_shared<msecregcfg_csr_t>(proc, CSR_MSECREGCFG));
+    add_csr(CSR_MOJOV_CFG, mojov_cfg = std::make_shared<mojov_cfg_csr_t>(proc, CSR_MOJOV_CFG));
+    add_csr(CSR_MOJOV_CIPHERS, mojov_ciphers = std::make_shared<mojov_ciphers_csr_t>(proc, CSR_MOJOV_CIPHERS));
     add_csr(CSR_MOJOV_KMSM_ADDR, mojov_kmsm_addr = std::make_shared<mojov_kmsm_addr_csr_t>(proc, CSR_MOJOV_KMSM_ADDR));
     add_csr(CSR_MOJOV_KMSM_DATA, mojov_kmsm_data = std::make_shared<mojov_kmsm_data_csr_t>(proc, CSR_MOJOV_KMSM_DATA));
     add_csr(CSR_MOJOV_KMSM_CTRL, mojov_kmsm_ctrl = std::make_shared<mojov_kmsm_ctrl_csr_t>(proc, CSR_MOJOV_KMSM_CTRL));

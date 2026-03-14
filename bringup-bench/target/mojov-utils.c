@@ -1,13 +1,14 @@
 #include "libmin.h"
 #include "mojov-utils.h"
 
-#define CSR_MPRIVREGCFG 0x0a0
-#define CSR_MOJOV_KMSM_ADDR 0x0a1
-#define CSR_MOJOV_KMSM_DATA 0x0a2
-#define CSR_MOJOV_KMSM_CTRL 0x0a3
+#define CSR_MOJOV_CFG 0x0a0
+#define CSR_MOJOV_CIPHERS 0x0a1
+#define CSR_MOJOV_KMSM_ADDR 0x0a2
+#define CSR_MOJOV_KMSM_DATA 0x0a3
+#define CSR_MOJOV_KMSM_CTRL 0x0a4
 
-#define KMSM_PUBKEY_WORDS 256
-#define KMSM_ENCKEY_WORDS 128
+#define KMSM_PUBKEY_BYTES 800
+#define KMSM_ENCKEY_BYTES 768
 
 static const char *DC_FAST_KEM_HEX =
   "aeef3d701933d8cf8c884251c632e35ed37e894de486e7a307fa30b5b9abc82995b19adbe4861688bd1f261084a4dad58a1eb3c686c4d1a172a6604bdb7c8054a6271bd77bfa340b46a66509e5c7bfc90e863cd05b2d5b2f86453fab7fbf24e05ced6b10485f5c85f902be1a9ef25986568abc7cdfb4eb56bc799f18afef7ba85645c078c08c643e05d3ca48b241a9261d8a05b3b65e2b4b9a95a8b1071934a54717ee41297fd5ed8b30ff3fc7371ddf061b4847b8be2c85a397ae2873fad50d10dd28ed440398a6768c63ea09a266c781e78aa386c2549791f69170f73a09e2e24b8834525457c35ff089bd7b4ae232d946c0361f5564aa5a47005c978fe371dacac0ed4fe1f5839e275960887fe26d9a4011f96d8b079e7578fad158bc89b4b748565f8be6c3f7d09cb6ef665008e5a6e2e7849a28bf512ec55f9f0ed0b7464b3b0bdf87b7c32ac265bbae6d3fad00f5bd4a9cfbf2494bf0cfc8f725dbc628b873e3018dcb3082df19ad2858a510cde5ccd72daade4a8bc2488a0673f7b47103062a5f7a9cf43943a58f8721be2b030ee4c93441ae81820bc11f1f310b4a2df60d067dbd64db492fbd3289d4846d55a2b4af9964871d3e4aa6d3e7c55d588e8ae5ac8bbda6105d1cd85d78771b71ae379a29e71cd37bf4049289b9de9a35fdde6b58bbbded7b8f354e89add01d460dc2e109071580d736d665446dfd0c3260163f39c39e23bcd9f6ce2a8cf407c42a4f6f525a6ef8174f26346078de920862db5944a7b093cc6b4eee98b168910ff66f981fb8b20d784d1c38f5dd9fabd2f63edd5696a52be0b868e992395f33abea191fa38776b55dc5551dea1b8f70bed25d70974189294017e6a5575c2ca540c905d2fa5b25dceaa7fc2911b3a613a96387074a75d80a062a59c906b8540f47dbd489e331d3bd70d0bf2b972da50ee37b74085315e7e936c02a41e939c25752b9c787185b0202102f170bc3bcee21b3e9259e2db87e2dfa4eb6c45e69ba9776a574d03eafc7cd214bb3d6c700997f471f1036e51cddb6c67b8708ca306d5d27bd9ab75f6724f6f918147947ffaf420d75";
@@ -24,7 +25,7 @@ static const char *DC_PROOF_KEM_HEX =
 static const char *DC_PROOF_MSG_HEX =
   "50a07cce562c363cb9d662adc2b3a9e06280021478babc002ea627c41e8fd7ab33b4d6fb388910e3e5e87cc3c1f180056b4bbefa1f3217d17367892bfceb8a9c";
 
-void mojov_print_mprivregcfg(uint64_t val)
+void mojov_print_mojov_cfg(uint64_t val)
 {
   libmin_printf("(mojov_en:%s, key_valid:%s, format_sel:%s, mojov_ver:%u)",
                 (val & 0x01) ? "t" : "f",
@@ -33,17 +34,28 @@ void mojov_print_mprivregcfg(uint64_t val)
                 (val >> 4) & 0xff);
 }
 
-uint64_t mojov_read_mprivregcfg(void)
+uint64_t mojov_read_mojov_cfg(void)
 {
   uint64_t value;
-  __asm__ volatile ("csrr %0, %1" : "=r"(value) : "i"(CSR_MPRIVREGCFG));
+  __asm__ volatile ("csrr %0, %1" : "=r"(value) : "i"(CSR_MOJOV_CFG));
   return value;
 }
 
-void mojov_write_mprivregcfg(uint64_t value)
+void mojov_write_mojov_cfg(uint64_t value)
 {
-  __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MPRIVREGCFG), "rK"(value));
+  __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MOJOV_CFG), "rK"(value));
 }
+
+uint64_t mojov_read_mojov_ciphers(void)
+{
+  uint64_t value;
+  __asm__ volatile ("csrr %0, %1" : "=r"(value) : "i"(CSR_MOJOV_CIPHERS));
+  return value;
+}
+
+void mojov_print_mprivregcfg(uint64_t val) { mojov_print_mojov_cfg(val); }
+uint64_t mojov_read_mprivregcfg(void) { return mojov_read_mojov_cfg(); }
+void mojov_write_mprivregcfg(uint64_t value) { mojov_write_mojov_cfg(value); }
 
 static inline void write_kmsm_addr(uint64_t value)
 {
@@ -117,8 +129,8 @@ static void load_hex_words_to_kmsm(const char *hex, uint64_t start_addr)
 
 static int mojov_configure_kmsm_from_dc(const char *kem_hex, const char *msg_hex)
 {
-  load_hex_words_to_kmsm(kem_hex, KMSM_PUBKEY_WORDS);
-  load_hex_words_to_kmsm(msg_hex, KMSM_PUBKEY_WORDS + KMSM_ENCKEY_WORDS);
+  load_hex_words_to_kmsm(kem_hex, KMSM_PUBKEY_BYTES);
+  load_hex_words_to_kmsm(msg_hex, KMSM_PUBKEY_BYTES + KMSM_ENCKEY_BYTES);
 
   write_kmsm_ctrl(1);
 

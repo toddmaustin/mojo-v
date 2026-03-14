@@ -2231,8 +2231,8 @@ void aia_csr_t::verify_permissions(insn_t insn, bool write) const {
   basic_csr_t::verify_permissions(insn, write);
 }
 
-// implement class msecregcfg_csr_t
-msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
+// implement class mojov_cfg_csr_t
+mojov_cfg_csr_t::mojov_cfg_csr_t(processor_t* const proc, const reg_t addr):
   basic_csr_t(proc,
               addr,
               (((reg_t)proc->get_cfg().mojov_arg << 12)
@@ -2240,6 +2240,18 @@ msecregcfg_csr_t::msecregcfg_csr_t(processor_t* const proc, const reg_t addr):
                | (/* format_sel: fast(0) */(reg_t)(proc->get_cfg().mojov_proofcarrying ? FORMAT_SEL_PROOFCARRYING : (proc->get_cfg().mojov_strong ? FORMAT_SEL_STRONG : FORMAT_SEL_FAST)) << 2)
                | (/* key_valid:1 */(reg_t)1 << 1)
                | (/*mojov_en:off(0)*/0))) { }
+
+mojov_ciphers_csr_t::mojov_ciphers_csr_t(processor_t* const proc, const reg_t addr):
+  basic_csr_t(proc, addr, 0) {
+}
+
+reg_t mojov_ciphers_csr_t::read() const noexcept {
+  return 0;
+}
+
+bool mojov_ciphers_csr_t::unlogged_write(const reg_t UNUSED val) noexcept {
+  return false;
+}
 
 
 
@@ -2282,7 +2294,7 @@ bool mojov_kmsm_ctrl_csr_t::unlogged_write(const reg_t val) noexcept {
   return basic_csr_t::unlogged_write(proc->mojov_kmsm_read_ctrl());
 }
 
-bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
+bool mojov_cfg_csr_t::unlogged_write(const reg_t val) noexcept {
   reg_t masked_secreg = (read() & ~(reg_t)1);
   reg_t new_secreg = masked_secreg | (val & 1);
 
@@ -2303,4 +2315,3 @@ bool msecregcfg_csr_t::unlogged_write(const reg_t val) noexcept {
   }
   return wrote;
 }
-
