@@ -1,5 +1,6 @@
 #include "libmin.h"
 #include "simon.h"
+#include "mojov-utils.h"
 #include "dc-fast.h"
 
 typedef unsigned __int128 uint128_t;
@@ -7,34 +8,6 @@ typedef unsigned __int128 uint128_t;
 // Mojo-V asm instruction definitions (using the format-friendly .insn directive in GNU AS
 #define LDE(rd,base,ofs) ".insn i 0xb, 0x0, " #rd ", " #base ", " #ofs "\n\t"
 #define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
-
-// Define your custom CSR number
-#define CSR_MPRIVREGCFG 0x0a0
-
-static void
-print_mprivregcfg(uint64_t val)
-{
-  libmin_printf("(mojov_en:%s, key_valid:%s, format_sel:%s, mojov_ver:%u)",
-                (val & 0x01) ? "t" : "f",
-                (val & 0x02) ? "t" : "f",
-                ((val >> 2) & 0x03) == 2 ? "proof-carrying" : ((((val >> 2) & 0x03) == 1) ? "strong" : "fast"),
-                (val >> 4) & 0xff);
-}
-
-// Inline helpers
-static inline uint64_t
-read_mprivregcfg(void)
-{
-  uint64_t value;
-  __asm__ volatile ("csrr %0, %1" : "=r"(value) : "i"(CSR_MPRIVREGCFG));
-  return value;
-}
-
-static inline void
-write_mprivregcfg(uint64_t value)
-{
-  __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MPRIVREGCFG), "rK"(value));
-}
 
 // Predefined memory values
 uint64_t x = 35;
@@ -49,7 +22,6 @@ main(void)
 {
 
   // initilize cipher engine, for checking results
-  #define MOJOV_PT_SIG   0xdeadbeef
   union mojov_memfmt_t {
     uint128_t ct;     // ciphertext
 
@@ -71,22 +43,18 @@ main(void)
   uint64_t val;
 
   // read reset value
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   // enable private register semantics (bit 0 = 1)
-  write_mprivregcfg(1);
-
-  val = read_mprivregcfg();
-  if ((val & 1) == 0)
-  {
-    libmin_printf("ERROR: failed to enable Mojo-V (mojov_en stayed 0).\n");
+  if (mojov_enable_and_verify() != 0)
     return -1;
-  }
+
+  val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
 
@@ -153,15 +121,21 @@ main(void)
   simon_128_128_decrypt(&simon_state, x_enc, &x_check.ct);
   simon_128_128_decrypt(&simon_state, max_enc, &max_check.ct);
 
+  if (x_check.pt.sig != (uint32_t)CONTRACT_SIG || max_check.pt.sig != (uint32_t)CONTRACT_SIG)
+  {
+    libmin_printf("ERROR: local decrypt validation failed.\n");
+    return -1;
+  }
+
   libmin_printf("Final results:   x:%lu, max:%lu\n", x_check.pt.val, max_check.pt.val);
 
 
   // disable private register semantics (write 0)
-  write_mprivregcfg(0);
+  mojov_write_mprivregcfg(0);
 
-  val = read_mprivregcfg();
+  val = mojov_read_mprivregcfg();
   libmin_printf("After disable, mprivregcfg = 0x%lx, ", val);
-  print_mprivregcfg(val);
+  mojov_print_mprivregcfg(val);
   libmin_printf("\n");
 
   libmin_success();
