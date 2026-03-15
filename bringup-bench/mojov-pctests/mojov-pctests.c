@@ -1,7 +1,7 @@
 #include "libmin.h"
 #include "simon.h"
 #include "mojov-utils.h"
-#include "dc-proof.h"
+#include "dc-proofcarrying.h"
 
 volatile double iszero = 0.0;
 
@@ -27,7 +27,7 @@ int rb(int n)                 // uniform in [0..n-1], no modulo bias
   return r % n;
 }
 
-#define MOJOV_PT_SIG   0xdeadbeef
+static uint64_t g_contract_sig = CONTRACT_SIG;
 
 double
 genrand_fp64(void)
@@ -59,10 +59,10 @@ secret_3rdparty(double dblval, uint64_t in_brand)
   if (mojov_arg == 25)
   {
     // replay attack, using an old AUTH_SIG
-    auth_sig = MOJOV_PT_SIG-1;
+    auth_sig = g_contract_sig - 1;
   }
   else
-    auth_sig = MOJOV_PT_SIG;
+    auth_sig = g_contract_sig;
 
   uint64_t dfhash = mojov_hash64(mojov_hash64_init(), in_brand);
   mojov_mem_proofcarrying_fp64_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), auth_sig, dfhash} };
@@ -269,7 +269,14 @@ main(void)
   mojov_arg = (val >> 12) & 0xffff;
 
   // enable private register semantics (bit 0 = 1)
-  mojov_write_mprivregcfg(1);
+  if (mojov_enable_and_verify() != 0)
+    return -1;
+
+  if (g_contract_sig == 0)
+  {
+    libmin_printf("ERROR: missing compile-time CONTRACT_SIG.\n");
+    return -1;
+  }
 
   val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);

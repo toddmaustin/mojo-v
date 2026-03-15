@@ -57,6 +57,20 @@ void mojov_print_mprivregcfg(uint64_t val) { mojov_print_mojov_cfg(val); }
 uint64_t mojov_read_mprivregcfg(void) { return mojov_read_mojov_cfg(); }
 void mojov_write_mprivregcfg(uint64_t value) { mojov_write_mojov_cfg(value); }
 
+int mojov_enable_and_verify(void)
+{
+  mojov_write_mojov_cfg(1);
+  const uint64_t cfg = mojov_read_mojov_cfg();
+  if ((cfg & 0x1) == 0) {
+    libmin_printf("ERROR: failed to enable Mojo-V (mojov_en stayed 0).\n");
+    mojov_print_mojov_cfg(cfg);
+    libmin_printf("\n");
+    return -1;
+  }
+  return 0;
+}
+
+
 static inline void write_kmsm_addr(uint64_t value)
 {
   __asm__ volatile ("csrw %0, %1" :: "i"(CSR_MOJOV_KMSM_ADDR), "rK"(value));

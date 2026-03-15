@@ -80,6 +80,11 @@ main(void)
   write_mprivregcfg(1);
 
   val = read_mprivregcfg();
+  if ((val & 1) == 0)
+  {
+    libmin_printf("ERROR: failed to enable Mojo-V (mojov_en stayed 0).\n");
+    return -1;
+  }
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
   print_mprivregcfg(val);
   libmin_printf("\n");
