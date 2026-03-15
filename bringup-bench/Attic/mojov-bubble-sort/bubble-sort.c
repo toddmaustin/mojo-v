@@ -7,7 +7,7 @@
 #endif
 // #define secret_cmov(p, x, y) __builtin_secret_cmov((p), (x), (y))
 #define secret_cmov(p, x, y) ((p) ? (x) : (y))
-#define secret_decrypt(x) (x)
+#define mojov_3rdparty_decrypt(x) (x)
 
 extern inline uint64_t
 __instret(void)
@@ -89,7 +89,7 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = secret_decrypt(secret_data[i]);
+    raw_data[i] = mojov_3rdparty_decrypt(secret_data[i]);
   print_data(raw_data, DATASET_SIZE);
 
   // check the array
@@ -101,7 +101,7 @@ main(void)
       return -1;
     }
   }
-  libmin_printf("INFO: %lu swaps executed.\n", secret_decrypt(swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_3rdparty_decrypt(swaps));
   libmin_printf("INFO: data is properly sorted.\n");
 
   libmin_success();

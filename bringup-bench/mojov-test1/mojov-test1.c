@@ -1,4 +1,5 @@
 #include "libmin.h"
+#include "mojov-utils.h"
 
 // #define SECRET_BUGS
 
@@ -251,7 +252,22 @@ foo(void)
 int
 main(void)
 {
+  uint64_t cfg = mojov_read_mprivregcfg();
+  libmin_printf("Initial mprivregcfg = 0x%lx, ", cfg);
+  mojov_print_mprivregcfg(cfg);
+  libmin_printf("\n");
+
+  if (mojov_enable_and_verify() != 0)
+    return -1;
+
   foo();
+
+  mojov_write_mprivregcfg(0);
+  cfg = mojov_read_mprivregcfg();
+  libmin_printf("After disable, mprivregcfg = 0x%lx, ", cfg);
+  mojov_print_mprivregcfg(cfg);
+  libmin_printf("\n");
+
   libmin_printf("INFO: All tests successed.\n");
   return 0;
 }

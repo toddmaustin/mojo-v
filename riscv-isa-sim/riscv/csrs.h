@@ -1002,6 +1002,7 @@ class aia_csr_t: public masked_csr_t {
 class mojov_cfg_csr_t : public basic_csr_t {
 public:
   mojov_cfg_csr_t(processor_t* const proc, reg_t addr);
+  reg_t read() const noexcept override;
 
 protected:
   // Called after permission checks; return true if write actually applied.

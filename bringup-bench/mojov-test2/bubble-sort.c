@@ -103,7 +103,8 @@ main(void)
   libmin_printf("\n");
 
   // enable private register semantics (bit 0 = 1)
-  mojov_write_mprivregcfg(1);
+  if (mojov_enable_and_verify() != 0)
+    return -1;
 
   val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);

@@ -224,6 +224,7 @@ void mojov_print_mojov_cfg(uint64_t val);
 uint64_t mojov_read_mojov_cfg(void);
 void mojov_write_mojov_cfg(uint64_t value);
 uint64_t mojov_read_mojov_ciphers(void);
+int mojov_enable_and_verify(void);
 
 /* Backward compatibility aliases. */
 void mojov_print_mprivregcfg(uint64_t val);
