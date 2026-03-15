@@ -19,7 +19,7 @@ if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAST)
   // decrypt the value with the processor-internal key
   simon_128_128_decrypt(&p->simon_state, ctval.ct, &ptval.ct);
 
-  if (ptval.pt.auth_sig != MOJOV_PT_SIG)
+  if (ptval.pt.auth_sig != (uint32_t)p->get_state()->mojov_dc.contract_sig)
   {
     // Mojo-V not valid ciphertext, trap out...
     throw trap_security_exception(insn.bits());
@@ -43,7 +43,7 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
   simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi = ptval.ct.ct_hi ^ ctval.ct.ct_lo;
 
-  if (ptval.pt.auth_sig != MOJOV_PT_SIG)
+  if (ptval.pt.auth_sig != p->get_state()->mojov_dc.contract_sig)
   {
     // Mojo-V not valid ciphertext, trap out...
     throw trap_security_exception(insn.bits());
@@ -67,7 +67,7 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
   simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi = ptval.ct.ct_hi ^ ctval.ct.ct_lo;
 
-  if (ptval.pt.auth_sig != MOJOV_PT_SIG)
+  if (ptval.pt.auth_sig != p->get_state()->mojov_dc.contract_sig)
   {
     // Mojo-V not valid ciphertext, trap out...
     throw trap_security_exception(insn.bits());

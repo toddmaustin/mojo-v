@@ -2238,7 +2238,7 @@ mojov_cfg_csr_t::mojov_cfg_csr_t(processor_t* const proc, const reg_t addr):
               (((reg_t)proc->get_cfg().mojov_arg << 12)
                | (/* ver:0x1 */(reg_t)1 << 4)
                | (/* format_sel: fast(0) */(reg_t)(proc->get_cfg().mojov_proofcarrying ? FORMAT_SEL_PROOFCARRYING : (proc->get_cfg().mojov_strong ? FORMAT_SEL_STRONG : FORMAT_SEL_FAST)) << 2)
-               | (/* key_valid:1 */(reg_t)1 << 1)
+               | (/* key_valid:0 */(reg_t)0 << 1)
                | (/*mojov_en:off(0)*/0))) { }
 
 mojov_ciphers_csr_t::mojov_ciphers_csr_t(processor_t* const proc, const reg_t addr):
@@ -2294,21 +2294,31 @@ bool mojov_kmsm_ctrl_csr_t::unlogged_write(const reg_t val) noexcept {
   return basic_csr_t::unlogged_write(proc->mojov_kmsm_read_ctrl());
 }
 
-bool mojov_cfg_csr_t::unlogged_write(const reg_t val) noexcept {
-  reg_t masked_secreg = (read() & ~(reg_t)1);
-  reg_t new_secreg = masked_secreg | (val & 1);
+reg_t mojov_cfg_csr_t::read() const noexcept {
+  reg_t val = basic_csr_t::read();
+  if (proc->get_state()->mojov_dcvalid)
+    val |= ((reg_t)1 << 1);
+  else
+    val &= ~((reg_t)1 << 1);
+  return val;
+}
 
-  // masked_csr_t will apply the mask & store the value into its internal reg.
+bool mojov_cfg_csr_t::unlogged_write(const reg_t val) noexcept {
+  const reg_t current = read();
+  const bool key_valid = (current & ((reg_t)1 << 1)) != 0;
+  const bool req_enable = (val & 1) != 0;
+
+  reg_t new_secreg = current & ~(reg_t)1;
+  if (req_enable && key_valid)
+    new_secreg |= 1;
+
   const bool wrote = basic_csr_t::unlogged_write(new_secreg);
 
-  // Optional: latch a fast flag on the processor for quick checks in exec path.
-  // We'll store this in processor_t (see step 3).
   if (wrote) {
-    const bool enabled = (read() & 1) != 0;
+    const bool enabled = (new_secreg & 1) != 0;
     proc->set_secreg_mode(enabled);
 
-    if (!enabled)
-    { 
+    if (!enabled) {
       SECREG_RESET;
       FP_SECREG_RESET;
     }

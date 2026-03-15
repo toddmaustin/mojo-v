@@ -512,18 +512,9 @@ public:
   //
   void mojov_reset()
   {
-    // Mojo-V data contract installed?
-    if (cfg->mojov_dcvalid)
-    {
-      state.mojov_dcvalid = true;
-      state.mojov_dc = cfg->mojov_dc;
-    }
-    else
-    {
-      // zero out the data contract
-      state.mojov_dcvalid = false;
-      memset(&state.mojov_dc, 0, sizeof(state.mojov_dc));
-    }
+    // reset clears data-contract validity until a successful KMSM open.
+    state.mojov_dcvalid = false;
+    memset(&state.mojov_dc, 0, sizeof(state.mojov_dc));
 
     kmsm_addr = 0;
     kmsm_ctrl_busy = false;

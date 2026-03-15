@@ -146,7 +146,6 @@
 #define RA READ_REG(X_RA)
 
 // Mojo-V memory format details
-#define MOJOV_PT_SIG   0xdeadbeef
 
 // fast memory format
 union mojov_mem_fast_t {

@@ -1,7 +1,8 @@
 #include "libmin.h"
 #include "simon.h"
 #include "mojov-utils.h"
-#include "dc-proof.h"
+#include "dc-proofcarrying.h"
+#include <stdlib.h>
 
 volatile double iszero = 0.0;
 
@@ -27,7 +28,7 @@ int rb(int n)                 // uniform in [0..n-1], no modulo bias
   return r % n;
 }
 
-#define MOJOV_PT_SIG   0xdeadbeef
+static uint64_t g_contract_sig = CONTRACT_SIG;
 
 double
 genrand_fp64(void)
@@ -53,16 +54,16 @@ genrand_fp64(void)
 }
 
 mojov_mem_proofcarrying_fp64_t
-secret_3rdparty(double dblval, uint64_t in_brand)
+mojov_3rdparty_encrypt(double dblval, uint64_t in_brand, uint64_t contract_sig)
 {
   uint64_t auth_sig;
   if (mojov_arg == 25)
   {
     // replay attack, using an old AUTH_SIG
-    auth_sig = MOJOV_PT_SIG-1;
+    auth_sig = contract_sig - 1;
   }
   else
-    auth_sig = MOJOV_PT_SIG;
+    auth_sig = contract_sig;
 
   uint64_t dfhash = mojov_hash64(mojov_hash64_init(), in_brand);
   mojov_mem_proofcarrying_fp64_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), auth_sig, dfhash} };
@@ -74,6 +75,43 @@ secret_3rdparty(double dblval, uint64_t in_brand)
 
   return ctval;
 }
+
+
+static double
+mojov_3rdparty_decrypt_fp64(mojov_mem_proofcarrying_fp64_t ctval, uint64_t contract_sig)
+{
+  mojov_mem_proofcarrying_fp64_t ptval;
+  simon_128_128_decrypt(&simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
+  simon_128_128_decrypt(&simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
+  ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+
+  if (ptval.pt.auth_sig != contract_sig)
+  {
+    libmin_printf("ERROR: mojov_3rdparty_decrypt() decryption validation failed!\n");
+    exit(-1);
+  }
+
+  return ptval.pt.val;
+}
+
+static uint64_t
+mojov_3rdparty_decrypt_u64(mojov_mem_proofcarrying_u64_t ctval, uint64_t contract_sig)
+{
+  mojov_mem_proofcarrying_u64_t ptval;
+  simon_128_128_decrypt(&simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
+  simon_128_128_decrypt(&simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
+  ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+
+  if (ptval.pt.auth_sig != contract_sig)
+  {
+    libmin_printf("ERROR: mojov_3rdparty_decrypt() decryption validation failed!\n");
+    exit(-1);
+  }
+
+  return ptval.pt.val;
+}
+
+#define mojov_3rdparty_decrypt(ctval, contract_sig) _Generic((ctval),   mojov_mem_proofcarrying_fp64_t: mojov_3rdparty_decrypt_fp64,   mojov_mem_proofcarrying_u64_t: mojov_3rdparty_decrypt_u64 )((ctval), (contract_sig))
 
 // supported sizes: 64, 128, 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 64
@@ -269,7 +307,14 @@ main(void)
   mojov_arg = (val >> 12) & 0xffff;
 
   // enable private register semantics (bit 0 = 1)
-  mojov_write_mprivregcfg(1);
+  if (mojov_enable_and_verify() != 0)
+    return -1;
+
+  if (g_contract_sig == 0)
+  {
+    libmin_printf("ERROR: missing compile-time CONTRACT_SIG.\n");
+    return -1;
+  }
 
   val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
@@ -313,10 +358,10 @@ main(void)
     if (mojov_arg == 23 && i == 14)
     {
       // substitution attack
-      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */10000000);
+      secret_data[i] = mojov_3rdparty_encrypt(raw_data[i], /* input type */10000000, g_contract_sig);
     }
     else
-      secret_data[i] = secret_3rdparty(raw_data[i], /* input type */i);
+      secret_data[i] = mojov_3rdparty_encrypt(raw_data[i], /* input type */i, g_contract_sig);
   }
   print_data(raw_data, DATASET_SIZE);
 
@@ -348,10 +393,10 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = mojov_decrypt_proofcarrying_fp64(&simon_state, secret_data[i]);
+    raw_data[i] = mojov_3rdparty_decrypt(secret_data[i], g_contract_sig);
   print_data(raw_data, DATASET_SIZE);
 
-  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_proofcarrying_u64(&simon_state, swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_3rdparty_decrypt(swaps, g_contract_sig));
 
   // check the array
   bool sorted = true;
@@ -365,7 +410,7 @@ main(void)
   }
   libmin_printf("ERROR: data is %sproperly sorted.\n", sorted ? "" : "not ");
 
-  double sum = mojov_decrypt_proofcarrying_fp64(&simon_state, sum_enc);
+  double sum = mojov_3rdparty_decrypt(sum_enc, g_contract_sig);
   libmin_printf("INFO: final summary variable: %.20lf\n", sum);
 
   uint64_t dfhash;
