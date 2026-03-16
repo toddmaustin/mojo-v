@@ -152,7 +152,7 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = mojov_decrypt_fast_u64(&simon_state, secret_data[i]);
+    raw_data[i] = mojov_decrypt_fast_u64(&simon_state, secret_data[i], CONTRACT_SIG);
   print_data(raw_data, DATASET_SIZE);
 
   // check the array
@@ -164,7 +164,7 @@ main(void)
       return -1;
     }
   }
-  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_fast_u64(&simon_state, swaps));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_fast_u64(&simon_state, swaps, CONTRACT_SIG));
   libmin_printf("INFO: data is properly sorted.\n");
 
   libmin_success();

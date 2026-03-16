@@ -62,7 +62,7 @@ typedef union mojov_mem_strong_u64_t {
   struct {
     uint64_t val;
     uint64_t salt;
-    uint64_t auth_sig;
+    uint64_t sig;
     uint64_t metadata;
   } pt;
 } mojov_mem_strong_u64_t;
@@ -75,7 +75,7 @@ typedef union mojov_mem_strong_fp64_t {
   struct {
     double val;
     uint64_t salt;
-    uint64_t auth_sig;
+    uint64_t sig;
     uint64_t metadata;
   } pt;
 } mojov_mem_strong_fp64_t;
@@ -88,7 +88,7 @@ typedef union mojov_mem_proofcarrying_u64_t {
   struct {
     uint64_t val;
     uint64_t salt;
-    uint64_t auth_sig;
+    uint64_t sig;
     uint64_t metadata;
   } pt;
 } mojov_mem_proofcarrying_u64_t;
@@ -101,67 +101,116 @@ typedef union mojov_mem_proofcarrying_fp64_t {
   struct {
     double val;
     uint64_t salt;
-    uint64_t auth_sig;
+    uint64_t sig;
     uint64_t metadata;
   } pt;
 } mojov_mem_proofcarrying_fp64_t;
 
-static inline uint64_t mojov_decrypt_fast_u64(simon_state_t *simon_state, mojov_mem_fast_u64_t ctval)
+static inline uint64_t mojov_decrypt_fast_u64(simon_state_t *simon_state, mojov_mem_fast_u64_t ctval, uint64_t sig)
 {
   mojov_mem_fast_u64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct, &ptval.ct);
+  if (ptval.pt.sig != (uint32_t)sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.val;
 }
 
-static inline double mojov_decrypt_fast_fp64(simon_state_t *simon_state, mojov_mem_fast_fp64_t ctval)
+static inline double mojov_decrypt_fast_fp64(simon_state_t *simon_state, mojov_mem_fast_fp64_t ctval, uint64_t sig)
 {
   mojov_mem_fast_fp64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct, &ptval.ct);
+  if (ptval.pt.sig != (uint32_t)sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.val;
 }
 
-static inline uint64_t mojov_decrypt_strong_u64(simon_state_t *simon_state, mojov_mem_strong_u64_t ctval)
+static inline uint64_t mojov_decrypt_strong_u64(simon_state_t *simon_state, mojov_mem_strong_u64_t ctval, uint64_t sig)
 {
   mojov_mem_strong_u64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
   simon_128_128_decrypt(simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+  if (ptval.pt.sig != sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.val;
 }
 
-static inline double mojov_decrypt_strong_fp64(simon_state_t *simon_state, mojov_mem_strong_fp64_t ctval)
+static inline double mojov_decrypt_strong_fp64(simon_state_t *simon_state, mojov_mem_strong_fp64_t ctval, uint64_t sig)
 {
   mojov_mem_strong_fp64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
   simon_128_128_decrypt(simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+  if (ptval.pt.sig != sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.val;
 }
 
-static inline uint64_t mojov_decrypt_proofcarrying_u64(simon_state_t *simon_state, mojov_mem_proofcarrying_u64_t ctval)
+static inline mojov_mem_proofcarrying_fp64_t
+mojov_encrypt_proofcarrying_fp64(simon_state_t *simon_state, double dblval, uint64_t in_brand, uint64_t sig)
+{
+  uint64_t dfhash = mojov_hash64(mojov_hash64_init(), in_brand);
+  mojov_mem_proofcarrying_fp64_t ptval = {.pt = { dblval, ((uint64_t)libmin_rand() << 32) | (uint64_t)libmin_rand(), sig, dfhash} };
+  mojov_mem_proofcarrying_fp64_t ctval;
+
+  // encrypt the memory packet with the processor's internal key
+  simon_128_128_encrypt(simon_state, ptval.ct.ct_lo, &ctval.ct.ct_lo);
+  simon_128_128_encrypt(simon_state, (ptval.ct.ct_hi ^ ctval.ct.ct_lo), &ctval.ct.ct_hi);
+
+  return ctval;
+}
+
+static inline uint64_t mojov_decrypt_proofcarrying_u64(simon_state_t *simon_state, mojov_mem_proofcarrying_u64_t ctval, uint64_t sig)
 {
   mojov_mem_proofcarrying_u64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
   simon_128_128_decrypt(simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+  if (ptval.pt.sig != sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.val;
 }
 
-static inline double mojov_decrypt_proofcarrying_fp64(simon_state_t *simon_state, mojov_mem_proofcarrying_fp64_t ctval)
+static inline double mojov_decrypt_proofcarrying_fp64(simon_state_t *simon_state, mojov_mem_proofcarrying_fp64_t ctval, uint64_t sig)
 {
   mojov_mem_proofcarrying_fp64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
   simon_128_128_decrypt(simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+  if (ptval.pt.sig != sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.val;
 }
 
-static inline uint64_t mojov_dfhash_proofcarrying_fp64(simon_state_t *simon_state, mojov_mem_proofcarrying_fp64_t ctval)
+static inline uint64_t mojov_dfhash_proofcarrying_fp64(simon_state_t *simon_state, mojov_mem_proofcarrying_fp64_t ctval, uint64_t sig)
 {
   mojov_mem_proofcarrying_fp64_t ptval;
   simon_128_128_decrypt(simon_state, ctval.ct.ct_lo, &ptval.ct.ct_lo);
   simon_128_128_decrypt(simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
+  if (ptval.pt.sig != sig)
+  {
+    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_fail(-1);
+  }
   return ptval.pt.metadata;
 }
 

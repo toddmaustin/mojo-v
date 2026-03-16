@@ -5,6 +5,9 @@
 
 typedef unsigned __int128 uint128_t;
 
+uint128_t simon_key = SIMON128_KEY;
+simon_state_t simon_state;
+
 // Mojo-V asm instruction definitions (using the format-friendly .insn directive in GNU AS
 #define LDE(rd,base,ofs) ".insn i 0xb, 0x0, " #rd ", " #base ", " #ofs "\n\t"
 #define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
@@ -13,34 +16,26 @@ typedef unsigned __int128 uint128_t;
 uint64_t x = 35;
 uint64_t max = 25;
 
-uint128_t x_enc;
-uint128_t max_enc;
-uint128_t bogus_enc = 42;
+mojov_mem_fast_u64_t x_enc;
+mojov_mem_fast_u64_t max_enc;
+mojov_mem_fast_u64_t bogus_enc = {.ct = 42};
 
 int
 main(void)
 {
+  uint64_t val;
+
+  // initilize Mojo-V and open a fast-mode contract
+  if (mojov_configure_kmsm_from_dc_fast() != 0)
+    return -1;
 
   // initilize cipher engine, for checking results
-  union mojov_memfmt_t {
-    uint128_t ct;     // ciphertext
-
-    struct {          // plaintext
-      uint64_t val;     // register plaintext value
-      uint32_t salt;    // random salt
-      uint32_t sig;     // fixed signature
-    } pt;
-  };
-  uint128_t simon_key = SIMON128_KEY;
-  simon_state_t simon_state;
   simon_128_128_keyexpand(&simon_state, simon_key, 68);
 
   //
   // mprivregcfg tests
   //
   libmin_printf("** Running CSR[privreg] tests...\n");
-
-  uint64_t val;
 
   // read reset value
   val = mojov_read_mprivregcfg();
@@ -56,7 +51,6 @@ main(void)
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
   mojov_print_mprivregcfg(val);
   libmin_printf("\n");
-
 
   // do some secret computation
   libmin_printf("Initial inputs: x:%lu, max:%lu\n", x, max);
@@ -116,19 +110,19 @@ main(void)
     : "x24", "x25", "x26", "x27", "x15" // clobbered registers
   );
 
-  // decrypt results locally
-  union mojov_memfmt_t x_check, max_check;
-  simon_128_128_decrypt(&simon_state, x_enc, &x_check.ct);
-  simon_128_128_decrypt(&simon_state, max_enc, &max_check.ct);
+  // decrypt results locally and validate computation and signature
+  uint64_t x_check = mojov_decrypt_fast_u64(&simon_state, x_enc, CONTRACT_SIG);
+  uint64_t max_check = mojov_decrypt_fast_u64(&simon_state, max_enc, CONTRACT_SIG);
 
-  if (x_check.pt.sig != (uint32_t)CONTRACT_SIG || max_check.pt.sig != (uint32_t)CONTRACT_SIG)
+  // check that the computation was successful
+  if (x_check != 35 || max_check != 35)
   {
-    libmin_printf("ERROR: local decrypt validation failed.\n");
+    libmin_printf("ERROR: computation results are incorrect. (x_enc == %lu, max_enc == %lu)\n", x_check, max_check);
     return -1;
   }
 
-  libmin_printf("Final results:   x:%lu, max:%lu\n", x_check.pt.val, max_check.pt.val);
-
+  // looks good, output the correct results
+  libmin_printf("Final results:   x:%lu, max:%lu\n", x_check, max_check);
 
   // disable private register semantics (write 0)
   mojov_write_mprivregcfg(0);

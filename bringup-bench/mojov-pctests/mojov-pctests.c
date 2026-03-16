@@ -2,7 +2,6 @@
 #include "simon.h"
 #include "mojov-utils.h"
 #include "dc-proofcarrying.h"
-#include <stdlib.h>
 
 volatile double iszero = 0.0;
 
@@ -28,8 +27,6 @@ int rb(int n)                 // uniform in [0..n-1], no modulo bias
   return r % n;
 }
 
-static uint64_t g_contract_sig = CONTRACT_SIG;
-
 double
 genrand_fp64(void)
 {
@@ -53,6 +50,7 @@ genrand_fp64(void)
   return v;
 }
 
+#if 0
 mojov_mem_proofcarrying_fp64_t
 mojov_3rdparty_encrypt(double dblval, uint64_t in_brand, uint64_t contract_sig)
 {
@@ -76,7 +74,6 @@ mojov_3rdparty_encrypt(double dblval, uint64_t in_brand, uint64_t contract_sig)
   return ctval;
 }
 
-
 static double
 mojov_3rdparty_decrypt_fp64(mojov_mem_proofcarrying_fp64_t ctval, uint64_t contract_sig)
 {
@@ -85,7 +82,7 @@ mojov_3rdparty_decrypt_fp64(mojov_mem_proofcarrying_fp64_t ctval, uint64_t contr
   simon_128_128_decrypt(&simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
 
-  if (ptval.pt.auth_sig != contract_sig)
+  if (ptval.pt.sig != contract_sig)
   {
     libmin_printf("ERROR: mojov_3rdparty_decrypt() decryption validation failed!\n");
     exit(-1);
@@ -112,6 +109,7 @@ mojov_3rdparty_decrypt_u64(mojov_mem_proofcarrying_u64_t ctval, uint64_t contrac
 }
 
 #define mojov_3rdparty_decrypt(ctval, contract_sig) _Generic((ctval),   mojov_mem_proofcarrying_fp64_t: mojov_3rdparty_decrypt_fp64,   mojov_mem_proofcarrying_u64_t: mojov_3rdparty_decrypt_u64 )((ctval), (contract_sig))
+#endif
 
 // supported sizes: 64, 128, 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 64
@@ -310,12 +308,6 @@ main(void)
   if (mojov_enable_and_verify() != 0)
     return -1;
 
-  if (g_contract_sig == 0)
-  {
-    libmin_printf("ERROR: missing compile-time CONTRACT_SIG.\n");
-    return -1;
-  }
-
   val = mojov_read_mprivregcfg();
   libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
   mojov_print_mprivregcfg(val);
@@ -358,10 +350,10 @@ main(void)
     if (mojov_arg == 23 && i == 14)
     {
       // substitution attack
-      secret_data[i] = mojov_3rdparty_encrypt(raw_data[i], /* input type */10000000, g_contract_sig);
+      secret_data[i] = mojov_encrypt_proofcarrying_fp64(&simon_state, raw_data[i], /* input type */10000000, CONTRACT_SIG - (mojov_arg == 25 ? 1 : 0));
     }
     else
-      secret_data[i] = mojov_3rdparty_encrypt(raw_data[i], /* input type */i, g_contract_sig);
+      secret_data[i] = mojov_encrypt_proofcarrying_fp64(&simon_state, raw_data[i], /* input type */i, CONTRACT_SIG - (mojov_arg == 25 ? 1 : 0));
   }
   print_data(raw_data, DATASET_SIZE);
 
@@ -393,10 +385,10 @@ main(void)
 
   // decrypt the array
   for (unsigned i=0; i < DATASET_SIZE; i++)
-    raw_data[i] = mojov_3rdparty_decrypt(secret_data[i], g_contract_sig);
+    raw_data[i] = mojov_decrypt_proofcarrying_fp64(&simon_state, secret_data[i], CONTRACT_SIG);
   print_data(raw_data, DATASET_SIZE);
 
-  libmin_printf("INFO: %lu swaps executed.\n", mojov_3rdparty_decrypt(swaps, g_contract_sig));
+  libmin_printf("INFO: %lu swaps executed.\n", mojov_decrypt_proofcarrying_u64(&simon_state, swaps, CONTRACT_SIG));
 
   // check the array
   bool sorted = true;
@@ -410,18 +402,18 @@ main(void)
   }
   libmin_printf("ERROR: data is %sproperly sorted.\n", sorted ? "" : "not ");
 
-  double sum = mojov_3rdparty_decrypt(sum_enc, g_contract_sig);
+  double sum = mojov_decrypt_proofcarrying_fp64(&simon_state, sum_enc, CONTRACT_SIG);
   libmin_printf("INFO: final summary variable: %.20lf\n", sum);
 
   uint64_t dfhash;
   if (mojov_arg == 22)
   {
-    dfhash = mojov_dfhash_proofcarrying_fp64(&simon_state, secret_data[DATASET_SIZE-1]);
+    dfhash = mojov_dfhash_proofcarrying_fp64(&simon_state, secret_data[DATASET_SIZE-1], CONTRACT_SIG);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
   }
   else
   {
-    dfhash = mojov_dfhash_proofcarrying_fp64(&simon_state, sum_enc);
+    dfhash = mojov_dfhash_proofcarrying_fp64(&simon_state, sum_enc, CONTRACT_SIG);
     libmin_printf("INFO: final dataflow hash: 0x%08x%08x\n", (uint32_t)(dfhash >> 32), (uint32_t)dfhash);
   }
   if (dfhash == 0xc928d654cf18433e)

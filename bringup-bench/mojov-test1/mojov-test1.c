@@ -1,5 +1,12 @@
 #include "libmin.h"
+#include "simon.h"
 #include "mojov-utils.h"
+#include "dc-fast.h"
+
+typedef unsigned __int128 uint128_t;
+
+uint128_t simon_key = SIMON128_KEY;
+simon_state_t simon_state;
 
 // #define SECRET_BUGS
 
@@ -252,6 +259,13 @@ foo(void)
 int
 main(void)
 {
+  // initilize Mojo-V and open a fast-mode contract
+  if (mojov_configure_kmsm_from_dc_fast() != 0)
+    return -1;
+
+  // initilize cipher engine, for checking results
+  simon_128_128_keyexpand(&simon_state, simon_key, 68);
+
   uint64_t cfg = mojov_read_mprivregcfg();
   libmin_printf("Initial mprivregcfg = 0x%lx, ", cfg);
   mojov_print_mprivregcfg(cfg);

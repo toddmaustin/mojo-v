@@ -1,14 +1,14 @@
 
 LOCAL_CFLAGS=-std=c23
 LOCAL_LIBS=
-LOCAL_OBJS=mojov-test1.o ../common/simon.o
+LOCAL_OBJS=mojov-test1.o ../common/simon.o ../target/mojov-utils.o
 
 PROG=mojov-test1
 
 include ../Makefile
 
 test: $(TARGET_EXE)
-	-$(TARGET_SIM) --mojov-dc=../target/dc-fast.txt --mojov-verbose ./$(TARGET_EXE) > FOO 
+	-$(TARGET_SIM) --mojov-verbose ./$(TARGET_EXE) > FOO 
 	$(TARGET_DIFF) FOO mojov-test1.$(TARGET_REFEXT)
 	rm -f FOO
 
