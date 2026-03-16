@@ -11,7 +11,7 @@ To learn more...
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
 The current Mojo-V ISA Extension Specification (release 1.00):
-- [In PDF format.] (https://drive.google.com/file/d/1UuaZvgpbdWOfQjF1D-9r0aCrPs590F5L)
+- [In PDF format.] (https://drive.google.com/file/d/1O50EuI95i0APeQfc4jVVHrMJqdQnsEra)
 
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
