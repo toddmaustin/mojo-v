@@ -1,3 +1,14 @@
+** Mojo-V Reference Platform - Release 1.00
+
+  - This release fully implements (in the Spike RISC-V simulator) a reference Mojo-V target with an V64GC ISA, ML-KEM-512 key encapsulation for data contract loading, and Simon-128 symmetric key encryption for secret computation encryption.
+  - Updated Mojo-V specification to v1.00
+  - The Key Management Shadow Map has been added, this is an internal data structure that allows programmers to i) probe the processors public key, ii) inject an ML-KEM-512 encapsulated key into the processor, and iii) inject a 3rd-party encrypted data contract into the processor. Together these facilities allow a third party to give Mojo-V hardware access to sensitive data in a way that does not permit programmers and hackers to see the sensitive data, but while allowing them to compute upon the encrypted data.
+  - Most of Mojo-V's implementation in Spike is now moved to riscv/mojov-crypto.h and riscv/mojov-crypto.cc.
+  - Most of Mojo-V's implementation in bringup-bench is now moved to bringup-bench/target/mojov-utils.h and bringup-bench/target/mojov-utils.c
+  - Fully implemented 3rd-party decryption validation, so now when a value is decrypted, it is checked to see if the internal signature value matches the current data contract, and if not, the decryption fails. 
+
+--
+
 ** Mojo-V Reference Platform — Release 0.93
 
   - Updated Mojo-V specification to v0.93

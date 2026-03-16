@@ -10,31 +10,30 @@ To learn more...
 - Here is an intro video describing Mojo-V: https://www.youtube.com/watch?v=HUT46TcNyyM
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
-The current Mojo-V ISA Extension Specification (release 0.93):
+The current Mojo-V ISA Extension Specification (release 1.00):
 - [In PDF format.] (https://drive.google.com/file/d/1UuaZvgpbdWOfQjF1D-9r0aCrPs590F5L)
 
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
-# 🧩 Mojo-V Reference Platform — Release 0.93
+# 🧩 Mojo-V Reference Platform — Release 1.00
 
 ## 🚧 Project Status
 
-The Mojo-V reference platform release 0.93 implements secret integer and floating-point computation using a fixed symmetric key cipher. Mojo-V supports three encryption modes: fast, strong, and proof-carrying. As of this release, 64-bit secret computation is fully secretized and this early reference platform can be used for software development and red-teaming. Additional capabilities will be rolled out in future releases, including LLVM compiler support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
+The Mojo-V reference platform release 1.00 is a full reference implementation (in the Spike RISC-V simulator) of the Mojo-V semantics for an RV64GC CPU with ML-KEM-512 key encapsulation for data contract loading, and SIMON-128 symmetric key encryption for secret computation protection. Mojo-V supports three encryption modes: fast, strong, and proof-carrying. As of this release, 64-bit secret computation is fully secretized and this early reference platform can be used for software development and security analysis. Additional capabilities will be rolled out in future releases, including LLVM compiler support, Mojo-V library support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
 
-**Specification Version:** 0.93  (February 2026)  
+**Specification Version:** 1.00  (March 2026)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
 ## Current components
 
-1. **Mojo-V ISA Spec v0.93**
+1. **Mojo-V ISA Spec v1.00**
 
    - released in `doc/`
 
 2. **Spike (Instruction Set Simulator) with Mojo-V Extensions**
 
-   - Mojo-V integrated into `riscv-isa-sim`, nearly feature-complete
-   - Missing only: instruction-level key management (KM) infrastructure; currently, all key management is done through Spike command line options; current implementation: key exchange with ML-KEM512, bulk encryption with SIMON128.
+   - Mojo-V integrated into `riscv-isa-sim`, and feature-complete for an RV64GC CPU with ML-KEM-512 key encapsulation for data contract loading, and SIMON-128 symmetric key encryption for secret computation protection.
    - To run Spike with Mojo-V extensions enabled, add the `--isa=rv64gc_zicond_zkmojov_zicntr` flag when running `spike`
 
 3. **Data Contract Multi-tool**
@@ -172,8 +171,8 @@ The following options have been added to Spike, the standard RISC-V ISA simulato
   --mojov-strong        Use Mojo-V strong encryption format (otherwise using data contract specified mode)
   --mojov-proofcarrying Use Mojo-V proof-carrying encryption format (otherwise use data contract specified mode)
   --mojov-arg=<n>       Pass a numeric argument to a Mojo-V test code
+  --mojov-pk=<pem_file> Load Mojo-V CPU public key from <pem_file>
   --mojov-sk=<pem_file> Load Mojo-V CPU secret key from <pem_file>
-  --mojov-dc=<dc_file>  Load Mojo-V data contract from <dc_file>
 ```
 
 ---
