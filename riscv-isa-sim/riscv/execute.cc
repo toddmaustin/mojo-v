@@ -193,6 +193,7 @@ static inline reg_t execute_insn_fast(processor_t* p, reg_t pc, insn_fetch_t fet
   p->get_state()->n_inputs = 1;
 
   // get the unambiguous opcode descriptor
+  // FIXME: this is over-precise and does not yet match the Mojo-V spec
   uint64_t opcode = ((uint64_t)fetch.insn.bits() << 32) | (uint64_t)fetch.insn.bits();
   p->get_state()->dfhash_input[0] = { -1, sm64_hash64(sm64_init(), opcode) };
 
@@ -204,6 +205,7 @@ static inline reg_t execute_insn_logged(processor_t* p, reg_t pc, insn_fetch_t f
   p->get_state()->n_inputs = 1;
 
   // get the unambiguous opcode descriptor
+  // FIXME: this is over-precise and does not yet match the Mojo-V spec
   uint64_t opcode = ((uint64_t)fetch.insn.bits() << 32) | (uint64_t)fetch.insn.bits();
   p->get_state()->dfhash_input[0] = {-1, sm64_hash64(sm64_init(), opcode) };
 
