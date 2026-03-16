@@ -59,6 +59,18 @@ void mojov_write_mprivregcfg(uint64_t value) { mojov_write_mojov_cfg(value); }
 
 int mojov_enable_and_verify(void)
 {
+  const uint64_t before = mojov_read_mojov_cfg();
+  if ((before & 0x2) == 0) {
+    mojov_write_mojov_cfg(1);
+    const uint64_t blocked = mojov_read_mojov_cfg();
+    if ((blocked & 0x1) != 0) {
+      libmin_printf("ERROR: Mojo-V enabled without a valid open data contract.\n");
+      mojov_print_mojov_cfg(blocked);
+      libmin_printf("\n");
+      return -1;
+    }
+  }
+
   mojov_write_mojov_cfg(1);
   const uint64_t cfg = mojov_read_mojov_cfg();
   if ((cfg & 0x1) == 0) {
@@ -155,6 +167,12 @@ static int mojov_configure_kmsm_from_dc(const char *kem_hex, const char *msg_hex
   const uint64_t status = (ctrl >> 2) & 0x7;
 
   if (status == 0) {
+    const uint64_t cfg = mojov_read_mojov_cfg();
+    if ((cfg & 0x2) == 0) {
+      libmin_printf("ERROR: KMSM contract open succeeded but key_valid stayed 0 (mojov_cfg=0x%lx).\n", cfg);
+      return -1;
+    }
+
     libmin_printf("INFO: KMSM contract open succeeded.\n");
     return 0;
   }
