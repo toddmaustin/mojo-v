@@ -149,9 +149,9 @@ secret_select_fp64(mojov_mem_fast_u64_t *predicate, mojov_mem_fast_fp64_t *if_tr
   );
 }
 
-// Run the fixed-iteration secret Newton-Raphson solver and return the decrypted root.
-static double
-rn_solver(mojov_mem_fast_u64_t *converged)
+// Run the fixed-iteration secret Newton-Raphson solver and return the encrypted root.
+static mojov_mem_fast_fp64_t
+nr_solver(mojov_mem_fast_u64_t *converged)
 {
   mojov_mem_fast_fp64_t guess;
   mojov_mem_fast_fp64_t f_value;
@@ -171,7 +171,7 @@ rn_solver(mojov_mem_fast_u64_t *converged)
     secret_select_fp64(converged, &guess, &updated_guess, &guess);
   }
 
-  return mojov_decrypt_fast_fp64(&simon_state, guess, CONTRACT_SIG);
+  return guess;
 }
 
 int
@@ -201,7 +201,8 @@ main(void)
   {
     mojov_mem_fast_u64_t converged;
     sqrt_value = testdata[i];
-    double root = rn_solver(&converged);
+    mojov_mem_fast_fp64_t root_ct = nr_solver(&converged);
+    double root = mojov_decrypt_fast_fp64(&simon_state, root_ct, CONTRACT_SIG);
     libmin_printf("sqrt(%lf) == %lf (converged:%c)\n",
       sqrt_value,
       root,
