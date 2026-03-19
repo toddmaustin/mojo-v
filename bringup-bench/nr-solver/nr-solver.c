@@ -2,6 +2,9 @@
 #include "simon.h"
 #include "mojov-utils.h"
 #include "dc-fast.h"
+typedef mojov_mem_fast_u64_t _u64e_t;
+typedef mojov_mem_fast_fp64_t _fp64e_t;
+#include "mojov-intrinsics.h"
 
 #define SECRET
 
@@ -25,150 +28,25 @@ static const double testdata[] = {
 };
 #define NTESTDATA (sizeof(testdata) / sizeof(testdata[0]))
 
-// Encrypt and store a public FP64 value into FAST-format secret memory.
-static void
-secret_store_fp64(double value, mojov_mem_fast_fp64_t *dst)
-{
-  __asm__ volatile (
-    "fld   f28, (%0)\n\t"
-    FSDE(  f28, %1, 0)
-    :
-    : "r" (&value), "r" (dst)
-    : "f28", "memory"
-  );
-}
-
-// Encrypt and store a public U64 value into FAST-format secret memory.
-static void
-secret_store_u64(uint64_t value, mojov_mem_fast_u64_t *dst)
-{
-  __asm__ volatile (
-    "ld   x28, (%0)\n\t"
-    SDE(  x28, %1, 0)
-    :
-    : "r" (&value), "r" (dst)
-    : "x28", "memory"
-  );
-}
-
-// Compute the secret Newton-Raphson residual x*x - sqrt_value.
-static void
-secret_f(double public_sqrt_value, mojov_mem_fast_fp64_t *x, mojov_mem_fast_fp64_t *dst)
-{
-  __asm__ volatile (
-    FLDE(  f28, %1, 0)
-    "fld   f29, (%0)\n\t"
-    "fmul.d f30, f28, f28\n\t"
-    "fsub.d f30, f30, f29\n\t"
-    FSDE(  f30, %2, 0)
-    :
-    : "r" (&public_sqrt_value), "r" (x), "r" (dst)
-    : "f28", "f29", "f30", "memory"
-  );
-}
-
-// Compute the absolute value of a secret FP64 input with data-oblivious selection.
-static void
-secret_fabs(mojov_mem_fast_fp64_t *src, mojov_mem_fast_fp64_t *dst)
-{
-  __asm__ volatile (
-    FLDE(  f28, %0, 0)
-    "mv      x28, x0\n\t"
-    "fmv.d.x f29, x28\n\t"
-    "flt.d   x30, f28, f29\n\t"
-    "fneg.d  f30, f28\n\t"
-    "fmv.x.d x28, f28\n\t"
-    "fmv.x.d x29, f30\n\t"
-    "czero.eqz x31, x29, x30\n\t"
-    "czero.nez x30, x28, x30\n\t"
-    "or        x31, x30, x31\n\t"
-    "fmv.d.x f31, x31\n\t"
-    FSDE(      f31, %1, 0)
-    :
-    : "r" (src), "r" (dst)
-    : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "f31", "memory"
-  );
-}
-
-// Compare a secret FP64 value against a public bound and store a secret boolean.
-static void
-secret_le_public(mojov_mem_fast_fp64_t *src, double rhs, mojov_mem_fast_u64_t *dst)
-{
-  __asm__ volatile (
-    FLDE(  f28, %0, 0)
-    "fld   f29, (%1)\n\t"
-    "fle.d  x28, f28, f29\n\t"
-    SDE(   x28, %2, 0)
-    :
-    : "r" (src), "r" (&rhs), "r" (dst)
-    : "x28", "f28", "f29", "memory"
-  );
-}
-
-// Compute one secret Newton-Raphson update step for the current guess.
-static void
-secret_nr_update(double public_sqrt_value, mojov_mem_fast_fp64_t *guess, mojov_mem_fast_fp64_t *dst)
-{
-  static const double two = 2.0;
-
-  __asm__ volatile (
-    FLDE(  f28, %1, 0)
-    "fld   f29, (%0)\n\t"
-    "fld   f30, (%2)\n\t"
-    "fmul.d f31, f28, f28\n\t"
-    "fsub.d f31, f31, f29\n\t"
-    "fmul.d f30, f28, f30\n\t"
-    "fdiv.d f31, f31, f30\n\t"
-    "fsub.d f31, f28, f31\n\t"
-    FSDE(  f31, %3, 0)
-    :
-    : "r" (&public_sqrt_value), "r" (guess), "r" (&two), "r" (dst)
-    : "f28", "f29", "f30", "f31", "memory"
-  );
-}
-
-// Select between two secret FP64 values using a secret predicate.
-static void
-secret_select_fp64(mojov_mem_fast_u64_t *predicate, mojov_mem_fast_fp64_t *if_true,
-                   mojov_mem_fast_fp64_t *if_false, mojov_mem_fast_fp64_t *dst)
-{
-  __asm__ volatile (
-    LDE(   x30, %0, 0)
-    FLDE(  f28, %1, 0)
-    FLDE(  f29, %2, 0)
-    "fmv.x.d x28, f28\n\t"
-    "fmv.x.d x29, f29\n\t"
-    "czero.eqz x31, x28, x30\n\t"
-    "czero.nez x30, x29, x30\n\t"
-    "or        x31, x30, x31\n\t"
-    "fmv.d.x f30, x31\n\t"
-    FSDE(      f30, %3, 0)
-    :
-    : "r" (predicate), "r" (if_true), "r" (if_false), "r" (dst)
-    : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "memory"
-  );
-}
-
 // Run the fixed-iteration secret Newton-Raphson solver and return the encrypted root.
-static mojov_mem_fast_fp64_t
-nr_solver(mojov_mem_fast_u64_t *converged)
+static _fp64e_t
+nr_solver(_u64e_t *converged)
 {
-  mojov_mem_fast_fp64_t guess;
-  mojov_mem_fast_fp64_t f_value;
-  mojov_mem_fast_fp64_t abs_f_value;
-  mojov_mem_fast_fp64_t updated_guess;
-  uint64_t false_value = 0;
+  _fp64e_t guess;
+  _fp64e_t sqrt_secret;
 
-  secret_store_fp64(1.0, &guess);
-  secret_store_u64(false_value, converged);
+  _fstore(&guess, 1.0);
+  _fstore(&sqrt_secret, sqrt_value);
+  _store(converged, 0);
 
   for (unsigned iter = 0; iter < MAXITER; ++iter)
   {
-    secret_f(sqrt_value, &guess, &f_value);
-    secret_fabs(&f_value, &abs_f_value);
-    secret_le_public(&abs_f_value, MAXERR, converged);
-    secret_nr_update(sqrt_value, &guess, &updated_guess);
-    secret_select_fp64(converged, &guess, &updated_guess, &guess);
+    _fp64e_t f_value = _fsub(_fmul(guess, guess), sqrt_secret);
+    _fp64e_t abs_f_value = _fabs(f_value);
+    _fp64e_t updated_guess = _fsub(guess, _fdiv(f_value, _fmuli(guess, 2.0)));
+
+    *converged = _fslei(abs_f_value, MAXERR);
+    guess = _fcmov(*converged, guess, updated_guess);
   }
 
   return guess;
@@ -199,9 +77,9 @@ main(void)
 
   for (unsigned i = 0; i < NTESTDATA; ++i)
   {
-    mojov_mem_fast_u64_t converged;
+    _u64e_t converged;
     sqrt_value = testdata[i];
-    mojov_mem_fast_fp64_t root_ct = nr_solver(&converged);
+    _fp64e_t root_ct = nr_solver(&converged);
     double root = mojov_decrypt_fast_fp64(&simon_state, root_ct, CONTRACT_SIG);
     libmin_printf("sqrt(%lf) == %lf (converged:%c)\n",
       sqrt_value,
