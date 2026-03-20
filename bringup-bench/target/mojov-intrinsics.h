@@ -59,8 +59,7 @@ extern inline _u64e_t _land(_u64e_t src1, _u64e_t src2);
 extern inline _u64e_t _landi(_u64e_t src1, uint64_t src2);
 extern inline _u64e_t _lor(_u64e_t src1, _u64e_t src2);
 extern inline _u64e_t _lori(_u64e_t src1, uint64_t src2);
-extern inline _u64e_t _not(_u64e_t src);
-extern inline _u64e_t _noti(uint64_t src);
+extern inline _u64e_t _lnot(_u64e_t src);
 
 extern inline _u64e_t _and(_u64e_t src1, _u64e_t src2);
 extern inline _u64e_t _andi(_u64e_t src1, uint64_t src2);
@@ -201,31 +200,30 @@ _MOJOV_DEF_BINI_U64(_lshi, "sll")
 _MOJOV_DEF_BIN_U64(_rsh, "srl")
 _MOJOV_DEF_BINI_U64(_rshi, "srl")
 
-extern inline _u64e_t _not(_u64e_t src) { _u64e_t zero; _store(&zero, 0); return _seq(src, zero); }
-extern inline _u64e_t _noti(uint64_t src) { _u64e_t tmp; _store(&tmp, src); return _not(tmp); }
+extern inline _u64e_t _lnot(_u64e_t src) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "sltiu x30, x28, 1\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src) : "x28", "x30", "memory"); return dst; }
 extern inline _u64e_t _sgt(_u64e_t src1, _u64e_t src2) { return _slt(src2, src1); }
 extern inline _u64e_t _sgti(_u64e_t src1, uint64_t src2) { _u64e_t tmp; _store(&tmp, src2); return _slt(tmp, src1); }
-extern inline _u64e_t _sge(_u64e_t src1, _u64e_t src2) { return _not(_slt(src1, src2)); }
-extern inline _u64e_t _sgei(_u64e_t src1, uint64_t src2) { return _not(_slti(src1, src2)); }
-extern inline _u64e_t _sle(_u64e_t src1, _u64e_t src2) { return _not(_slt(src2, src1)); }
-extern inline _u64e_t _slei(_u64e_t src1, uint64_t src2) { return _not(_sgti(src1, src2)); }
-extern inline _u64e_t _seq(_u64e_t src1, _u64e_t src2) { return _not(_or(_slt(src1, src2), _slt(src2, src1))); }
-extern inline _u64e_t _seqi(_u64e_t src1, uint64_t src2) { _u64e_t tmp; _store(&tmp, src2); return _seq(src1, tmp); }
-extern inline _u64e_t _sne(_u64e_t src1, _u64e_t src2) { return _or(_slt(src1, src2), _slt(src2, src1)); }
-extern inline _u64e_t _snei(_u64e_t src1, uint64_t src2) { _u64e_t tmp; _store(&tmp, src2); return _sne(src1, tmp); }
-extern inline _u64e_t _land(_u64e_t src1, _u64e_t src2) { _u64e_t zero; _store(&zero, 0); return _and(_sne(src1, zero), _sne(src2, zero)); }
-extern inline _u64e_t _landi(_u64e_t src1, uint64_t src2) { _u64e_t tmp; _store(&tmp, src2); return _land(src1, tmp); }
-extern inline _u64e_t _lor(_u64e_t src1, _u64e_t src2) { _u64e_t zero; _store(&zero, 0); return _or(_sne(src1, zero), _sne(src2, zero)); }
-extern inline _u64e_t _lori(_u64e_t src1, uint64_t src2) { _u64e_t tmp; _store(&tmp, src2); return _lor(src1, tmp); }
-extern inline _u64e_t _neg(_u64e_t src) { _u64e_t zero; _store(&zero, 0); return _sub(zero, src); }
-extern inline _u64e_t _negi(uint64_t src) { _u64e_t zero; _store(&zero, 0); return _subi(zero, src); }
+extern inline _u64e_t _sge(_u64e_t src1, _u64e_t src2) { return _lnot(_slt(src1, src2)); }
+extern inline _u64e_t _sgei(_u64e_t src1, uint64_t src2) { return _lnot(_slti(src1, src2)); }
+extern inline _u64e_t _sle(_u64e_t src1, _u64e_t src2) { return _lnot(_slt(src2, src1)); }
+extern inline _u64e_t _slei(_u64e_t src1, uint64_t src2) { return _lnot(_sgti(src1, src2)); }
+extern inline _u64e_t _seq(_u64e_t src1, _u64e_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) LDE(x29, %2, 0) "xor x30, x28, x29\n\t" "seqz x31, x30\n\t" SDE(x31, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _seqi(_u64e_t src1, uint64_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "ld x29, (%2)\n\t" "xor x30, x28, x29\n\t" "seqz x31, x30\n\t" SDE(x31, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _sne(_u64e_t src1, _u64e_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) LDE(x29, %2, 0) "xor x30, x28, x29\n\t" "snez x31, x30\n\t" SDE(x31, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _snei(_u64e_t src1, uint64_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "ld x29, (%2)\n\t" "xor x30, x28, x29\n\t" "snez x31, x30\n\t" SDE(x31, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _land(_u64e_t src1, _u64e_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) LDE(x29, %2, 0) "snez x30, x28\n\t" "snez x31, x29\n\t" "and x30, x30, x31\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _landi(_u64e_t src1, uint64_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "ld x29, (%2)\n\t" "snez x30, x28\n\t" "snez x31, x29\n\t" "and x30, x30, x31\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _lor(_u64e_t src1, _u64e_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) LDE(x29, %2, 0) "snez x30, x28\n\t" "snez x31, x29\n\t" "or x30, x30, x31\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _lori(_u64e_t src1, uint64_t src2) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "ld x29, (%2)\n\t" "snez x30, x28\n\t" "snez x31, x29\n\t" "or x30, x30, x31\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src1), "r"(&src2) : "x28", "x29", "x30", "x31", "memory"); return dst; }
+extern inline _u64e_t _neg(_u64e_t src) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "xori x30, x28, -1\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src) : "x28", "x30", "memory"); return dst; }
+extern inline _u64e_t _negi(uint64_t src) { _u64e_t dst; __asm__ volatile ( "ld x28, (%1)\n\t" "xori x30, x28, -1\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src) : "x28", "x30", "memory"); return dst; }
 
 extern inline _u64e_t _fsgt(_fp64e_t src1, _fp64e_t src2) { return _fslt(src2, src1); }
 extern inline _u64e_t _fsgti(_fp64e_t src1, double src2) { _fp64e_t tmp; _fstore(&tmp, src2); return _fslt(tmp, src1); }
 extern inline _u64e_t _fsge(_fp64e_t src1, _fp64e_t src2) { return _fsle(src2, src1); }
 extern inline _u64e_t _fsgei(_fp64e_t src1, double src2) { _fp64e_t tmp; _fstore(&tmp, src2); return _fsle(tmp, src1); }
-extern inline _u64e_t _fsne(_fp64e_t src1, _fp64e_t src2) { return _not(_fseq(src1, src2)); }
-extern inline _u64e_t _fsnei(_fp64e_t src1, double src2) { return _not(_fseqi(src1, src2)); }
+extern inline _u64e_t _fsne(_fp64e_t src1, _fp64e_t src2) { return _lnot(_fseq(src1, src2)); }
+extern inline _u64e_t _fsnei(_fp64e_t src1, double src2) { return _lnot(_fseqi(src1, src2)); }
 
 extern inline _fp64e_t _fabs(_fp64e_t src);
 extern inline _u64e_t _cmov(_u64e_t predicate, _u64e_t if_true, _u64e_t if_false);
