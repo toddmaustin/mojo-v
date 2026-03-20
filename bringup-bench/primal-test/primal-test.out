@@ -1,0 +1,30 @@
+INFO: KMSM contract open succeeded.
+** Running CSR[privreg] tests...
+Initial mprivregcfg = 0x12, (mojov_en:f, key_valid:t, format_sel:fast, mojov_ver:1)
+INFO: running with loaded data contract.
+INFO: simon_key = 0x27a48e9de04eadbc5297fe6330cea7d6
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+After enable, mprivregcfg = 0x13, (mojov_en:t, key_valid:t, format_sel:fast, mojov_ver:1)
+Primality tests found 15 primes...
+Value 3 is `prime' with failure probability (0)
+Value 1056892541 is `likely prime' with failure probability (1 in 4294967296)
+Value 169649717 is `likely prime' with failure probability (1 in 4294967296)
+Value 700223551 is `likely prime' with failure probability (1 in 4294967296)
+Value 1188849523 is `likely prime' with failure probability (1 in 4294967296)
+Value 1020434647 is `likely prime' with failure probability (1 in 4294967296)
+Value 1160321069 is `likely prime' with failure probability (1 in 4294967296)
+Value 1905260989 is `likely prime' with failure probability (1 in 4294967296)
+Value 781423079 is `likely prime' with failure probability (1 in 4294967296)
+Value 1552357897 is `likely prime' with failure probability (1 in 4294967296)
+Value 1756481459 is `likely prime' with failure probability (1 in 4294967296)
+Value 444368413 is `likely prime' with failure probability (1 in 4294967296)
+Value 1594368973 is `likely prime' with failure probability (1 in 4294967296)
+Value 213253303 is `likely prime' with failure probability (1 in 4294967296)
+Value 1211505371 is `likely prime' with failure probability (1 in 4294967296)

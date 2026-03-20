@@ -1,0 +1,3 @@
+KEYGEN: wrote public key to `pk-file.pem' and private key to `sk-file.pem'
+DCGEN: wrote combined KEM+contract file to 'dc-file.txt'
+SUCCESS: DCGEN -> DCCHK Mojo-V data_contract_t transfer validated.
