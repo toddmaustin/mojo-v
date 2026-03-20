@@ -32,12 +32,10 @@ static const double testdata[] = {
 static _fp64e_t
 nr_solver(_u64e_t *converged)
 {
-  _fp64e_t guess;
-  _fp64e_t sqrt_secret;
+  _fp64e_t guess = _fenc(1.0);
+  _fp64e_t sqrt_secret = _fenc(sqrt_value);
 
-  _fstore(&guess, 1.0);
-  _fstore(&sqrt_secret, sqrt_value);
-  _store(converged, 0);
+  *converged = _enc(0);
 
   for (unsigned iter = 0; iter < MAXITER; ++iter)
   {

@@ -6,8 +6,29 @@
 
 /* Callers provide _u64e_t and _fp64e_t before including this header. */
 
-extern inline void _store(_u64e_t *dst, uint64_t src);
-extern inline void _fstore(_fp64e_t *dst, double src);
+extern inline _u64e_t
+_enc(uint64_t src)
+{
+  _u64e_t dst;
+  __asm__ volatile (
+    "ld x28, (%1)\n\t"
+    SDE(x28, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "x28", "memory");
+  return dst;
+}
+
+extern inline _fp64e_t
+_fenc(double src)
+{
+  _fp64e_t dst;
+  __asm__ volatile (
+    "fld f28, (%1)\n\t"
+    FSDE(f28, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "f28", "memory");
+  return dst;
+}
 
 extern inline _u64e_t _add(_u64e_t src1, _u64e_t src2);
 extern inline _u64e_t _addi(_u64e_t src1, uint64_t src2);
@@ -155,14 +176,6 @@ extern inline _u64e_t name(_fp64e_t src1, double src2) { \
   return dst; \
 }
 
-extern inline void _store(_u64e_t *dst, uint64_t src) {
-  __asm__ volatile ("ld x28, (%1)\n\t" SDE(x28, %0, 0) : : "r"(dst), "r"(&src) : "x28", "memory");
-}
-
-extern inline void _fstore(_fp64e_t *dst, double src) {
-  __asm__ volatile ("fld f28, (%1)\n\t" FSDE(f28, %0, 0) : : "r"(dst), "r"(&src) : "f28", "memory");
-}
-
 _MOJOV_DEF_BIN_U64(_add, "add")
 _MOJOV_DEF_BINI_U64(_addi, "add")
 _MOJOV_DEF_BIN_U64(_sub, "sub")
@@ -202,7 +215,7 @@ _MOJOV_DEF_BINI_U64(_rshi, "srl")
 
 extern inline _u64e_t _lnot(_u64e_t src) { _u64e_t dst; __asm__ volatile ( LDE(x28, %1, 0) "sltiu x30, x28, 1\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src) : "x28", "x30", "memory"); return dst; }
 extern inline _u64e_t _sgt(_u64e_t src1, _u64e_t src2) { return _slt(src2, src1); }
-extern inline _u64e_t _sgti(_u64e_t src1, uint64_t src2) { _u64e_t tmp; _store(&tmp, src2); return _slt(tmp, src1); }
+extern inline _u64e_t _sgti(_u64e_t src1, uint64_t src2) { _u64e_t tmp = _enc(src2); return _slt(tmp, src1); }
 extern inline _u64e_t _sge(_u64e_t src1, _u64e_t src2) { return _lnot(_slt(src1, src2)); }
 extern inline _u64e_t _sgei(_u64e_t src1, uint64_t src2) { return _lnot(_slti(src1, src2)); }
 extern inline _u64e_t _sle(_u64e_t src1, _u64e_t src2) { return _lnot(_slt(src2, src1)); }
@@ -219,9 +232,9 @@ extern inline _u64e_t _neg(_u64e_t src) { _u64e_t dst; __asm__ volatile ( LDE(x2
 extern inline _u64e_t _negi(uint64_t src) { _u64e_t dst; __asm__ volatile ( "ld x28, (%1)\n\t" "xori x30, x28, -1\n\t" SDE(x30, %0, 0) : : "r"(&dst), "r"(&src) : "x28", "x30", "memory"); return dst; }
 
 extern inline _u64e_t _fsgt(_fp64e_t src1, _fp64e_t src2) { return _fslt(src2, src1); }
-extern inline _u64e_t _fsgti(_fp64e_t src1, double src2) { _fp64e_t tmp; _fstore(&tmp, src2); return _fslt(tmp, src1); }
+extern inline _u64e_t _fsgti(_fp64e_t src1, double src2) { _fp64e_t tmp = _fenc(src2); return _fslt(tmp, src1); }
 extern inline _u64e_t _fsge(_fp64e_t src1, _fp64e_t src2) { return _fsle(src2, src1); }
-extern inline _u64e_t _fsgei(_fp64e_t src1, double src2) { _fp64e_t tmp; _fstore(&tmp, src2); return _fsle(tmp, src1); }
+extern inline _u64e_t _fsgei(_fp64e_t src1, double src2) { _fp64e_t tmp = _fenc(src2); return _fsle(tmp, src1); }
 extern inline _u64e_t _fsne(_fp64e_t src1, _fp64e_t src2) { return _lnot(_fseq(src1, src2)); }
 extern inline _u64e_t _fsnei(_fp64e_t src1, double src2) { return _lnot(_fseqi(src1, src2)); }
 

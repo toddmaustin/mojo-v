@@ -17,7 +17,7 @@ uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
 struct primality_result {
-  uint32_t val;
+  _u64e_t val;
   _u64e_t prim;
 };
 
@@ -46,8 +46,7 @@ split_int(uint64_t *s, uint64_t *d, uint64_t n)
 static _u64e_t
 powm_secret(_u64e_t base, uint64_t exponent, _u64e_t modulus)
 {
-  _u64e_t result;
-  _store(&result, 1);
+  _u64e_t result = _enc(1);
 
   while (exponent != 0)
   {
@@ -62,32 +61,36 @@ powm_secret(_u64e_t base, uint64_t exponent, _u64e_t modulus)
 }
 
 static _u64e_t
-miller_rabin_secret(uint32_t n)
+miller_rabin_secret(_u64e_t n_enc, uint64_t n)
 {
   _u64e_t prim_secret;
+#if 0
+  _store(&prim_secret, PT_COMPOSITE);
 
+  _u64e_t done;
+  _store(&done, 0);
+
+  _u64e_t pred = _seqi(n_enc, 2u);
+  pred = _seqi(_andi(n_enc, 1u), 0u);
+#endif
+ 
   if ((n & 1u) == 0)
   {
-    _store(&prim_secret, n == 2u ? PT_PRIME : PT_COMPOSITE);
+    prim_secret = _enc(n == 2u ? PT_PRIME : PT_COMPOSITE);
     return prim_secret;
   }
   if (n == 3u)
   {
-    _store(&prim_secret, PT_PRIME);
-    return prim_secret;
+    return _enc(PT_PRIME);
   }
   if (n < 3u)
   {
-    _store(&prim_secret, PT_COMPOSITE);
-    return prim_secret;
+    return _enc(PT_COMPOSITE);
   }
 
-  _u64e_t n_secret;
-  _u64e_t nm1_secret;
-  _u64e_t composite_secret;
-  _store(&n_secret, n);
-  _store(&nm1_secret, (uint64_t)n - 1ull);
-  _store(&composite_secret, 0);
+  _u64e_t n_secret = _enc(n);
+  _u64e_t nm1_secret = _enc((uint64_t)n - 1ull);
+  _u64e_t composite_secret = _enc(0);
 
   uint64_t s;
   uint64_t d;
@@ -96,11 +99,9 @@ miller_rabin_secret(uint32_t n)
   for (uint32_t i = 0; i < K; ++i)
   {
     const uint64_t a_public = get_random_int(2, (uint64_t)n - 2ull);
-    _u64e_t a_secret;
-    _u64e_t witness_composite;
+    _u64e_t a_secret = _enc(a_public);
+    _u64e_t witness_composite = _enc(0);
     _u64e_t passed_witness;
-    _store(&a_secret, a_public);
-    _store(&witness_composite, 0);
 
     _u64e_t x = powm_secret(a_secret, d, n_secret);
     passed_witness = _lor(_seqi(x, 1), _seq(x, nm1_secret));
@@ -118,11 +119,7 @@ miller_rabin_secret(uint32_t n)
     composite_secret = _lor(composite_secret, witness_composite);
   }
 
-  _u64e_t composite_value;
-  _u64e_t likely_value;
-  _store(&composite_value, PT_COMPOSITE);
-  _store(&likely_value, PT_PRIME_LIKELY);
-  prim_secret = _cmov(composite_secret, composite_value, likely_value);
+  prim_secret = _cmov(composite_secret, _enc(PT_COMPOSITE), _enc(PT_PRIME_LIKELY));
   return prim_secret;
 }
 
@@ -154,8 +151,8 @@ main(void)
   val = 3;
   for (uint32_t i = 0; i < NTESTS; ++i)
   {
-    q[i].val = (uint32_t)val;
-    q[i].prim = miller_rabin_secret((uint32_t)val);
+    q[i].val = _enc(val);
+    q[i].prim = miller_rabin_secret(q[i].val, val);
     q_head++;
     val = (uint32_t)libmin_rand();
   }
@@ -163,7 +160,7 @@ main(void)
   uint32_t prime_count = 0;
   for (uint32_t i = 0; i < q_head; ++i)
   {
-    uint32_t prim = (uint32_t)mojov_decrypt_fast_u64(&simon_state, q[i].prim, CONTRACT_SIG);
+    uint64_t prim = mojov_decrypt_fast_u64(&simon_state, q[i].prim, CONTRACT_SIG);
     if (prim != PT_COMPOSITE)
       prime_count++;
   }
@@ -171,13 +168,12 @@ main(void)
   libmin_printf("Primality tests found %u primes...\n", prime_count);
   for (uint32_t i = 0; i < q_head; ++i)
   {
-    uint32_t prim = (uint32_t)mojov_decrypt_fast_u64(&simon_state, q[i].prim, CONTRACT_SIG);
+    uint64_t val = mojov_decrypt_fast_u64(&simon_state, q[i].val, CONTRACT_SIG);
+    uint64_t prim = mojov_decrypt_fast_u64(&simon_state, q[i].prim, CONTRACT_SIG);
     if (prim == PT_PRIME)
-      libmin_printf("Value %u is `prime' with failure probability (0)\n", q[i].val);
+      libmin_printf("Value %lu is `prime' with failure probability (0)\n", val);
     else if (prim == PT_PRIME_LIKELY)
-      libmin_printf("Value %u is `likely prime' with failure probability (1 in %.0lf)\n",
-        q[i].val,
-        libmin_pow(4.0, K));
+      libmin_printf("Value %lu is `likely prime' with failure probability (1 in %.0lf)\n", val, libmin_pow(4.0, K));
   }
 
   libmin_success();
