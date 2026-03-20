@@ -75,10 +75,6 @@ extern inline _u64e_t _rshi(_u64e_t src1, uint64_t src2);
 extern inline _u64e_t _neg(_u64e_t src);
 extern inline _u64e_t _negi(uint64_t src);
 
-extern inline _fp64e_t _fabs(_fp64e_t src);
-extern inline _u64e_t _cmov(_u64e_t predicate, _u64e_t if_true, _u64e_t if_false);
-extern inline _fp64e_t _fcmov(_u64e_t predicate, _fp64e_t if_true, _fp64e_t if_false);
-
 #define _MOJOV_DEF_BIN_U64(name, insn) \
 extern inline _u64e_t name(_u64e_t src1, _u64e_t src2) { \
   _u64e_t dst; \
@@ -230,6 +226,10 @@ extern inline _u64e_t _fsge(_fp64e_t src1, _fp64e_t src2) { return _fsle(src2, s
 extern inline _u64e_t _fsgei(_fp64e_t src1, double src2) { _fp64e_t tmp; _fstore(&tmp, src2); return _fsle(tmp, src1); }
 extern inline _u64e_t _fsne(_fp64e_t src1, _fp64e_t src2) { return _not(_fseq(src1, src2)); }
 extern inline _u64e_t _fsnei(_fp64e_t src1, double src2) { return _not(_fseqi(src1, src2)); }
+
+extern inline _fp64e_t _fabs(_fp64e_t src);
+extern inline _u64e_t _cmov(_u64e_t predicate, _u64e_t if_true, _u64e_t if_false);
+extern inline _fp64e_t _fcmov(_u64e_t predicate, _fp64e_t if_true, _fp64e_t if_false);
 
 extern inline _fp64e_t _fabs(_fp64e_t src) {
   _fp64e_t dst;
