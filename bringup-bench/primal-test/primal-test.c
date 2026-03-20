@@ -110,11 +110,11 @@ miller_rabin_secret(uint32_t n)
       x = _mod(_mul(x, x), n_secret);
       _u64e_t hit_one = _seqi(x, 1);
       _u64e_t hit_nm1 = _seq(x, nm1_secret);
-      witness_composite = _lor(witness_composite, _land(_not(passed_witness), hit_one));
+      witness_composite = _lor(witness_composite, _land(_lnot(passed_witness), hit_one));
       passed_witness = _lor(passed_witness, hit_nm1);
     }
 
-    witness_composite = _lor(witness_composite, _not(passed_witness));
+    witness_composite = _lor(witness_composite, _lnot(passed_witness));
     composite_secret = _lor(composite_secret, witness_composite);
   }
 
