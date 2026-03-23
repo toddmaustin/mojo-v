@@ -165,7 +165,7 @@ static inline _u64e_t _neg(_u64e_t src)
     : "x28", "x30", "memory");
   return dst;
 }
-/* Computes integer negation with an immediate. Example: dst = -42; */
+/* Computes integer negation with an immediate. Example: dst = -(42); */
 static inline _u64e_t _negi(uint64_t src)
 {
   _u64e_t dst;
@@ -426,6 +426,30 @@ static inline _fp64e_t _fmuli(_fp64e_t src1, double src2) __MOJOV_DEF_BINI_FP64(
 static inline _fp64e_t _fdiv(_fp64e_t src1, _fp64e_t src2) __MOJOV_DEF_BIN_FP64(_fdiv, "fdiv.d")
 /* Computes floating-point division with an immediate. Example: dst = src1 / 42.0; */
 static inline _fp64e_t _fdivi(_fp64e_t src1, double src2) __MOJOV_DEF_BINI_FP64(_fdivi, "fdiv.d")
+/* Computes integer negation. Example: dst = -src; */
+static inline _fp64e_t _fneg(_fp64e_t src)
+{
+  _fp64e_t dst;
+  __asm__ volatile (
+    FLDE(f28, %1, 0)
+    "fsgnjn.d f30, f28, f28\n\t"
+    FSDE(f30, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "f28", "f30", "memory");
+  return dst;
+}
+/* Computes integer negation with an immediate. Example: dst = -(42.0); */
+static inline _fp64e_t _fnegi(double src)
+{
+  _fp64e_t dst;
+  __asm__ volatile (
+    "fld f28, (%1)\n\t"
+    "fsgnjn.d f30, f28, f28\n\t"
+    FSDE(f30, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "f28", "f30", "memory");
+  return dst;
+}
 /* Computes the floating-point absolute value. Example: dst = fabs(src); */
 static inline _fp64e_t _fabs(_fp64e_t src)
 {
