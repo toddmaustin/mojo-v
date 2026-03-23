@@ -37,7 +37,7 @@ bubblesort(_u64e_t *data, unsigned size)
   {
     for (unsigned j=0; j < size - i - 1; j++)
     {
-      _u64e_t do_swap = _slt(data[j+1], data[j]);
+      _u64e_t do_swap = _sltu(data[j+1], data[j]);
       _u64e_t tmp = data[j];
       data[j] = _cmov(do_swap, data[j+1], data[j]);
       data[j+1] = _cmov(do_swap, tmp, data[j+1]);

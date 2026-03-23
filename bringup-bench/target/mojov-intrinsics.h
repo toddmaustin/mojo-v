@@ -6,7 +6,7 @@
 
 /* Callers provide _u64e_t and _fp64e_t before including this header. */
 
-/* Encodes a scalar uint64_t value into an engine integer operand. Example: src_e = value; */
+/* Encodes a scalar uint64_t value into an engine integer operand. */
 extern inline _u64e_t
 _enc(uint64_t src)
 {
@@ -19,7 +19,7 @@ _enc(uint64_t src)
   return dst;
 }
 
-/* Encodes a scalar double value into an engine floating-point operand. Example: src_e = value; */
+/* Encodes a scalar double value into an engine floating-point operand. */
 extern inline _fp64e_t
 _fenc(double src)
 {
@@ -32,144 +32,230 @@ _fenc(double src)
   return dst;
 }
 
-/* Computes integer addition. Example: dst_e = src1_e + src2_e; */
-extern inline _u64e_t _add(_u64e_t src1, _u64e_t src2);
-/* Computes integer addition with an immediate. Example: dst_e = src1_e + 42u; */
-extern inline _u64e_t _addi(_u64e_t src1, uint64_t src2);
-/* Computes integer subtraction. Example: dst_e = src1_e - src2_e; */
-extern inline _u64e_t _sub(_u64e_t src1, _u64e_t src2);
-/* Computes integer subtraction with an immediate. Example: dst_e = src1_e - 42u; */
-extern inline _u64e_t _subi(_u64e_t src1, uint64_t src2);
-/* Computes integer multiplication. Example: dst_e = src1_e * src2_e; */
-extern inline _u64e_t _mul(_u64e_t src1, _u64e_t src2);
-/* Computes integer multiplication with an immediate. Example: dst_e = src1_e * 42u; */
-extern inline _u64e_t _muli(_u64e_t src1, uint64_t src2);
-/* Computes unsigned integer division. Example: dst_e = src1_e / src2_e; */
-extern inline _u64e_t _div(_u64e_t src1, _u64e_t src2);
-/* Computes unsigned integer division with an immediate. Example: dst_e = src1_e / 42u; */
-extern inline _u64e_t _divi(_u64e_t src1, uint64_t src2);
-/* Computes unsigned integer remainder. Example: dst_e = src1_e % src2_e; */
-extern inline _u64e_t _mod(_u64e_t src1, _u64e_t src2);
-/* Computes unsigned integer remainder with an immediate. Example: dst_e = src1_e % 42u; */
-extern inline _u64e_t _modi(_u64e_t src1, uint64_t src2);
+#define __MOJOV_DEF_BIN_U64(name, insn) \
+{ \
+  _u64e_t dst; \
+  __asm__ volatile ( \
+    LDE(x28, %1, 0) \
+    LDE(x29, %2, 0) \
+    insn " x30, x28, x29\n\t" \
+    SDE(x30, %0, 0) \
+    : : "r"(&dst), "r"(&src1), "r"(&src2) \
+    : "x28", "x29", "x30", "memory"); \
+  return dst; \
+}
 
-/* Computes floating-point addition. Example: dst_e = src1_e + src2_e; */
+#define __MOJOV_DEF_BINI_U64(name, insn) \
+{ \
+  _u64e_t dst; \
+  __asm__ volatile ( \
+    LDE(x28, %1, 0) \
+    "ld x29, (%2)\n\t" \
+    insn " x30, x28, x29\n\t" \
+    SDE(x30, %0, 0) \
+    : : "r"(&dst), "r"(&src1), "r"(&src2) \
+    : "x28", "x29", "x30", "memory"); \
+  return dst; \
+}
+
+#define __MOJOV_DEF_BIN_FP64(name, insn) \
+{ \
+  _fp64e_t dst; \
+  __asm__ volatile ( \
+    FLDE(f28, %1, 0) \
+    FLDE(f29, %2, 0) \
+    insn " f30, f28, f29\n\t" \
+    FSDE(f30, %0, 0) \
+    : : "r"(&dst), "r"(&src1), "r"(&src2) \
+    : "f28", "f29", "f30", "memory"); \
+  return dst; \
+}
+
+#define __MOJOV_DEF_BINI_FP64(name, insn) \
+{ \
+  _fp64e_t dst; \
+  __asm__ volatile ( \
+    FLDE(f28, %1, 0) \
+    "fld f29, (%2)\n\t" \
+    insn " f30, f28, f29\n\t" \
+    FSDE(f30, %0, 0) \
+    : : "r"(&dst), "r"(&src1), "r"(&src2) \
+    : "f28", "f29", "f30", "memory"); \
+  return dst; \
+}
+
+#define __MOJOV_DEF_REL_FP64(name, insn) \
+{ \
+  _u64e_t dst; \
+  __asm__ volatile ( \
+    FLDE(f28, %1, 0) \
+    FLDE(f29, %2, 0) \
+    insn " x28, f28, f29\n\t" \
+    SDE(x28, %0, 0) \
+    : : "r"(&dst), "r"(&src1), "r"(&src2) \
+    : "x28", "f28", "f29", "memory"); \
+  return dst; \
+}
+
+#define __MOJOV_DEF_RELI_FP64(name, insn) \
+{ \
+  _u64e_t dst; \
+  __asm__ volatile ( \
+    FLDE(f28, %1, 0) \
+    "fld f29, (%2)\n\t" \
+    insn " x28, f28, f29\n\t" \
+    SDE(x28, %0, 0) \
+    : : "r"(&dst), "r"(&src1), "r"(&src2) \
+    : "x28", "f28", "f29", "memory"); \
+  return dst; \
+}
+
+/* Computes integer addition. Example: dst = src1 + src2; */
+extern inline _u64e_t _add(_u64e_t src1, _u64e_t src2);
+/* Computes integer addition with an immediate. Example: dst = src1 + 42u; */
+extern inline _u64e_t _addi(_u64e_t src1, uint64_t src2);
+/* Computes integer subtraction. Example: dst = src1 - src2; */
+extern inline _u64e_t _sub(_u64e_t src1, _u64e_t src2);
+/* Computes integer subtraction with an immediate. Example: dst = src1 - 42u; */
+extern inline _u64e_t _subi(_u64e_t src1, uint64_t src2);
+/* Computes integer multiplication. Example: dst = src1 * src2; */
+extern inline _u64e_t _mul(_u64e_t src1, _u64e_t src2);
+/* Computes integer multiplication with an immediate. Example: dst = src1 * 42u; */
+extern inline _u64e_t _muli(_u64e_t src1, uint64_t src2);
+/* Computes signed integer division. Example: dst = src1 / src2; */
+extern inline _u64e_t _div(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_div, "div")
+/* Computes signed integer division with an immediate. Example: dst = src1 / 42; */
+extern inline _u64e_t _divi(_u64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_divi, "div")
+/* Computes unsigned integer division. Example: dst = src1 / src2; */
+extern inline _u64e_t _divu(_u64e_t src1, _u64e_t src2);
+/* Computes unsigned integer division with an immediate. Example: dst = src1 / 42u; */
+extern inline _u64e_t _divui(_u64e_t src1, uint64_t src2);
+/* Computes signed integer remainder. Example: dst = src1 % src2; */
+extern inline _u64e_t _mod(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_mod, "rem")
+/* Computes signed integer remainder with an immediate. Example: dst = src1 % 42u; */
+extern inline _u64e_t _modi(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_modi, "rem")
+/* Computes unsigned integer remainder. Example: dst = src1 % src2; */
+extern inline _u64e_t _modu(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_modu, "remu")
+/* Computes unsigned integer remainder with an immediate. Example: dst = src1 % 42; */
+extern inline _u64e_t _modui(_u64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_modui, "remu")
+
+/* Computes floating-point addition. Example: dst = src1 + src2; */
 extern inline _fp64e_t _fadd(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point addition with an immediate. Example: dst_e = src1_e + 42.0; */
+/* Computes floating-point addition with an immediate. Example: dst = src1 + 42.0; */
 extern inline _fp64e_t _faddi(_fp64e_t src1, double src2);
-/* Computes floating-point subtraction. Example: dst_e = src1_e - src2_e; */
+/* Computes floating-point subtraction. Example: dst = src1 - src2; */
 extern inline _fp64e_t _fsub(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point subtraction with an immediate. Example: dst_e = src1_e - 42.0; */
+/* Computes floating-point subtraction with an immediate. Example: dst = src1 - 42.0; */
 extern inline _fp64e_t _fsubi(_fp64e_t src1, double src2);
-/* Computes floating-point multiplication. Example: dst_e = src1_e * src2_e; */
+/* Computes floating-point multiplication. Example: dst = src1 * src2; */
 extern inline _fp64e_t _fmul(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point multiplication with an immediate. Example: dst_e = src1_e * 42.0; */
+/* Computes floating-point multiplication with an immediate. Example: dst = src1 * 42.0; */
 extern inline _fp64e_t _fmuli(_fp64e_t src1, double src2);
-/* Computes floating-point division. Example: dst_e = src1_e / src2_e; */
+/* Computes floating-point division. Example: dst = src1 / src2; */
 extern inline _fp64e_t _fdiv(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point division with an immediate. Example: dst_e = src1_e / 42.0; */
+/* Computes floating-point division with an immediate. Example: dst = src1 / 42.0; */
 extern inline _fp64e_t _fdivi(_fp64e_t src1, double src2);
 
-/* Computes integer equality. Example: dst_e = src1_e == src2_e; */
+/* Computes integer equality. Example: dst = src1 == src2; */
 extern inline _u64e_t _seq(_u64e_t src1, _u64e_t src2);
-/* Computes integer equality with an immediate. Example: dst_e = src1_e == 42u; */
+/* Computes integer equality with an immediate. Example: dst = src1 == 42u; */
 extern inline _u64e_t _seqi(_u64e_t src1, uint64_t src2);
-/* Computes integer inequality. Example: dst_e = src1_e != src2_e; */
+/* Computes integer inequality. Example: dst = src1 != src2; */
 extern inline _u64e_t _sne(_u64e_t src1, _u64e_t src2);
-/* Computes integer inequality with an immediate. Example: dst_e = src1_e != 42u; */
+/* Computes integer inequality with an immediate. Example: dst = src1 != 42u; */
 extern inline _u64e_t _snei(_u64e_t src1, uint64_t src2);
-/* Computes signed src1 < src2. Example: dst_e = (int64_t)src1_e < (int64_t)src2_e; */
-extern inline _u64e_t _slt(_u64e_t src1, _u64e_t src2);
-/* Computes signed src1 < an immediate. Example: dst_e = (int64_t)src1_e < 42; */
-extern inline _u64e_t _slti(_u64e_t src1, uint64_t src2);
-/* Computes unsigned src1 < src2. Example: dst_e = (uint64_t)src1_e < (uint64_t)src2_e; */
+/* Computes signed src1 < src2. Example: dst = (int64_t)src1 < (int64_t)src2; */
+extern inline _u64e_t _slt(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BINI_U64(_slti, "slt")
+/* Computes signed src1 < an immediate. Example: dst = (int64_t)src1 < 42; */
+extern inline _u64e_t _slti(_u64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_slt, "slt")
+/* Computes unsigned src1 < src2. Example: dst = (uint64_t)src1 < (uint64_t)src2; */
 extern inline _u64e_t _sltu(_u64e_t src1, _u64e_t src2);
-/* Computes unsigned src1 < an immediate. Example: dst_e = (uint64_t)src1_e < 42u; */
+/* Computes unsigned src1 < an immediate. Example: dst = (uint64_t)src1 < 42u; */
 extern inline _u64e_t _sltui(_u64e_t src1, uint64_t src2);
-/* Computes signed src1 <= src2. Example: dst_e = (int64_t)src1_e <= (int64_t)src2_e; */
+/* Computes signed src1 <= src2. Example: dst = (int64_t)src1 <= (int64_t)src2; */
 extern inline _u64e_t _sle(_u64e_t src1, _u64e_t src2);
-/* Computes signed src1 <= an immediate. Example: dst_e = (int64_t)src1_e <= 42; */
-extern inline _u64e_t _slei(_u64e_t src1, uint64_t src2);
-/* Computes unsigned src1 <= src2. Example: dst_e = (uint64_t)src1_e <= (uint64_t)src2_e; */
+/* Computes signed src1 <= an immediate. Example: dst = (int64_t)src1 <= 42; */
+extern inline _u64e_t _slei(_u64e_t src1, int64_t src2);
+/* Computes unsigned src1 <= src2. Example: dst = (uint64_t)src1 <= (uint64_t)src2; */
 extern inline _u64e_t _sleu(_u64e_t src1, _u64e_t src2);
-/* Computes unsigned src1 <= an immediate. Example: dst_e = (uint64_t)src1_e <= 42u; */
+/* Computes unsigned src1 <= an immediate. Example: dst = (uint64_t)src1 <= 42u; */
 extern inline _u64e_t _sleui(_u64e_t src1, uint64_t src2);
-/* Computes signed src1 > src2. Example: dst_e = (int64_t)src1_e > (int64_t)src2_e; */
-extern inline _u64e_t _sgt(_u64e_t src1, _u64e_t src2);
-/* Computes signed src1 > an immediate. Example: dst_e = (int64_t)src1_e > 42; */
-extern inline _u64e_t _sgti(_u64e_t src1, uint64_t src2);
-/* Computes unsigned src1 > src2. Example: dst_e = (uint64_t)src1_e > (uint64_t)src2_e; */
-extern inline _u64e_t _sgtu(_u64e_t src1, _u64e_t src2);
-/* Computes unsigned src1 > an immediate. Example: dst_e = (uint64_t)src1_e > 42u; */
-extern inline _u64e_t _sgtui(_u64e_t src1, uint64_t src2);
-/* Computes signed src1 >= src2. Example: dst_e = (int64_t)src1_e >= (int64_t)src2_e; */
+/* Computes signed src1 > src2. Example: dst = (int64_t)src1 > (int64_t)src2; */
+extern inline _u64e_t _sgt(_u64e_t src1, _u64e_t src2) { return _slt(src2, src1); }
+/* Computes signed src1 > an immediate. Example: dst = (int64_t)src1 > 42; */
+extern inline _u64e_t _sgti(_u64e_t src1, int64_t src2) { _u64e_t tmp = _enc(src2); return _slt(tmp, src1); }
+/* Computes unsigned src1 > src2. Example: dst = (uint64_t)src1 > (uint64_t)src2; */
+extern inline _u64e_t _sgtu(_u64e_t src1, _u64e_t src2) { return _sltu(src2, src1); }
+/* Computes unsigned src1 > an immediate. Example: dst = (uint64_t)src1 > 42u; */
+extern inline _u64e_t _sgtui(_u64e_t src1, uint64_t src2) { _u64e_t tmp = _enc(src2); return _sltu(tmp, src1); }
+/* Computes signed src1 >= src2. Example: dst = (int64_t)src1 >= (int64_t)src2; */
 extern inline _u64e_t _sge(_u64e_t src1, _u64e_t src2);
-/* Computes signed src1 >= an immediate. Example: dst_e = (int64_t)src1_e >= 42; */
-extern inline _u64e_t _sgei(_u64e_t src1, uint64_t src2);
-/* Computes unsigned src1 >= src2. Example: dst_e = (uint64_t)src1_e >= (uint64_t)src2_e; */
+/* Computes signed src1 >= an immediate. Example: dst = (int64_t)src1 >= 42; */
+extern inline _u64e_t _sgei(_u64e_t src1, int64_t src2);
+/* Computes unsigned src1 >= src2. Example: dst = (uint64_t)src1 >= (uint64_t)src2; */
 extern inline _u64e_t _sgeu(_u64e_t src1, _u64e_t src2);
-/* Computes unsigned src1 >= an immediate. Example: dst_e = (uint64_t)src1_e >= 42u; */
+/* Computes unsigned src1 >= an immediate. Example: dst = (uint64_t)src1 >= 42u; */
 extern inline _u64e_t _sgeui(_u64e_t src1, uint64_t src2);
 
-/* Computes floating-point equality. Example: dst_e = src1_e == src2_e; */
+/* Computes floating-point equality. Example: dst = src1 == src2; */
 extern inline _u64e_t _fseq(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point equality with an immediate. Example: dst_e = src1_e == 42.0; */
+/* Computes floating-point equality with an immediate. Example: dst = src1 == 42.0; */
 extern inline _u64e_t _fseqi(_fp64e_t src1, double src2);
-/* Computes floating-point inequality. Example: dst_e = src1_e != src2_e; */
+/* Computes floating-point inequality. Example: dst = src1 != src2; */
 extern inline _u64e_t _fsne(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point inequality with an immediate. Example: dst_e = src1_e != 42.0; */
+/* Computes floating-point inequality with an immediate. Example: dst = src1 != 42.0; */
 extern inline _u64e_t _fsnei(_fp64e_t src1, double src2);
-/* Computes floating-point less-than. Example: dst_e = src1_e < src2_e; */
+/* Computes floating-point less-than. Example: dst = src1 < src2; */
 extern inline _u64e_t _fslt(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point less-than with an immediate. Example: dst_e = src1_e < 42.0; */
+/* Computes floating-point less-than with an immediate. Example: dst = src1 < 42.0; */
 extern inline _u64e_t _fslti(_fp64e_t src1, double src2);
-/* Computes floating-point less-than-or-equal. Example: dst_e = src1_e <= src2_e; */
+/* Computes floating-point less-than-or-equal. Example: dst = src1 <= src2; */
 extern inline _u64e_t _fsle(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point less-than-or-equal with an immediate. Example: dst_e = src1_e <= 42.0; */
+/* Computes floating-point less-than-or-equal with an immediate. Example: dst = src1 <= 42.0; */
 extern inline _u64e_t _fslei(_fp64e_t src1, double src2);
-/* Computes floating-point greater-than. Example: dst_e = src1_e > src2_e; */
+/* Computes floating-point greater-than. Example: dst = src1 > src2; */
 extern inline _u64e_t _fsgt(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point greater-than with an immediate. Example: dst_e = src1_e > 42.0; */
+/* Computes floating-point greater-than with an immediate. Example: dst = src1 > 42.0; */
 extern inline _u64e_t _fsgti(_fp64e_t src1, double src2);
-/* Computes floating-point greater-than-or-equal. Example: dst_e = src1_e >= src2_e; */
+/* Computes floating-point greater-than-or-equal. Example: dst = src1 >= src2; */
 extern inline _u64e_t _fsge(_fp64e_t src1, _fp64e_t src2);
-/* Computes floating-point greater-than-or-equal with an immediate. Example: dst_e = src1_e >= 42.0; */
+/* Computes floating-point greater-than-or-equal with an immediate. Example: dst = src1 >= 42.0; */
 extern inline _u64e_t _fsgei(_fp64e_t src1, double src2);
 
-/* Computes logical AND after booleanizing both operands. Example: dst_e = src1_e && src2_e; */
+/* Computes logical AND after booleanizing both operands. Example: dst = src1 && src2; */
 extern inline _u64e_t _land(_u64e_t src1, _u64e_t src2);
-/* Computes logical AND with an immediate after booleanizing both operands. Example: dst_e = src1_e && 42u; */
+/* Computes logical AND with an immediate after booleanizing both operands. Example: dst = src1 && 42u; */
 extern inline _u64e_t _landi(_u64e_t src1, uint64_t src2);
-/* Computes logical OR after booleanizing both operands. Example: dst_e = src1_e || src2_e; */
+/* Computes logical OR after booleanizing both operands. Example: dst = src1 || src2; */
 extern inline _u64e_t _lor(_u64e_t src1, _u64e_t src2);
-/* Computes logical OR with an immediate after booleanizing both operands. Example: dst_e = src1_e || 42u; */
+/* Computes logical OR with an immediate after booleanizing both operands. Example: dst = src1 || 42u; */
 extern inline _u64e_t _lori(_u64e_t src1, uint64_t src2);
-/* Computes logical NOT after booleanizing the operand. Example: dst_e = !src_e; */
+/* Computes logical NOT after booleanizing the operand. Example: dst = !src; */
 extern inline _u64e_t _lnot(_u64e_t src);
 
-/* Computes bitwise AND. Example: dst_e = src1_e & src2_e; */
+/* Computes bitwise AND. Example: dst = src1 & src2; */
 extern inline _u64e_t _and(_u64e_t src1, _u64e_t src2);
-/* Computes bitwise AND with an immediate. Example: dst_e = src1_e & 42u; */
+/* Computes bitwise AND with an immediate. Example: dst = src1 & 42u; */
 extern inline _u64e_t _andi(_u64e_t src1, uint64_t src2);
-/* Computes bitwise OR. Example: dst_e = src1_e | src2_e; */
+/* Computes bitwise OR. Example: dst = src1 | src2; */
 extern inline _u64e_t _or(_u64e_t src1, _u64e_t src2);
-/* Computes bitwise OR with an immediate. Example: dst_e = src1_e | 42u; */
+/* Computes bitwise OR with an immediate. Example: dst = src1 | 42u; */
 extern inline _u64e_t _ori(_u64e_t src1, uint64_t src2);
-/* Computes bitwise XOR. Example: dst_e = src1_e ^ src2_e; */
+/* Computes bitwise XOR. Example: dst = src1 ^ src2; */
 extern inline _u64e_t _xor(_u64e_t src1, _u64e_t src2);
-/* Computes bitwise XOR with an immediate. Example: dst_e = src1_e ^ 42u; */
+/* Computes bitwise XOR with an immediate. Example: dst = src1 ^ 42u; */
 extern inline _u64e_t _xori(_u64e_t src1, uint64_t src2);
-/* Computes a logical left shift. Example: dst_e = src1_e << src2_e; */
+/* Computes a logical left shift. Example: dst = src1 << src2; */
 extern inline _u64e_t _lsh(_u64e_t src1, _u64e_t src2);
-/* Computes a logical left shift with an immediate. Example: dst_e = src1_e << 3; */
+/* Computes a logical left shift with an immediate. Example: dst = src1 << 3; */
 extern inline _u64e_t _lshi(_u64e_t src1, uint64_t src2);
-/* Computes a logical right shift. Example: dst_e = src1_e >> src2_e; */
+/* Computes a logical right shift. Example: dst = src1 >> src2; */
 extern inline _u64e_t _rsh(_u64e_t src1, _u64e_t src2);
-/* Computes a logical right shift with an immediate. Example: dst_e = src1_e >> 3; */
+/* Computes a logical right shift with an immediate. Example: dst = src1 >> 3; */
 extern inline _u64e_t _rshi(_u64e_t src1, uint64_t src2);
-/* Computes a bitwise complement. Example: dst_e = ~src_e; */
+/* Computes a bitwise complement. Example: dst = ~src; */
 extern inline _u64e_t _neg(_u64e_t src);
-/* Computes a bitwise complement of an immediate. Example: dst_e = ~42u; */
+/* Computes a bitwise complement of an immediate. Example: dst = ~42u; */
 extern inline _u64e_t _negi(uint64_t src);
 
 #define _MOJOV_DEF_BIN_U64(name, insn) \
@@ -259,10 +345,11 @@ _MOJOV_DEF_BIN_U64(_sub, "sub")
 _MOJOV_DEF_BINI_U64(_subi, "sub")
 _MOJOV_DEF_BIN_U64(_mul, "mul")
 _MOJOV_DEF_BINI_U64(_muli, "mul")
-_MOJOV_DEF_BIN_U64(_div, "divu")
-_MOJOV_DEF_BINI_U64(_divi, "divu")
-_MOJOV_DEF_BIN_U64(_mod, "remu")
-_MOJOV_DEF_BINI_U64(_modi, "remu")
+_MOJOV_DEF_BIN_U64(_mulu, "mul")
+_MOJOV_DEF_BINI_U64(_mului, "mul")
+_MOJOV_DEF_BIN_U64(_divu, "divu")
+_MOJOV_DEF_BINI_U64(_divui, "divu")
+
 _MOJOV_DEF_BIN_FP64(_fadd, "fadd.d")
 _MOJOV_DEF_BINI_FP64(_faddi, "fadd.d")
 _MOJOV_DEF_BIN_FP64(_fsub, "fsub.d")
@@ -271,16 +358,17 @@ _MOJOV_DEF_BIN_FP64(_fmul, "fmul.d")
 _MOJOV_DEF_BINI_FP64(_fmuli, "fmul.d")
 _MOJOV_DEF_BIN_FP64(_fdiv, "fdiv.d")
 _MOJOV_DEF_BINI_FP64(_fdivi, "fdiv.d")
-_MOJOV_DEF_REL_U64(_slt, "slt")
-_MOJOV_DEF_RELI_U64(_slti, "slt")
+
 _MOJOV_DEF_REL_U64(_sltu, "sltu")
 _MOJOV_DEF_RELI_U64(_sltui, "sltu")
+
 _MOJOV_DEF_REL_FP64(_fseq, "feq.d")
 _MOJOV_DEF_RELI_FP64(_fseqi, "feq.d")
 _MOJOV_DEF_REL_FP64(_fslt, "flt.d")
 _MOJOV_DEF_RELI_FP64(_fslti, "flt.d")
 _MOJOV_DEF_REL_FP64(_fsle, "fle.d")
 _MOJOV_DEF_RELI_FP64(_fslei, "fle.d")
+
 _MOJOV_DEF_BIN_U64(_and, "and")
 _MOJOV_DEF_BINI_U64(_andi, "and")
 _MOJOV_DEF_BIN_U64(_or, "or")
@@ -306,39 +394,13 @@ _lnot(_u64e_t src)
 }
 
 extern inline _u64e_t
-_sgt(_u64e_t src1, _u64e_t src2)
-{
-  return _slt(src2, src1);
-}
-
-extern inline _u64e_t
-_sgti(_u64e_t src1, uint64_t src2)
-{
-  _u64e_t tmp = _enc(src2);
-  return _slt(tmp, src1);
-}
-
-extern inline _u64e_t
-_sgtu(_u64e_t src1, _u64e_t src2)
-{
-  return _sltu(src2, src1);
-}
-
-extern inline _u64e_t
-_sgtui(_u64e_t src1, uint64_t src2)
-{
-  _u64e_t tmp = _enc(src2);
-  return _sltu(tmp, src1);
-}
-
-extern inline _u64e_t
 _sge(_u64e_t src1, _u64e_t src2)
 {
   return _lnot(_slt(src1, src2));
 }
 
 extern inline _u64e_t
-_sgei(_u64e_t src1, uint64_t src2)
+_sgei(_u64e_t src1, int64_t src2)
 {
   return _lnot(_slti(src1, src2));
 }
@@ -362,7 +424,7 @@ _sle(_u64e_t src1, _u64e_t src2)
 }
 
 extern inline _u64e_t
-_slei(_u64e_t src1, uint64_t src2)
+_slei(_u64e_t src1, int64_t src2)
 {
   return _lnot(_sgti(src1, src2));
 }
@@ -567,11 +629,11 @@ _fsnei(_fp64e_t src1, double src2)
   return _lnot(_fseqi(src1, src2));
 }
 
-/* Computes the floating-point absolute value. Example: dst_e = fabs(src_e); */
+/* Computes the floating-point absolute value. Example: dst = fabs(src); */
 extern inline _fp64e_t _fabs(_fp64e_t src);
-/* Selects between integer operands using a predicate. Example: dst_e = predicate_e ? true_e : false_e; */
+/* Selects between integer operands using a predicate. Example: dst = predicate ? if_true : if_false; */
 extern inline _u64e_t _cmov(_u64e_t predicate, _u64e_t if_true, _u64e_t if_false);
-/* Selects between floating-point operands using a predicate. Example: dst_e = predicate_e ? true_e : false_e; */
+/* Selects between floating-point operands using a predicate. Example: dst = predicate ? if_true : if_false; */
 extern inline _fp64e_t _fcmov(_u64e_t predicate, _fp64e_t if_true, _fp64e_t if_false);
 
 extern inline _fp64e_t _fabs(_fp64e_t src) {
