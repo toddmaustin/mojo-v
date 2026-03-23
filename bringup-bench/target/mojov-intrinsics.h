@@ -406,18 +406,14 @@ static inline _fp64e_t _fabs(_fp64e_t src)
   _fp64e_t dst;
   __asm__ volatile (
     FLDE(f28, %1, 0)
-    "fmv.d.x f29, x0\n\t"
-    "flt.d x30, f28, f29\n\t"
-    "fneg.d f30, f28\n\t"
     "fmv.x.d x28, f28\n\t"
-    "fmv.x.d x29, f30\n\t"
-    "czero.eqz x31, x29, x30\n\t"
-    "czero.nez x30, x28, x30\n\t"
-    "or x31, x30, x31\n\t"
-    "fmv.d.x f31, x31\n\t"
-    FSDE(f31, %0, 0)
+    "addi x29, x0, -1\n\t"
+    "srli x29, x29, 1\n\t"
+    "and x30, x28, x29\n\t"
+    "fmv.d.x f29, x30\n\t"
+    FSDE(f29, %0, 0)
     : : "r"(&dst), "r"(&src)
-    : "x28", "x29", "x30", "x31", "f28", "f29", "f30", "f31", "memory");
+    : "x28", "x29", "x30", "f28", "f29", "memory");
   return dst;
 }
 
@@ -493,4 +489,3 @@ static inline _fp64e_t _fcmov(_u64e_t predicate, _fp64e_t if_true, _fp64e_t if_f
 }
 
 #endif /* MOJOV_INTRINSICS_H */
-
