@@ -11,7 +11,7 @@
  *  Mojo-V intrinsic helper functions...
  */
 
-/* Encodes a scalar uint64_t value into an engine integer operand. */
+/* Encodes scalar uint64_t value into an engine integer operand. */
 extern inline _u64e_t
 _enc(uint64_t src)
 {
@@ -24,7 +24,7 @@ _enc(uint64_t src)
   return dst;
 }
 
-/* Encodes a scalar double value into an engine floating-point operand. */
+/* Encodes scalar double value into an engine floating-point operand. */
 extern inline _fp64e_t
 _fenc(double src)
 {
@@ -237,26 +237,30 @@ extern inline _u64e_t _lnot(_u64e_t src)
  */
 
 /* Computes bitwise AND. Example: dst = src1 & src2; */
-extern inline _u64e_t _and(_u64e_t src1, _u64e_t src2);
+extern inline _u64e_t _and(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add, "and")
 /* Computes bitwise AND with an immediate. Example: dst = src1 & 42u; */
-extern inline _u64e_t _andi(_u64e_t src1, uint64_t src2);
+extern inline _u64e_t _andi(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "and")
 /* Computes bitwise OR. Example: dst = src1 | src2; */
-extern inline _u64e_t _or(_u64e_t src1, _u64e_t src2);
+extern inline _u64e_t _or(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add, "or")
 /* Computes bitwise OR with an immediate. Example: dst = src1 | 42u; */
-extern inline _u64e_t _ori(_u64e_t src1, uint64_t src2);
+extern inline _u64e_t _ori(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "or")
 /* Computes bitwise XOR. Example: dst = src1 ^ src2; */
-extern inline _u64e_t _xor(_u64e_t src1, _u64e_t src2);
+extern inline _u64e_t _xor(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add, "xor")
 /* Computes bitwise XOR with an immediate. Example: dst = src1 ^ 42u; */
-extern inline _u64e_t _xori(_u64e_t src1, uint64_t src2);
-/* Computes a logical left shift. Example: dst = src1 << src2; */
-extern inline _u64e_t _lsh(_u64e_t src1, _u64e_t src2);
-/* Computes a logical left shift with an immediate. Example: dst = src1 << 3; */
-extern inline _u64e_t _lshi(_u64e_t src1, uint64_t src2);
-/* Computes a logical right shift. Example: dst = src1 >> src2; */
-extern inline _u64e_t _rsh(_u64e_t src1, _u64e_t src2);
-/* Computes a logical right shift with an immediate. Example: dst = src1 >> 3; */
-extern inline _u64e_t _rshi(_u64e_t src1, uint64_t src2);
-/* Computes a bitwise complement. Example: dst = ~src; */
+extern inline _u64e_t _xori(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "xor")
+/* Computes shift left logical. Example: dst = src1 << src2; */
+extern inline _u64e_t _sll(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add, "sll")
+/* Computes shift left logical with an immediate. Example: dst = src1 << 3; */
+extern inline _u64e_t _slli(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "sll")
+/* Computes unsigned shift right logical. Example: dst = (uint64_t)src1 >> (uint64_t)src2; */
+extern inline _u64e_t _srl(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add, "srl")
+/* Computes unsigned shift right logical with an immediate. Example: (uint64_t)dst = (uint64_t)src1 >> 3; */
+extern inline _u64e_t _srli(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "srl")
+/* Computes signed shift right arithmetic. Example: dst = (int64_t)src1 >> (int64_t)src2; */
+extern inline _u64e_t _sra(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add, "sra")
+/* Computes signed shift right arithmetic with an immediate. Example: (int64_t)dst = (int64_t)src1 >> 3; */
+extern inline _u64e_t _srai(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "sra")
+/* Computes bitwise complement. Example: dst = ~src; */
 extern inline _u64e_t _neg(_u64e_t src)
 {
   _u64e_t dst;
@@ -268,7 +272,7 @@ extern inline _u64e_t _neg(_u64e_t src)
     : "x28", "x30", "memory");
   return dst;
 }
-/* Computes a bitwise complement of an immediate. Example: dst = ~42u; */
+/* Computes bitwise complement of an immediate. Example: dst = ~42u; */
 extern inline _u64e_t _negi(uint64_t src)
 {
   _u64e_t dst;
