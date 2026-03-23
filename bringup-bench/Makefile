@@ -293,7 +293,7 @@ clean-all all-clean:
 spike-build:
 	$(MAKE) -C target clean build
 
-MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-sectests mojov-pctests bubble-sort edit-distance nr-solver primal-test
+MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-sectests mojov-pctests bubble-sort edit-distance nr-solver primal-test bitonic-sort
 
 mojov-tests:
 	@for _BMARK in $(MOJOV_BMARKS) ; do \
