@@ -152,6 +152,32 @@ static inline _u64e_t _modi(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_m
 static inline _u64e_t _modu(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_modu, "remu")
 /* Computes unsigned integer remainder with an immediate. Example: dst = src1 % 42; */
 static inline _u64e_t _modui(_u64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_modui, "remu")
+/* Computes integer negation. Example: dst = -src; */
+static inline _u64e_t _neg(_u64e_t src)
+{
+  _u64e_t dst;
+  __asm__ volatile (
+    LDE(x28, %1, 0)
+    "xori x30, x28, -1\n\t"
+    "addi x30, x30, 1\n\t"
+    SDE(x30, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "x28", "x30", "memory");
+  return dst;
+}
+/* Computes integer negation with an immediate. Example: dst = -42; */
+static inline _u64e_t _negi(uint64_t src)
+{
+  _u64e_t dst;
+  __asm__ volatile (
+    "ld x28, (%1)\n\t"
+    "xori x30, x28, -1\n\t"
+    "addi x30, x30, 1\n\t"
+    SDE(x30, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "x28", "x30", "memory");
+  return dst;
+}
 
 
 /*
@@ -261,7 +287,7 @@ static inline _u64e_t _sra(_u64e_t src1, _u64e_t src2) __MOJOV_DEF_BIN_U64(_add,
 /* Computes signed shift right arithmetic with an immediate. Example: (int64_t)dst = (int64_t)src1 >> 3; */
 static inline _u64e_t _srai(_u64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "sra")
 /* Computes bitwise complement. Example: dst = ~src; */
-static inline _u64e_t _neg(_u64e_t src)
+static inline _u64e_t _comp(_u64e_t src)
 {
   _u64e_t dst;
   __asm__ volatile (
@@ -273,7 +299,7 @@ static inline _u64e_t _neg(_u64e_t src)
   return dst;
 }
 /* Computes bitwise complement of an immediate. Example: dst = ~42u; */
-static inline _u64e_t _negi(uint64_t src)
+static inline _u64e_t _compi(uint64_t src)
 {
   _u64e_t dst;
   __asm__ volatile (
