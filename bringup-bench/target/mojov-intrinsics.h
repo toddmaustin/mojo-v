@@ -123,15 +123,15 @@ _fenc(double src)
 /* Computes integer addition. Example: dst = src1 + src2; */
 static inline _uint64e_t _add(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "add")
 /* Computes integer addition with an immediate. Example: dst = src1 + 42u; */
-static inline _uint64e_t _addi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_addi, "add")
+static inline _uint64e_t _addi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "add")
 /* Computes integer subtraction. Example: dst = src1 - src2; */
 static inline _uint64e_t _sub(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_sub, "sub")
 /* Computes integer subtraction with an immediate. Example: dst = src1 - 42u; */
-static inline _uint64e_t _subi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_subi, "sub")
+static inline _uint64e_t _subi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_subi, "sub")
 /* Computes signed integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mul(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mul, "mul")
 /* Computes signed integer multiplication with an immediate. Example: dst = src1 * 42; */
-static inline _uint64e_t _muli(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_muli, "mul")
+static inline _uint64e_t _muli(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_muli, "mul")
 /* Computes unsigned integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mulu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mulu, "mul")
 /* Computes unsigned integer multiplication with an immediate. Example: dst = src1 * 42u; */
@@ -150,7 +150,7 @@ static inline _uint64e_t _mod(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_
 static inline _uint64e_t _modi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_modi, "rem")
 /* Computes unsigned integer remainder. Example: dst = src1 % src2; */
 static inline _uint64e_t _modu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_modu, "remu")
-/* Computes unsigned integer remainder with an immediate. Example: dst = src1 % 42; */
+/* Computes unsigned integer remainder with an immediate. Example: dst = src1 % 42u; */
 static inline _uint64e_t _modui(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_modui, "remu")
 /* Computes integer negation. Example: dst = -src; */
 static inline _uint64e_t _neg(_uint64e_t src)
@@ -216,7 +216,7 @@ static inline _uint64e_t _landi(_uint64e_t src1, uint64_t src2)
     : "x28", "x29", "x30", "x31", "memory");
   return dst;
 }
-/* Computes logical OR after booleanizing both operands. Example: dst = src1 ||src2;
+/* Computes logical OR after booleanizing both operands. Example: dst = src1 || src2;
  * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit */
 static inline _uint64e_t _lor(_uint64e_t src1, _uint64e_t src2)
 {
@@ -267,29 +267,29 @@ static inline _uint64e_t _lnot(_uint64e_t src)
  */
 
 /* Computes bitwise AND. Example: dst = src1 & src2; */
-static inline _uint64e_t _and(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "and")
+static inline _uint64e_t _and(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_and, "and")
 /* Computes bitwise AND with an immediate. Example: dst = src1 & 42u; */
-static inline _uint64e_t _andi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "and")
+static inline _uint64e_t _andi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_andi, "and")
 /* Computes bitwise OR. Example: dst = src1 | src2; */
-static inline _uint64e_t _or(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "or")
+static inline _uint64e_t _or(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_or, "or")
 /* Computes bitwise OR with an immediate. Example: dst = src1 | 42u; */
-static inline _uint64e_t _ori(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "or")
+static inline _uint64e_t _ori(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_ori, "or")
 /* Computes bitwise XOR. Example: dst = src1 ^ src2; */
-static inline _uint64e_t _xor(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "xor")
+static inline _uint64e_t _xor(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_xor, "xor")
 /* Computes bitwise XOR with an immediate. Example: dst = src1 ^ 42u; */
-static inline _uint64e_t _xori(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "xor")
+static inline _uint64e_t _xori(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_xori, "xor")
 /* Computes shift left logical. Example: dst = src1 << src2; */
-static inline _uint64e_t _sll(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "sll")
+static inline _uint64e_t _sll(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_sll, "sll")
 /* Computes shift left logical with an immediate. Example: dst = src1 << 3; */
-static inline _uint64e_t _slli(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "sll")
+static inline _uint64e_t _slli(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_slli, "sll")
 /* Computes unsigned shift right logical. Example: dst = (uint64_t)src1 >> (uint64_t)src2; */
-static inline _uint64e_t _srl(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "srl")
+static inline _uint64e_t _srl(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_srl, "srl")
 /* Computes unsigned shift right logical with an immediate. Example: (uint64_t)dst = (uint64_t)src1 >> 3; */
-static inline _uint64e_t _srli(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "srl")
+static inline _uint64e_t _srli(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_srli, "srl")
 /* Computes signed shift right arithmetic. Example: dst = (int64_t)src1 >> (int64_t)src2; */
-static inline _uint64e_t _sra(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "sra")
+static inline _uint64e_t _sra(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_sra, "sra")
 /* Computes signed shift right arithmetic with an immediate. Example: (int64_t)dst = (int64_t)src1 >> 3; */
-static inline _uint64e_t _srai(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "sra")
+static inline _uint64e_t _srai(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_srai, "sra")
 /* Computes bitwise complement. Example: dst = ~src; */
 static inline _uint64e_t _comp(_uint64e_t src)
 {
@@ -377,9 +377,9 @@ static inline _uint64e_t _snei(_uint64e_t src1, uint64_t src2)
   return dst;
 }
 /* Computes signed src1 < src2. Example: dst = (int64_t)src1 < (int64_t)src2; */
-static inline _uint64e_t _slt(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_slti, "slt")
+static inline _uint64e_t _slt(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_slt, "slt")
 /* Computes signed src1 < an immediate. Example: dst = (int64_t)src1 < 42; */
-static inline _uint64e_t _slti(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_slt, "slt")
+static inline _uint64e_t _slti(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_slti, "slt")
 /* Computes unsigned src1 < src2. Example: dst = (uint64_t)src1 < (uint64_t)src2; */
 static inline _uint64e_t _sltu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_sltu, "sltu")
 /* Computes unsigned src1 < an immediate. Example: dst = (uint64_t)src1 < 42u; */
