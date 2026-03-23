@@ -2,7 +2,7 @@
 #define MOJOV_INTRINSICS_H
 
 #include <stdint.h>
-#include "mojov-utils.h"
+#include "../bringup-bench/target/mojov-utils.h"
 
 /* Callers provide _uint64e_t and _fp64e_t before including this header. */
 

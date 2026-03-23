@@ -8,7 +8,7 @@ simon_state_t simon_state;
 
 typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
-#include "mojov-intrinsics.h"
+#include "mojov-exo.h"
 
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
