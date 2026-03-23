@@ -131,7 +131,7 @@ static inline _uint64e_t _subi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_
 /* Computes signed integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mul(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mul, "mul")
 /* Computes signed integer multiplication with an immediate. Example: dst = src1 * 42; */
-static inline _uint64e_t _muli(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_muli, "mul")
+static inline _uint64e_t _muli(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_muli, "mul")
 /* Computes unsigned integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mulu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mulu, "mul")
 /* Computes unsigned integer multiplication with an immediate. Example: dst = src1 * 42u; */
@@ -152,7 +152,7 @@ static inline _uint64e_t _modi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U
 static inline _uint64e_t _modu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_modu, "remu")
 /* Computes unsigned integer remainder with an immediate. Example: dst = src1 % 42u; */
 static inline _uint64e_t _modui(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_modui, "remu")
-/* Computes integer negation. Example: dst = -src; */
+/* Computes signed integer negation. Example: dst = -src; */
 static inline _uint64e_t _neg(_uint64e_t src)
 {
   _uint64e_t dst;
@@ -165,8 +165,8 @@ static inline _uint64e_t _neg(_uint64e_t src)
     : "x28", "x30", "memory");
   return dst;
 }
-/* Computes integer negation with an immediate. Example: dst = -(42); */
-static inline _uint64e_t _negi(uint64_t src)
+/* Computes signed integer negation with an immediate. Example: dst = -(42); */
+static inline _uint64e_t _negi(int64_t src)
 {
   _uint64e_t dst;
   __asm__ volatile (
