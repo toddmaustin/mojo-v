@@ -123,11 +123,11 @@ _fenc(double src)
 /* Computes integer addition. Example: dst = src1 + src2; */
 static inline _uint64e_t _add(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_add, "add")
 /* Computes integer addition with an immediate. Example: dst = src1 + 42u; */
-static inline _uint64e_t _addi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_addi, "add")
+static inline _uint64e_t _addi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_addi, "add")
 /* Computes integer subtraction. Example: dst = src1 - src2; */
 static inline _uint64e_t _sub(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_sub, "sub")
 /* Computes integer subtraction with an immediate. Example: dst = src1 - 42u; */
-static inline _uint64e_t _subi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_subi, "sub")
+static inline _uint64e_t _subi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_subi, "sub")
 /* Computes signed integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mul(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mul, "mul")
 /* Computes signed integer multiplication with an immediate. Example: dst = src1 * 42; */
@@ -184,7 +184,8 @@ static inline _uint64e_t _negi(uint64_t src)
  *  Mojo-V integer logical operation intrinsics...
  */
 
-/* Computes logical AND after booleanizing both operands. Example: dst = src1 && src2; */
+/* Computes logical AND after booleanizing both operands. Example: dst = src1 && src2;
+ * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit */
 static inline _uint64e_t _land(_uint64e_t src1, _uint64e_t src2)
 {
   _uint64e_t dst;
@@ -200,7 +201,7 @@ static inline _uint64e_t _land(_uint64e_t src1, _uint64e_t src2)
   return dst;
 }
 /* Computes logical AND with an immediate after booleanizing both operands. Example: dst = src1 && 42u;
- * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit*/
+ * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit */
 static inline _uint64e_t _landi(_uint64e_t src1, uint64_t src2)
 {
   _uint64e_t dst;
@@ -215,7 +216,8 @@ static inline _uint64e_t _landi(_uint64e_t src1, uint64_t src2)
     : "x28", "x29", "x30", "x31", "memory");
   return dst;
 }
-/* Computes logical OR after booleanizing both operands. Example: dst = src1 || src2; */
+/* Computes logical OR after booleanizing both operands. Example: dst = src1 ||src2;
+ * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit */
 static inline _uint64e_t _lor(_uint64e_t src1, _uint64e_t src2)
 {
   _uint64e_t dst;
@@ -230,7 +232,8 @@ static inline _uint64e_t _lor(_uint64e_t src1, _uint64e_t src2)
     : "x28", "x29", "x30", "x31", "memory");
   return dst;
 }
-/* Computes logical OR with an immediate after booleanizing both operands. Example: dst = src1 || 42u; */
+/* Computes logical OR with an immediate after booleanizing both operands. Example: dst = src1 || 42u;
+ * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit */
 static inline _uint64e_t _lori(_uint64e_t src1, uint64_t src2)
 {
   _uint64e_t dst;
