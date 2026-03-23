@@ -2,7 +2,7 @@
 #include "simon.h"
 #include "mojov-utils.h"
 #include "dc-fast.h"
-typedef mojov_mem_fast_u64_t _u64e_t;
+typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-intrinsics.h"
 
@@ -17,8 +17,8 @@ uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
 struct primality_result {
-  _u64e_t val;
-  _u64e_t prim;
+  _uint64e_t val;
+  _uint64e_t prim;
 };
 
 static struct primality_result q[Q_SIZE];
@@ -43,10 +43,10 @@ split_int(uint64_t *s, uint64_t *d, uint64_t n)
   }
 }
 
-static _u64e_t
-powm_secret(_u64e_t base, uint64_t exponent, _u64e_t modulus)
+static _uint64e_t
+powm_secret(_uint64e_t base, uint64_t exponent, _uint64e_t modulus)
 {
-  _u64e_t result = _enc(1);
+  _uint64e_t result = _enc(1);
 
   while (exponent != 0)
   {
@@ -60,17 +60,17 @@ powm_secret(_u64e_t base, uint64_t exponent, _u64e_t modulus)
   return result;
 }
 
-static _u64e_t
-miller_rabin_secret(_u64e_t n_enc, uint64_t n)
+static _uint64e_t
+miller_rabin_secret(_uint64e_t n_enc, uint64_t n)
 {
-  _u64e_t prim_secret;
+  _uint64e_t prim_secret;
 #if 0
   _store(&prim_secret, PT_COMPOSITE);
 
-  _u64e_t done;
+  _uint64e_t done;
   _store(&done, 0);
 
-  _u64e_t pred = _seqi(n_enc, 2u);
+  _uint64e_t pred = _seqi(n_enc, 2u);
   pred = _seqi(_andi(n_enc, 1u), 0u);
 #endif
  
@@ -88,9 +88,9 @@ miller_rabin_secret(_u64e_t n_enc, uint64_t n)
     return _enc(PT_COMPOSITE);
   }
 
-  _u64e_t n_secret = _enc(n);
-  _u64e_t nm1_secret = _enc((uint64_t)n - 1ull);
-  _u64e_t composite_secret = _enc(0);
+  _uint64e_t n_secret = _enc(n);
+  _uint64e_t nm1_secret = _enc((uint64_t)n - 1ull);
+  _uint64e_t composite_secret = _enc(0);
 
   uint64_t s;
   uint64_t d;
@@ -99,18 +99,18 @@ miller_rabin_secret(_u64e_t n_enc, uint64_t n)
   for (uint32_t i = 0; i < K; ++i)
   {
     const uint64_t a_public = get_random_int(2, (uint64_t)n - 2ull);
-    _u64e_t a_secret = _enc(a_public);
-    _u64e_t witness_composite = _enc(0);
-    _u64e_t passed_witness;
+    _uint64e_t a_secret = _enc(a_public);
+    _uint64e_t witness_composite = _enc(0);
+    _uint64e_t passed_witness;
 
-    _u64e_t x = powm_secret(a_secret, d, n_secret);
+    _uint64e_t x = powm_secret(a_secret, d, n_secret);
     passed_witness = _lor(_seqi(x, 1), _seq(x, nm1_secret));
 
     for (uint64_t r = 1; r <= s; ++r)
     {
       x = _mod(_mul(x, x), n_secret);
-      _u64e_t hit_one = _seqi(x, 1);
-      _u64e_t hit_nm1 = _seq(x, nm1_secret);
+      _uint64e_t hit_one = _seqi(x, 1);
+      _uint64e_t hit_nm1 = _seq(x, nm1_secret);
       witness_composite = _lor(witness_composite, _land(_lnot(passed_witness), hit_one));
       passed_witness = _lor(passed_witness, hit_nm1);
     }

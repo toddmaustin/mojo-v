@@ -6,17 +6,17 @@
 uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
-typedef mojov_mem_fast_u64_t _u64e_t;
+typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-intrinsics.h"
 
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
-_u64e_t secret_data[DATASET_SIZE];
+_uint64e_t secret_data[DATASET_SIZE];
 
 // total swaps executed so far
-_u64e_t swaps;
+_uint64e_t swaps;
 
 void
 print_data(uint64_t *data, unsigned size)
@@ -31,7 +31,7 @@ print_data(uint64_t *data, unsigned size)
 }
 
 void
-bitonic_sort(_u64e_t *data, unsigned size)
+bitonic_sort(_uint64e_t *data, unsigned size)
 {
   for (unsigned k = 2; k <= size; k <<= 1) // k is doubled every iteration
   {
@@ -40,14 +40,14 @@ bitonic_sort(_u64e_t *data, unsigned size)
       for (unsigned i = 0; i < size; i++)
       {
         unsigned l = (i ^ j);
-        _u64e_t _pred = _land(_enc(l > i),
+        _uint64e_t _pred = _land(_enc(l > i),
                               _lor(_land(_enc((i & k) == 0),
                                      _slt(data[l], data[i])
                                     ),
                                    _land(_enc((i & k) != 0), _slt(data[i], data[l]))
                               )
                              );
-        _u64e_t tmp = data[i];
+        _uint64e_t tmp = data[i];
         data[i] = _cmov(_pred, data[l], data[i]);
         data[l] = _cmov(_pred, tmp, data[l]);
         swaps = _addi(swaps, 1);

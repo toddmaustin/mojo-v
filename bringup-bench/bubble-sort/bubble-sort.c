@@ -6,17 +6,17 @@
 uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
-typedef mojov_mem_fast_u64_t _u64e_t;
+typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-intrinsics.h"
 
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
-_u64e_t secret_data[DATASET_SIZE];
+_uint64e_t secret_data[DATASET_SIZE];
 
 // total swaps executed so far
-_u64e_t swaps;
+_uint64e_t swaps;
 
 void
 print_data(uint64_t *data, unsigned size)
@@ -31,14 +31,14 @@ print_data(uint64_t *data, unsigned size)
 }
 
 void
-bubblesort(_u64e_t *data, unsigned size)
+bubblesort(_uint64e_t *data, unsigned size)
 {
   for (unsigned i=0; i < size-1; i++)
   {
     for (unsigned j=0; j < size - i - 1; j++)
     {
-      _u64e_t do_swap = _sltu(data[j+1], data[j]);
-      _u64e_t tmp = data[j];
+      _uint64e_t do_swap = _sltu(data[j+1], data[j]);
+      _uint64e_t tmp = data[j];
       data[j] = _cmov(do_swap, data[j+1], data[j]);
       data[j+1] = _cmov(do_swap, tmp, data[j+1]);
       swaps = _cmov(do_swap, _addi(swaps, 1), swaps);

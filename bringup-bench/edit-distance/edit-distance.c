@@ -6,7 +6,7 @@
 uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
-typedef mojov_mem_fast_u64_t _u64e_t;
+typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-intrinsics.h"
 
@@ -16,17 +16,17 @@ typedef mojov_mem_fast_fp64_t _fp64e_t;
 // total tests to run
 #define N_TESTS 4
 
-_u64e_t
-min3(_u64e_t x, _u64e_t y, _u64e_t z)
+_uint64e_t
+min3(_uint64e_t x, _uint64e_t y, _uint64e_t z)
 {
   return _cmov(_land(_slt(x, y), _slt(x, z)), x, _cmov(_slt(y, z), y, z));
 }
 
-_u64e_t
-EditDistance(_u64e_t *str1, _u64e_t *str2)
+_uint64e_t
+EditDistance(_uint64e_t *str1, _uint64e_t *str2)
 {
   unsigned i, j;
-  _u64e_t edit_matrix[GENE_LEN+1][GENE_LEN+1];
+  _uint64e_t edit_matrix[GENE_LEN+1][GENE_LEN+1];
 
   for (i = 0; i < GENE_LEN+1; i++)
     edit_matrix[i][0] = _enc(i);
@@ -38,7 +38,7 @@ EditDistance(_u64e_t *str1, _u64e_t *str2)
   {
     for (j = 0; j < GENE_LEN; j++ )
     {
-      _u64e_t edit = _cmov(_seq(str1[i], str2[j]), _enc(0u), _enc(1u));
+      _uint64e_t edit = _cmov(_seq(str1[i], str2[j]), _enc(0u), _enc(1u));
       edit_matrix[i + 1][j + 1] = min3(_addi(edit_matrix[i][j+1], 1), _addi(edit_matrix[i+1][j], 1), _add(edit_matrix[i][j], edit));
     }
   }
@@ -83,7 +83,7 @@ main(void)
   libmin_printf("------Within the randoms array------\n");
 
   // encrypt test genetics data
-  _u64e_t gene_enc[N_GENE_DATA][GENE_LEN];
+  _uint64e_t gene_enc[N_GENE_DATA][GENE_LEN];
   for (unsigned i=0; i < N_GENE_DATA; i++)
   {
     for (unsigned j=0; j < GENE_LEN; j++)
@@ -97,7 +97,7 @@ main(void)
     libmin_printf("++ compute distance from `%s' ++\n", gene_data[i]);
     for (unsigned j=0; j < N_GENE_DATA; j++)
     {
-      _u64e_t ed = EditDistance(gene_enc[i], gene_enc[j]);
+      _uint64e_t ed = EditDistance(gene_enc[i], gene_enc[j]);
       libmin_printf("  edit_distance(%s, %s) == %lu\n", gene_data[i], gene_data[j], mojov_decrypt_fast_u64(&simon_state, ed, CONTRACT_SIG));
     }
     libmin_printf("\n");
