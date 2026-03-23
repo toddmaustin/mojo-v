@@ -2,7 +2,7 @@
 #include "simon.h"
 #include "mojov-utils.h"
 #include "dc-fast.h"
-typedef mojov_mem_fast_u64_t _u64e_t;
+typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-intrinsics.h"
 
@@ -30,7 +30,7 @@ static const double testdata[] = {
 
 // Run the fixed-iteration secret Newton-Raphson solver and return the encrypted root.
 static _fp64e_t
-nr_solver(_u64e_t *converged)
+nr_solver(_uint64e_t *converged)
 {
   _fp64e_t guess = _fenc(1.0);
   _fp64e_t sqrt_secret = _fenc(sqrt_value);
@@ -75,7 +75,7 @@ main(void)
 
   for (unsigned i = 0; i < NTESTDATA; ++i)
   {
-    _u64e_t converged;
+    _uint64e_t converged;
     sqrt_value = testdata[i];
     _fp64e_t root_ct = nr_solver(&converged);
     double root = mojov_decrypt_fast_fp64(&simon_state, root_ct, CONTRACT_SIG);

@@ -130,7 +130,7 @@ static inline _uint64e_t _sub(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_
 static inline _uint64e_t _subi(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_subi, "sub")
 /* Computes signed integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mul(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mul, "mul")
-/* Computes signed integer multiplication with an immediate. Example: dst = src1 * 42u; */
+/* Computes signed integer multiplication with an immediate. Example: dst = src1 * 42; */
 static inline _uint64e_t _muli(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_muli, "mul")
 /* Computes unsigned integer multiplication. Example: dst = src1 * src2; */
 static inline _uint64e_t _mulu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mulu, "mul")
@@ -146,7 +146,7 @@ static inline _uint64e_t _divu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN
 static inline _uint64e_t _divui(_uint64e_t src1, uint64_t src2) __MOJOV_DEF_BINI_U64(_divui, "divu")
 /* Computes signed integer remainder. Example: dst = src1 % src2; */
 static inline _uint64e_t _mod(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_mod, "rem")
-/* Computes signed integer remainder with an immediate. Example: dst = src1 % 42u; */
+/* Computes signed integer remainder with an immediate. Example: dst = src1 % 42; */
 static inline _uint64e_t _modi(_uint64e_t src1, int64_t src2) __MOJOV_DEF_BINI_U64(_modi, "rem")
 /* Computes unsigned integer remainder. Example: dst = src1 % src2; */
 static inline _uint64e_t _modu(_uint64e_t src1, _uint64e_t src2) __MOJOV_DEF_BIN_U64(_modu, "remu")
@@ -199,7 +199,8 @@ static inline _uint64e_t _land(_uint64e_t src1, _uint64e_t src2)
     : "x28", "x29", "x30", "x31", "memory");
   return dst;
 }
-/* Computes logical AND with an immediate after booleanizing both operands. Example: dst = src1 && 42u; */
+/* Computes logical AND with an immediate after booleanizing both operands. Example: dst = src1 && 42u;
+ * NOTE: to maintain data-oblivious semantics the operator does NOT shortcircuit*/
 static inline _uint64e_t _landi(_uint64e_t src1, uint64_t src2)
 {
   _uint64e_t dst;
@@ -426,7 +427,7 @@ static inline _fp64e_t _fmuli(_fp64e_t src1, double src2) __MOJOV_DEF_BINI_FP64(
 static inline _fp64e_t _fdiv(_fp64e_t src1, _fp64e_t src2) __MOJOV_DEF_BIN_FP64(_fdiv, "fdiv.d")
 /* Computes floating-point division with an immediate. Example: dst = src1 / 42.0; */
 static inline _fp64e_t _fdivi(_fp64e_t src1, double src2) __MOJOV_DEF_BINI_FP64(_fdivi, "fdiv.d")
-/* Computes integer negation. Example: dst = -src; */
+/* Computes floating-point negation. Example: dst = -src; */
 static inline _fp64e_t _fneg(_fp64e_t src)
 {
   _fp64e_t dst;
@@ -438,7 +439,7 @@ static inline _fp64e_t _fneg(_fp64e_t src)
     : "f28", "f30", "memory");
   return dst;
 }
-/* Computes integer negation with an immediate. Example: dst = -(42.0); */
+/* Computes floating-point negation with an immediate. Example: dst = -(42.0); */
 static inline _fp64e_t _fnegi(double src)
 {
   _fp64e_t dst;
