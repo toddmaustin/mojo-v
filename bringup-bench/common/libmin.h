@@ -3,6 +3,11 @@
 
 #include "libtarg.h"
 
+#ifdef __cplusplus
+/* libmin exposes a C interface even when included from C++ code. */
+extern "C" {
+#endif
+
 #define TRUE  1
 #define FALSE 0
 
@@ -382,5 +387,9 @@ uint32_t libmin_fnv32a(void *buf, size_t len, uint32_t hashval);
 #define FNV64a_INIT ((uint64_t)0xcbf29ce484222325ULL)
 
 uint64_t libmin_fnv64a(void *buf, size_t len, uint64_t hashval);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
 
 #endif /* LIBMIN_H */
