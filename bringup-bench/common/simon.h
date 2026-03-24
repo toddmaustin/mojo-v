@@ -1,6 +1,11 @@
 #ifndef SIMON_H
 #define SIMON_H
 
+#ifdef __cplusplus
+/* libmin exposes a C interface even when included from C++ code. */
+extern "C" {
+#endif
+
 #include <stdint.h>
 typedef unsigned __int128 uint128_t;
 #define HI64(X)        ((uint64_t)(((X) >> 64) & 0xffffffffffffffffULL))
@@ -29,6 +34,10 @@ void simon_128_64_decrypt(simon_state_t *simon_state, uint64_t ciphertext, uint6
 bool simon_128_128_keyexpand(simon_state_t *simon_state, uint128_t key, unsigned round_limit /*=*//* full strength *//*68*/);
 void simon_128_128_encrypt(simon_state_t *simon_state, uint128_t plaintext, uint128_t *ciphertext);
 void simon_128_128_decrypt(simon_state_t *simon_state, uint128_t ciphertext, uint128_t *plaintext);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
 
 #endif /* SIMON_H */
 

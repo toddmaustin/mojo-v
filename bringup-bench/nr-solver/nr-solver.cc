@@ -6,8 +6,6 @@ typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
 
-#define SECRET
-
 #define MAXERR 0.00001
 #define MAXITER 20
 
@@ -29,21 +27,20 @@ static const double testdata[] = {
 #define NTESTDATA (sizeof(testdata) / sizeof(testdata[0]))
 
 // Run the fixed-iteration secret Newton-Raphson solver and return the encrypted root.
-static _fp64e_t
-nr_solver(_uint64e_t *converged)
+static fp64e_t
+nr_solver(uint64e_t *converged)
 {
-  _fp64e_t guess = _fenc(1.0);
-  _fp64e_t sqrt_secret = _fenc(sqrt_value);
+  fp64e_t guess = 1.0;
+  fp64e_t sqrt_secret = sqrt_value;
 
-  *converged = _enc(0);
+  *converged = 0;
 
   for (unsigned iter = 0; iter < MAXITER; ++iter)
   {
-    _fp64e_t f_value = _fsub(_fmul(guess, guess), sqrt_secret);
-    _fp64e_t abs_f_value = _fabs(f_value);
-    _fp64e_t updated_guess = _fsub(guess, _fdiv(f_value, _fmuli(guess, 2.0)));
+    fp64e_t f_value = (guess * guess) - sqrt_secret;
+    fp64e_t updated_guess = guess - f_value / (guess * 2.0);
 
-    *converged = _fslei(abs_f_value, MAXERR);
+    *converged = fabs(f_value) <= MAXERR;
     guess = _fcmov(*converged, guess, updated_guess);
   }
 
@@ -75,9 +72,9 @@ main(void)
 
   for (unsigned i = 0; i < NTESTDATA; ++i)
   {
-    _uint64e_t converged;
+    uint64e_t converged;
     sqrt_value = testdata[i];
-    _fp64e_t root_ct = nr_solver(&converged);
+    fp64e_t root_ct = nr_solver(&converged);
     double root = mojov_decrypt_fast_fp64(&simon_state, root_ct, CONTRACT_SIG);
     libmin_printf("sqrt(%lf) == %lf (converged:%c)\n",
       sqrt_value,

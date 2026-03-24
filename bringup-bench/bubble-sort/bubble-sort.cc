@@ -13,10 +13,10 @@ typedef mojov_mem_fast_fp64_t _fp64e_t;
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
-_uint64e_t secret_data[DATASET_SIZE];
+uint64e_t secret_data[DATASET_SIZE];
 
 // total swaps executed so far
-_uint64e_t swaps;
+uint64e_t swaps;
 
 void
 print_data(uint64_t *data, unsigned size)
@@ -24,24 +24,22 @@ print_data(uint64_t *data, unsigned size)
   libmin_printf("DATA DUMP:\n");
   for (unsigned i=0; i < size; i++)
   {
-    libmin_printf("  data[%4u] = %10ld, ct =[", i, data[i]);
-    secret_print(secret_data[i]);
-    libmin_printf("]\n");
+    libmin_printf("  data[%4u] = %10ld\n", i, data[i]);
   }
 }
 
 void
-bubblesort(_uint64e_t *data, unsigned size)
+bubblesort(uint64e_t *data, unsigned size)
 {
   for (unsigned i=0; i < size-1; i++)
   {
     for (unsigned j=0; j < size - i - 1; j++)
     {
-      _uint64e_t do_swap = _sltu(data[j+1], data[j]);
-      _uint64e_t tmp = data[j];
-      data[j] = _cmov(do_swap, data[j+1], data[j]);
-      data[j+1] = _cmov(do_swap, tmp, data[j+1]);
-      swaps = _cmov(do_swap, _addi(swaps, 1), swaps);
+      uint64e_t do_swap = data[j+1] < data[j];
+      uint64e_t tmp = data[j];
+      data[j] = cmov(do_swap, data[j+1], data[j]);
+      data[j+1] = cmov(do_swap, tmp, data[j+1]);
+      swaps = cmov(do_swap, swaps+1, swaps);
     }
   }
 }
@@ -85,10 +83,7 @@ main(void)
 
   // initialize the array to sort
   for (unsigned i=0; i < DATASET_SIZE; i++)
-  {
-    raw_data[i] = libmin_rand();
-    secret_data[i] = _enc(raw_data[i]);
-  }
+    secret_data[i] = raw_data[i] = libmin_rand();
   print_data(raw_data, DATASET_SIZE);
 
   {

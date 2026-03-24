@@ -5,7 +5,7 @@
 #include "mojov-intrinsics.h"
 #else
 
-#include <cstdint>
+// #include <cstdint>
 #include <type_traits>
 
 #include "../bringup-bench/target/mojov-utils.h"
@@ -49,7 +49,7 @@ inline fp_storage_t zero_fp64e() { return _fenc(0.0); }
  * Example: uint64e_t total = 4u; */
 class uint64e_t {
 public:
-  using value_type = std::uint64_t;
+  using value_type = uint64_t;
   using storage_type = detail::uint_storage_t;
 
   /* Constructs an encrypted integer initialized to encrypted zero.
@@ -298,164 +298,164 @@ private:
 inline uint64e_t operator+(uint64e_t lhs, const uint64e_t& rhs) { lhs += rhs; return lhs; }
 /* Returns the encrypted sum of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t total = a + 4u; */
-inline uint64e_t operator+(uint64e_t lhs, std::uint64_t rhs) { lhs += rhs; return lhs; }
+inline uint64e_t operator+(uint64e_t lhs, uint64_t rhs) { lhs += rhs; return lhs; }
 /* Returns the encrypted sum of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t total = 4u + a; */
-inline uint64e_t operator+(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) + rhs; }
+inline uint64e_t operator+(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) + rhs; }
 /* Returns the encrypted difference of two encrypted integers.
  * Example: uint64e_t diff = a - b; */
 inline uint64e_t operator-(uint64e_t lhs, const uint64e_t& rhs) { lhs -= rhs; return lhs; }
 /* Returns the encrypted difference of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t diff = a - 4u; */
-inline uint64e_t operator-(uint64e_t lhs, std::uint64_t rhs) { lhs -= rhs; return lhs; }
+inline uint64e_t operator-(uint64e_t lhs, uint64_t rhs) { lhs -= rhs; return lhs; }
 /* Returns the encrypted difference of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t diff = 9u - a; */
-inline uint64e_t operator-(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) - rhs; }
+inline uint64e_t operator-(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) - rhs; }
 /* Returns the encrypted product of two encrypted integers.
  * Example: uint64e_t prod = a * b; */
 inline uint64e_t operator*(uint64e_t lhs, const uint64e_t& rhs) { lhs *= rhs; return lhs; }
 /* Returns the encrypted product of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t prod = a * 8u; */
-inline uint64e_t operator*(uint64e_t lhs, std::uint64_t rhs) { lhs *= rhs; return lhs; }
+inline uint64e_t operator*(uint64e_t lhs, uint64_t rhs) { lhs *= rhs; return lhs; }
 /* Returns the encrypted product of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t prod = 8u * a; */
-inline uint64e_t operator*(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) * rhs; }
+inline uint64e_t operator*(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) * rhs; }
 /* Returns the encrypted quotient of two encrypted integers.
  * Example: uint64e_t q = a / b; */
 inline uint64e_t operator/(uint64e_t lhs, const uint64e_t& rhs) { lhs /= rhs; return lhs; }
 /* Returns the encrypted quotient of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t q = a / 2u; */
-inline uint64e_t operator/(uint64e_t lhs, std::uint64_t rhs) { lhs /= rhs; return lhs; }
+inline uint64e_t operator/(uint64e_t lhs, uint64_t rhs) { lhs /= rhs; return lhs; }
 /* Returns the encrypted quotient of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t q = 16u / a; */
-inline uint64e_t operator/(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) / rhs; }
+inline uint64e_t operator/(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) / rhs; }
 /* Returns the encrypted remainder of two encrypted integers.
  * Example: uint64e_t r = a % b; */
 inline uint64e_t operator%(uint64e_t lhs, const uint64e_t& rhs) { lhs %= rhs; return lhs; }
 /* Returns the encrypted remainder of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t r = a % 16u; */
-inline uint64e_t operator%(uint64e_t lhs, std::uint64_t rhs) { lhs %= rhs; return lhs; }
+inline uint64e_t operator%(uint64e_t lhs, uint64_t rhs) { lhs %= rhs; return lhs; }
 /* Returns the encrypted remainder of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t r = 16u % a; */
-inline uint64e_t operator%(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) % rhs; }
+inline uint64e_t operator%(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) % rhs; }
 /* Returns the encrypted bitwise AND of two encrypted integers.
  * Example: uint64e_t both = a & b; */
 inline uint64e_t operator&(uint64e_t lhs, const uint64e_t& rhs) { lhs &= rhs; return lhs; }
 /* Returns the encrypted bitwise AND of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t masked = a & 0xffu; */
-inline uint64e_t operator&(uint64e_t lhs, std::uint64_t rhs) { lhs &= rhs; return lhs; }
+inline uint64e_t operator&(uint64e_t lhs, uint64_t rhs) { lhs &= rhs; return lhs; }
 /* Returns the encrypted bitwise AND of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t masked = 0xffu & a; */
-inline uint64e_t operator&(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) & rhs; }
+inline uint64e_t operator&(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) & rhs; }
 /* Returns the encrypted bitwise OR of two encrypted integers.
  * Example: uint64e_t bits = a | b; */
 inline uint64e_t operator|(uint64e_t lhs, const uint64e_t& rhs) { lhs |= rhs; return lhs; }
 /* Returns the encrypted bitwise OR of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t bits = a | 0x10u; */
-inline uint64e_t operator|(uint64e_t lhs, std::uint64_t rhs) { lhs |= rhs; return lhs; }
+inline uint64e_t operator|(uint64e_t lhs, uint64_t rhs) { lhs |= rhs; return lhs; }
 /* Returns the encrypted bitwise OR of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t bits = 0x10u | a; */
-inline uint64e_t operator|(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) | rhs; }
+inline uint64e_t operator|(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) | rhs; }
 /* Returns the encrypted bitwise XOR of two encrypted integers.
  * Example: uint64e_t bits = a ^ b; */
 inline uint64e_t operator^(uint64e_t lhs, const uint64e_t& rhs) { lhs ^= rhs; return lhs; }
 /* Returns the encrypted bitwise XOR of an encrypted integer and a plain uint64_t.
  * Example: uint64e_t bits = a ^ 0x10u; */
-inline uint64e_t operator^(uint64e_t lhs, std::uint64_t rhs) { lhs ^= rhs; return lhs; }
+inline uint64e_t operator^(uint64e_t lhs, uint64_t rhs) { lhs ^= rhs; return lhs; }
 /* Returns the encrypted bitwise XOR of a plain uint64_t and an encrypted integer.
  * Example: uint64e_t bits = 0x10u ^ a; */
-inline uint64e_t operator^(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) ^ rhs; }
+inline uint64e_t operator^(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) ^ rhs; }
 /* Returns the encrypted left shift of an integer by another encrypted amount.
  * Example: uint64e_t shifted = a << b; */
 inline uint64e_t operator<<(uint64e_t lhs, const uint64e_t& rhs) { lhs <<= rhs; return lhs; }
 /* Returns the encrypted left shift of an integer by a plain amount.
  * Example: uint64e_t shifted = a << 3u; */
-inline uint64e_t operator<<(uint64e_t lhs, std::uint64_t rhs) { lhs <<= rhs; return lhs; }
+inline uint64e_t operator<<(uint64e_t lhs, uint64_t rhs) { lhs <<= rhs; return lhs; }
 /* Returns the encrypted left shift of a plain value by an encrypted amount.
  * Example: uint64e_t shifted = 1u << a; */
-inline uint64e_t operator<<(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) << rhs; }
+inline uint64e_t operator<<(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) << rhs; }
 /* Returns the encrypted right shift of an integer by another encrypted amount.
  * Example: uint64e_t shifted = a >> b; */
 inline uint64e_t operator>>(uint64e_t lhs, const uint64e_t& rhs) { lhs >>= rhs; return lhs; }
 /* Returns the encrypted right shift of an integer by a plain amount.
  * Example: uint64e_t shifted = a >> 3u; */
-inline uint64e_t operator>>(uint64e_t lhs, std::uint64_t rhs) { lhs >>= rhs; return lhs; }
+inline uint64e_t operator>>(uint64e_t lhs, uint64_t rhs) { lhs >>= rhs; return lhs; }
 /* Returns the encrypted right shift of a plain value by an encrypted amount.
  * Example: uint64e_t shifted = 8u >> a; */
-inline uint64e_t operator>>(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) >> rhs; }
+inline uint64e_t operator>>(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) >> rhs; }
 /* Computes encrypted logical AND without C++ short-circuiting.
  * Example: uint64e_t both = a && b; */
 inline uint64e_t operator&&(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_land(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted logical AND between an encrypted integer and a plain integer.
  * Example: uint64e_t both = a && 1u; */
-inline uint64e_t operator&&(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_landi(lhs.encrypted(), rhs)); }
+inline uint64e_t operator&&(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_landi(lhs.encrypted(), rhs)); }
 /* Computes encrypted logical AND between a plain integer and an encrypted integer.
  * Example: uint64e_t both = 1u && a; */
-inline uint64e_t operator&&(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_landi(rhs.encrypted(), lhs)); }
+inline uint64e_t operator&&(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_landi(rhs.encrypted(), lhs)); }
 /* Computes encrypted logical OR without C++ short-circuiting.
  * Example: uint64e_t either = a || b; */
 inline uint64e_t operator||(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_lor(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted logical OR between an encrypted integer and a plain integer.
  * Example: uint64e_t either = a || 0u; */
-inline uint64e_t operator||(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_lori(lhs.encrypted(), rhs)); }
+inline uint64e_t operator||(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_lori(lhs.encrypted(), rhs)); }
 /* Computes encrypted logical OR between a plain integer and an encrypted integer.
  * Example: uint64e_t either = 0u || a; */
-inline uint64e_t operator||(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_lori(rhs.encrypted(), lhs)); }
+inline uint64e_t operator||(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_lori(rhs.encrypted(), lhs)); }
 
 /* Computes encrypted equality for two encrypted integers.
  * Example: uint64e_t eq = (a == b); */
 inline uint64e_t operator==(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_seq(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted equality for an encrypted integer and a plain integer.
  * Example: uint64e_t eq = (a == 7u); */
-inline uint64e_t operator==(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_seqi(lhs.encrypted(), rhs)); }
+inline uint64e_t operator==(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_seqi(lhs.encrypted(), rhs)); }
 /* Computes encrypted equality for a plain integer and an encrypted integer.
  * Example: uint64e_t eq = (7u == a); */
-inline uint64e_t operator==(std::uint64_t lhs, const uint64e_t& rhs) { return rhs == lhs; }
+inline uint64e_t operator==(uint64_t lhs, const uint64e_t& rhs) { return rhs == lhs; }
 /* Computes encrypted inequality for two encrypted integers.
  * Example: uint64e_t ne = (a != b); */
 inline uint64e_t operator!=(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sne(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted inequality for an encrypted integer and a plain integer.
  * Example: uint64e_t ne = (a != 7u); */
-inline uint64e_t operator!=(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_snei(lhs.encrypted(), rhs)); }
+inline uint64e_t operator!=(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_snei(lhs.encrypted(), rhs)); }
 /* Computes encrypted inequality for a plain integer and an encrypted integer.
  * Example: uint64e_t ne = (7u != a); */
-inline uint64e_t operator!=(std::uint64_t lhs, const uint64e_t& rhs) { return rhs != lhs; }
+inline uint64e_t operator!=(uint64_t lhs, const uint64e_t& rhs) { return rhs != lhs; }
 /* Computes encrypted unsigned less-than for two encrypted integers.
  * Example: uint64e_t lt = (a < b); */
 inline uint64e_t operator<(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sltu(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted unsigned less-than for an encrypted integer and a plain integer.
  * Example: uint64e_t lt = (a < 7u); */
-inline uint64e_t operator<(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_sltui(lhs.encrypted(), rhs)); }
+inline uint64e_t operator<(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sltui(lhs.encrypted(), rhs)); }
 /* Computes encrypted unsigned less-than for a plain integer and an encrypted integer.
  * Example: uint64e_t lt = (7u < a); */
-inline uint64e_t operator<(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sgtui(rhs.encrypted(), lhs)); }
+inline uint64e_t operator<(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sgtui(rhs.encrypted(), lhs)); }
 /* Computes encrypted unsigned less-than-or-equal for two encrypted integers.
  * Example: uint64e_t le = (a <= b); */
 inline uint64e_t operator<=(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sleu(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted unsigned less-than-or-equal for an encrypted integer and a plain integer.
  * Example: uint64e_t le = (a <= 7u); */
-inline uint64e_t operator<=(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_sleui(lhs.encrypted(), rhs)); }
+inline uint64e_t operator<=(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sleui(lhs.encrypted(), rhs)); }
 /* Computes encrypted unsigned less-than-or-equal for a plain integer and an encrypted integer.
  * Example: uint64e_t le = (7u <= a); */
-inline uint64e_t operator<=(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sgeui(rhs.encrypted(), lhs)); }
+inline uint64e_t operator<=(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sgeui(rhs.encrypted(), lhs)); }
 /* Computes encrypted unsigned greater-than for two encrypted integers.
  * Example: uint64e_t gt = (a > b); */
 inline uint64e_t operator>(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sgtu(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted unsigned greater-than for an encrypted integer and a plain integer.
  * Example: uint64e_t gt = (a > 7u); */
-inline uint64e_t operator>(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_sgtui(lhs.encrypted(), rhs)); }
+inline uint64e_t operator>(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sgtui(lhs.encrypted(), rhs)); }
 /* Computes encrypted unsigned greater-than for a plain integer and an encrypted integer.
  * Example: uint64e_t gt = (7u > a); */
-inline uint64e_t operator>(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sltui(rhs.encrypted(), lhs)); }
+inline uint64e_t operator>(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sltui(rhs.encrypted(), lhs)); }
 /* Computes encrypted unsigned greater-than-or-equal for two encrypted integers.
  * Example: uint64e_t ge = (a >= b); */
 inline uint64e_t operator>=(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sgeu(lhs.encrypted(), rhs.encrypted())); }
 /* Computes encrypted unsigned greater-than-or-equal for an encrypted integer and a plain integer.
  * Example: uint64e_t ge = (a >= 7u); */
-inline uint64e_t operator>=(const uint64e_t& lhs, std::uint64_t rhs) { return uint64e_t(_sgeui(lhs.encrypted(), rhs)); }
+inline uint64e_t operator>=(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sgeui(lhs.encrypted(), rhs)); }
 /* Computes encrypted unsigned greater-than-or-equal for a plain integer and an encrypted integer.
  * Example: uint64e_t ge = (7u >= a); */
-inline uint64e_t operator>=(std::uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sleui(rhs.encrypted(), lhs)); }
+inline uint64e_t operator>=(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sleui(rhs.encrypted(), lhs)); }
 
 /* Returns the encrypted sum of two encrypted FP64 values.
  * Example: fp64e_t total = a + b; */
@@ -563,7 +563,7 @@ inline fp64e_t cmov(const uint64e_t& predicate, const fp64e_t& if_true, const fp
 
 /* Returns the encrypted absolute value of an encrypted FP64.
  * Example: fp64e_t mag = abs(delta); */
-inline fp64e_t abs(const fp64e_t& value) {
+inline fp64e_t fabs(const fp64e_t& value) {
   return fp64e_t(_fabs(value.encrypted()));
 }
 

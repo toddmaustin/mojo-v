@@ -46,7 +46,7 @@ size_t libmin_strlen(const char *str);
 
 /* return order of strings */
 int libmin_strcmp(const char *l, const char *r);
-int libmin_strncmp(const char *s1, const char *s2, register size_t n);
+int libmin_strncmp(const char *s1, const char *s2, size_t n);
 size_t libmin_strspn(const char *s, const char *c);
 char *libmin_strtok(char *s, const char *sep);
 char *libmin_strdup (const char *s);
@@ -67,8 +67,8 @@ void *libmin_memmove(void *dest, const void *src, size_t n);
 
 #ifndef TARGET_SILENT
 /* print a message with format FMT to the co-simulation console */
-int libmin_printf(char *fmt, ...);
-int libmin_snprintf(char *s, size_t size, char *fmt, ...);
+int libmin_printf(const char *fmt, ...);
+int libmin_snprintf(char *s, size_t size, const char *fmt, ...);
 #else /* TARGET_SILENT */
 /* run silent */
 #define libmin_printf(FMT, ARGS...)	do { ; } while (0)
@@ -115,7 +115,7 @@ void *libmin_realloc(void *block, size_t size);
 /* free memory */
 void libmin_free(void * addr);
 
-#ifndef __clang__
+#ifndef NULL
 #define NULL	((void *)0)
 #endif
 

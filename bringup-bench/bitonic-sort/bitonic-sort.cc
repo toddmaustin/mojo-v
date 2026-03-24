@@ -13,10 +13,10 @@ typedef mojov_mem_fast_fp64_t _fp64e_t;
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 uint64_t raw_data[DATASET_SIZE];
-_uint64e_t secret_data[DATASET_SIZE];
+uint64e_t secret_data[DATASET_SIZE];
 
 // total swaps executed so far
-_uint64e_t swaps;
+uint64e_t swaps;
 
 void
 print_data(uint64_t *data, unsigned size)
@@ -24,14 +24,12 @@ print_data(uint64_t *data, unsigned size)
   libmin_printf("DATA DUMP:\n");
   for (unsigned i=0; i < size; i++)
   {
-    libmin_printf("  data[%4u] = %10ld, ct =[", i, data[i]);
-    secret_print(secret_data[i]);
-    libmin_printf("]\n");
+    libmin_printf("  data[%4u] = %10ld\n", i, data[i]);
   }
 }
 
 void
-bitonic_sort(_uint64e_t *data, unsigned size)
+bitonic_sort(uint64e_t *data, unsigned size)
 {
   for (unsigned k = 2; k <= size; k <<= 1) // k is doubled every iteration
   {
@@ -40,17 +38,14 @@ bitonic_sort(_uint64e_t *data, unsigned size)
       for (unsigned i = 0; i < size; i++)
       {
         unsigned l = (i ^ j);
-        _uint64e_t _pred = _land(_enc(l > i),
-                              _lor(_land(_enc((i & k) == 0),
-                                     _slt(data[l], data[i])
-                                    ),
-                                   _land(_enc((i & k) != 0), _slt(data[i], data[l]))
-                              )
-                             );
-        _uint64e_t tmp = data[i];
-        data[i] = _cmov(_pred, data[l], data[i]);
-        data[l] = _cmov(_pred, tmp, data[l]);
-        swaps = _addi(swaps, 1);
+        uint64e_t pred = ((uint64e_t)(l > i) &&
+                          (((uint64e_t)((i & k) == 0) &&_slt(data[l], data[i]))
+                           || ((uint64e_t)((i & k) != 0) && _slt(data[i], data[l])))
+                         );
+        uint64e_t tmp = data[i];
+        data[i] = cmov(pred, data[l], data[i]);
+        data[l] = cmov(pred, tmp, data[l]);
+        swaps = swaps + 1;
       }
     }
   }
@@ -92,13 +87,12 @@ main(void)
   libmin_srand(42);
 
   // initialize swaps
-  swaps = _enc(0);
+  swaps = 0;
 
   // initialize the array to sort
   for (unsigned i=0; i < DATASET_SIZE; i++)
   {
-    raw_data[i] = libmin_rand();
-    secret_data[i] = _enc(raw_data[i]);
+    secret_data[i] = raw_data[i] = libmin_rand();
   }
   print_data(raw_data, DATASET_SIZE);
 

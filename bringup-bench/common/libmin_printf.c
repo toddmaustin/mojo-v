@@ -748,7 +748,7 @@ dopr_outch(char *buffer, size_t *currlen, size_t maxlen, char c)
 }
 
 int
-libmin_printf(char *fmt, ...)
+libmin_printf(const char *fmt, ...)
 {
   char buf[1024], *s;
   va_list ap;
@@ -769,7 +769,7 @@ libmin_printf(char *fmt, ...)
 }
 
 int
-libmin_snprintf(char *s, size_t size, char *fmt, ...)
+libmin_snprintf(char *s, size_t size, const char *fmt, ...)
 {
   va_list ap;
 

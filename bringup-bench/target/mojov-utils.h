@@ -1,6 +1,11 @@
 #ifndef MOJOV_UTILS_H
 #define MOJOV_UTILS_H
 
+#ifdef __cplusplus
+/* libmin exposes a C interface even when included from C++ code. */
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include "libmin.h"
 #include "simon.h"
@@ -267,7 +272,9 @@ static inline void mojov_print_proofcarrying_fp64(mojov_mem_proofcarrying_fp64_t
   mojov_print_256(ct.ct.ct_hi, ct.ct.ct_lo);
 }
 
+#if 0
 #define secret_print(ct) _Generic((ct),   uint128_t: mojov_print_fast_128,   mojov_mem_fast_u64_t: mojov_print_fast_u64,   mojov_mem_fast_fp64_t: mojov_print_fast_fp64,   mojov_mem_strong_u64_t: mojov_print_strong_u64,   mojov_mem_strong_fp64_t: mojov_print_strong_fp64,   mojov_mem_proofcarrying_u64_t: mojov_print_proofcarrying_u64,   mojov_mem_proofcarrying_fp64_t: mojov_print_proofcarrying_fp64 )(ct)
+#endif
 
 void mojov_print_mojov_cfg(uint64_t val);
 uint64_t mojov_read_mojov_cfg(void);
@@ -283,5 +290,9 @@ void mojov_write_mprivregcfg(uint64_t value);
 int mojov_configure_kmsm_from_dc_fast(void);
 int mojov_configure_kmsm_from_dc_strong(void);
 int mojov_configure_kmsm_from_dc_proof(void);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
 
 #endif
