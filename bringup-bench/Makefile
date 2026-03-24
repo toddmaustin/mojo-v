@@ -220,7 +220,7 @@ LIBS = ../common/libmin.a
 build: $(TARGET_EXE)
 
 %.o: %.c
-	$(TARGET_CC) $(CFLAGS) -I../common/ -I../target/ -o $@ -c $<
+	$(TARGET_CC) $(CFLAGS) -I../common/ -I../target/ -I../../exo/ -o $@ -c $<
 
 ../common/libmin.a: $(LIBMIN_OBJS)
 	$(TARGET_AR) rcs ../common/libmin.a $(LIBMIN_OBJS)

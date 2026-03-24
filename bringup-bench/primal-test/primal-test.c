@@ -4,7 +4,7 @@
 #include "dc-fast.h"
 typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
-#include "mojov-intrinsics.h"
+#include "mojov-exo.h"
 
 #define K 16u
 #define PT_COMPOSITE 0u
