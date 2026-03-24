@@ -6,10 +6,10 @@ typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
 
-#define K 16u
-#define PT_COMPOSITE 0u
-#define PT_PRIME 1u
-#define PT_PRIME_LIKELY 2u
+#define K 16ull
+#define PT_COMPOSITE 0
+#define PT_PRIME 1
+#define PT_PRIME_LIKELY 2
 #define Q_SIZE NTESTS
 #define NTESTS 200
 
@@ -17,8 +17,8 @@ uint128_t simon_key = SIMON128_KEY;
 simon_state_t simon_state;
 
 struct primality_result {
-  _uint64e_t val;
-  _uint64e_t prim;
+  uint64e_t val;
+  uint64e_t prim;
 };
 
 static struct primality_result q[Q_SIZE];
@@ -43,54 +43,54 @@ split_int(uint64_t *s, uint64_t *d, uint64_t n)
   }
 }
 
-static _uint64e_t
-powm_secret(_uint64e_t base, uint64_t exponent, _uint64e_t modulus)
+static uint64e_t
+powm_secret(uint64e_t base, uint64_t exponent, uint64e_t modulus)
 {
-  _uint64e_t result = _enc(1);
+  uint64e_t result = 1;
 
   while (exponent != 0)
   {
     if ((exponent & 1ull) != 0)
-      result = _mod(_mul(result, base), modulus);
+      result = (result * base) % modulus;
     exponent >>= 1;
     if (exponent != 0)
-      base = _mod(_mul(base, base), modulus);
+      base = (base * base) % modulus;
   }
 
   return result;
 }
 
-static _uint64e_t
-miller_rabin_secret(_uint64e_t n_enc, uint64_t n)
+static uint64e_t
+miller_rabin_secret(uint64e_t n_enc, uint64_t n)
 {
-  _uint64e_t prim_secret;
+  uint64e_t prim_secret;
 #if 0
   _store(&prim_secret, PT_COMPOSITE);
 
-  _uint64e_t done;
+  uint64e_t done;
   _store(&done, 0);
 
-  _uint64e_t pred = _seqi(n_enc, 2u);
+  uint64e_t pred = _seqi(n_enc, 2u);
   pred = _seqi(_andi(n_enc, 1u), 0u);
 #endif
  
   if ((n & 1u) == 0)
   {
-    prim_secret = _enc(n == 2u ? PT_PRIME : PT_COMPOSITE);
+    prim_secret = n == 2u ? PT_PRIME : PT_COMPOSITE;
     return prim_secret;
   }
   if (n == 3u)
   {
-    return _enc(PT_PRIME);
+    return PT_PRIME;
   }
   if (n < 3u)
   {
-    return _enc(PT_COMPOSITE);
+    return PT_COMPOSITE;
   }
 
-  _uint64e_t n_secret = _enc(n);
-  _uint64e_t nm1_secret = _enc((uint64_t)n - 1ull);
-  _uint64e_t composite_secret = _enc(0);
+  uint64e_t n_secret = n;
+  uint64e_t nm1_secret = (uint64e_t)((uint64_t)n - 1);
+  uint64e_t composite_secret = 0;
 
   uint64_t s;
   uint64_t d;
@@ -99,27 +99,27 @@ miller_rabin_secret(_uint64e_t n_enc, uint64_t n)
   for (uint32_t i = 0; i < K; ++i)
   {
     const uint64_t a_public = get_random_int(2, (uint64_t)n - 2ull);
-    _uint64e_t a_secret = _enc(a_public);
-    _uint64e_t witness_composite = _enc(0);
-    _uint64e_t passed_witness;
+    uint64e_t a_secret = a_public;
+    uint64e_t witness_composite = 0;
+    uint64e_t passed_witness;
 
-    _uint64e_t x = powm_secret(a_secret, d, n_secret);
-    passed_witness = _lor(_seqi(x, 1), _seq(x, nm1_secret));
+    uint64e_t x = powm_secret(a_secret, d, n_secret);
+    passed_witness = (x == 1) || (x == nm1_secret);
 
     for (uint64_t r = 1; r <= s; ++r)
     {
-      x = _mod(_mul(x, x), n_secret);
-      _uint64e_t hit_one = _seqi(x, 1);
-      _uint64e_t hit_nm1 = _seq(x, nm1_secret);
-      witness_composite = _lor(witness_composite, _land(_lnot(passed_witness), hit_one));
-      passed_witness = _lor(passed_witness, hit_nm1);
+      x = (x * x) % n_secret;
+      uint64e_t hit_one = (x == 1);
+      uint64e_t hit_nm1 = (x == nm1_secret);
+      witness_composite = (witness_composite || (!passed_witness && hit_one));
+      passed_witness = (passed_witness || hit_nm1);
     }
 
-    witness_composite = _lor(witness_composite, _lnot(passed_witness));
-    composite_secret = _lor(composite_secret, witness_composite);
+    witness_composite = (witness_composite || !passed_witness);
+    composite_secret = (composite_secret || witness_composite);
   }
 
-  prim_secret = _cmov(composite_secret, _enc(PT_COMPOSITE), _enc(PT_PRIME_LIKELY));
+  prim_secret = cmov(composite_secret, (uint64e_t)PT_COMPOSITE, PT_PRIME_LIKELY);
   return prim_secret;
 }
 
@@ -151,7 +151,7 @@ main(void)
   val = 3;
   for (uint32_t i = 0; i < NTESTS; ++i)
   {
-    q[i].val = _enc(val);
+    q[i].val = val;
     q[i].prim = miller_rabin_secret(q[i].val, val);
     q_head++;
     val = (uint32_t)libmin_rand();
@@ -173,7 +173,7 @@ main(void)
     if (prim == PT_PRIME)
       libmin_printf("Value %lu is `prime' with failure probability (0)\n", val);
     else if (prim == PT_PRIME_LIKELY)
-      libmin_printf("Value %lu is `likely prime' with failure probability (1 in %.0lf)\n", val, libmin_pow(4.0, K));
+      libmin_printf("Value %lu is `likely prime' with failure probability (1 in %lu)\n", val, 4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull);
   }
 
   libmin_success();

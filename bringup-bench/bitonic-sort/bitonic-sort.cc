@@ -38,9 +38,8 @@ bitonic_sort(uint64e_t *data, unsigned size)
       for (unsigned i = 0; i < size; i++)
       {
         unsigned l = (i ^ j);
-        uint64e_t pred = ((uint64e_t)(l > i) &&
-                          (((uint64e_t)((i & k) == 0) &&_slt(data[l], data[i]))
-                           || ((uint64e_t)((i & k) != 0) && _slt(data[i], data[l])))
+        uint64e_t pred = ((l > i) &&
+                          (((uint64e_t)((i & k) == 0) && (data[l] < data[i])) || ((uint64e_t)((i & k) != 0) && (data[i] < data[l])))
                          );
         uint64e_t tmp = data[i];
         data[i] = cmov(pred, data[l], data[i]);

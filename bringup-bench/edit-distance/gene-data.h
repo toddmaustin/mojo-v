@@ -1,5 +1,5 @@
 // tuck the test data at the end of the file
-char *gene_data[] =
+const char *gene_data[] =
 {
   "TTAAGCAA","CCTTGCCT","AACAGAAT","GCGTGGCT","GTTGTAAT","CCAGTGTG","GCCACCAT","TACCGTTA","ATGGCTGA","GACTTACC",
   "GGCCTAGC","AAAACAGA","TGGACCCC","AAGATACG","AGACCAGT","AAGTTCTA","CGAGTTAG","CGGATACG","TGTTAGGG","CAACTTTG",

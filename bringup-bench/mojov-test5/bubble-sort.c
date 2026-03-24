@@ -60,9 +60,7 @@ print_data(double *data, unsigned size)
   libmin_printf("DATA DUMP:\n");
   for (unsigned i=0; i < size; i++)
   {
-    libmin_printf("  data[%4u] = %.20lf, ct =[", i, data[i]);
-    secret_print(secret_data[i]);
-    libmin_printf("]\n");
+    libmin_printf("  data[%4u] = %.20lf\n", i, data[i]);
   }
 }
 

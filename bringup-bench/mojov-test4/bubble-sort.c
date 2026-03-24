@@ -29,9 +29,7 @@ print_data(uint64_t *data, unsigned size)
   libmin_printf("DATA DUMP:\n");
   for (unsigned i=0; i < size; i++)
   {
-    libmin_printf("  data[%4u] = %10ld, ct =[", i, data[i]);
-    secret_print(secret_data[i]);
-    libmin_printf("]\n");
+    libmin_printf("  data[%4u] = %10ld\n", i, data[i]);
   }
 }
 
