@@ -81,6 +81,9 @@ public:
   /* Encrypts a plain int after promoting it to uint64_t.
    * Example: uint64e_t v(5); */
   uint64e_t(int plain) : value_(_enc(static_cast<value_type>(plain))) {}
+  /* Converts an encrypted FP64 wrapper to encrypted uint64_t.
+   * Example: uint64e_t bits(fp); */
+  uint64e_t(const fp64e_t& plain);
 
   /* Replaces this wrapper with a raw encrypted integer payload.
    * Example: v = _enc(9u); */
@@ -231,6 +234,9 @@ public:
   /* Encrypts a plain double into an fp64e_t wrapper.
    * Example: fp64e_t v(2.5); */
   fp64e_t(value_type plain) : value_(_fenc(plain)) {}
+  /* Converts an encrypted uint64_t wrapper to encrypted FP64.
+   * Example: fp64e_t fp(count); */
+  fp64e_t(const uint64e_t& plain);
 
   /* Replaces this wrapper with a raw encrypted FP64 payload.
    * Example: v = _fenc(3.5); */
@@ -292,6 +298,11 @@ public:
 private:
   storage_type value_;
 };
+
+/* Converts encrypted FP64 to encrypted uint64_t using Mojo-V conversion. */
+inline uint64e_t::uint64e_t(const fp64e_t& plain) : value_(_fcvt_lu_d(plain.encrypted())) {}
+/* Converts encrypted uint64_t to encrypted FP64 using Mojo-V conversion. */
+inline fp64e_t::fp64e_t(const uint64e_t& plain) : value_(_fcvt_du(plain.encrypted())) {}
 
 /* Returns the encrypted sum of two encrypted integers.
  * Example: uint64e_t total = a + b; */
@@ -554,11 +565,53 @@ inline uint64e_t operator>=(double lhs, const fp64e_t& rhs) { return uint64e_t(_
 inline uint64e_t cmov(const uint64e_t& predicate, const uint64e_t& if_true, const uint64e_t& if_false) {
   return uint64e_t(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
 }
+/* Selects one encrypted integer or another based on a plain predicate. */
+inline uint64e_t cmov(uint64_t predicate, const uint64e_t& if_true, const uint64e_t& if_false) {
+  return cmov(uint64e_t(predicate), if_true, if_false);
+}
+inline uint64e_t cmov(const uint64e_t& predicate, uint64_t if_true, const uint64e_t& if_false) {
+  return cmov(predicate, uint64e_t(if_true), if_false);
+}
+inline uint64e_t cmov(const uint64e_t& predicate, const uint64e_t& if_true, uint64_t if_false) {
+  return cmov(predicate, if_true, uint64e_t(if_false));
+}
+inline uint64e_t cmov(uint64_t predicate, uint64_t if_true, const uint64e_t& if_false) {
+  return cmov(uint64e_t(predicate), uint64e_t(if_true), if_false);
+}
+inline uint64e_t cmov(uint64_t predicate, const uint64e_t& if_true, uint64_t if_false) {
+  return cmov(uint64e_t(predicate), if_true, uint64e_t(if_false));
+}
+inline uint64e_t cmov(const uint64e_t& predicate, uint64_t if_true, uint64_t if_false) {
+  return cmov(predicate, uint64e_t(if_true), uint64e_t(if_false));
+}
+inline uint64e_t cmov(uint64_t predicate, uint64_t if_true, uint64_t if_false) {
+  return cmov(uint64e_t(predicate), uint64e_t(if_true), uint64e_t(if_false));
+}
 
-/* Selects one encrypted FP64 or another based on an encrypted predicate.
- * Example: fp64e_t chosen = cmov(pred, on_true, on_false); */
+/* Selects one encrypted FP64 or another based on encrypted/plain predicate. */
 inline fp64e_t cmov(const uint64e_t& predicate, const fp64e_t& if_true, const fp64e_t& if_false) {
   return fp64e_t(_fcmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
+}
+inline fp64e_t cmov(uint64_t predicate, const fp64e_t& if_true, const fp64e_t& if_false) {
+  return cmov(uint64e_t(predicate), if_true, if_false);
+}
+inline fp64e_t cmov(const uint64e_t& predicate, double if_true, const fp64e_t& if_false) {
+  return cmov(predicate, fp64e_t(if_true), if_false);
+}
+inline fp64e_t cmov(const uint64e_t& predicate, const fp64e_t& if_true, double if_false) {
+  return cmov(predicate, if_true, fp64e_t(if_false));
+}
+inline fp64e_t cmov(uint64_t predicate, double if_true, const fp64e_t& if_false) {
+  return cmov(uint64e_t(predicate), fp64e_t(if_true), if_false);
+}
+inline fp64e_t cmov(uint64_t predicate, const fp64e_t& if_true, double if_false) {
+  return cmov(uint64e_t(predicate), if_true, fp64e_t(if_false));
+}
+inline fp64e_t cmov(const uint64e_t& predicate, double if_true, double if_false) {
+  return cmov(predicate, fp64e_t(if_true), fp64e_t(if_false));
+}
+inline fp64e_t cmov(uint64_t predicate, double if_true, double if_false) {
+  return cmov(uint64e_t(predicate), fp64e_t(if_true), fp64e_t(if_false));
 }
 
 /* Returns the encrypted absolute value of an encrypted FP64.
