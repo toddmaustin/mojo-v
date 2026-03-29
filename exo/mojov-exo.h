@@ -28,6 +28,7 @@ typedef EXO_FP64E_STORAGE_TYPE _fp64e_t;
 namespace exo {
 
 class uint64e_t;
+class int64e_t;
 class fp64e_t;
 
 namespace detail {
@@ -84,6 +85,9 @@ public:
   /* Converts an encrypted FP64 wrapper to encrypted uint64_t.
    * Example: uint64e_t bits(fp); */
   uint64e_t(const fp64e_t& plain);
+  /* Converts an encrypted int64 wrapper to encrypted uint64_t without changing bits.
+   * Example: uint64e_t bits(signed_bits); */
+  uint64e_t(const int64e_t& plain);
 
   /* Replaces this wrapper with a raw encrypted integer payload.
    * Example: v = _enc(9u); */
@@ -201,6 +205,75 @@ private:
   storage_type value_;
 };
 
+/* Wraps a Mojo-V encrypted signed 64-bit integer so C++ expressions map to intrinsics.
+ * Example: int64e_t total = -4; */
+class int64e_t {
+public:
+  using value_type = int64_t;
+  using storage_type = detail::uint_storage_t;
+
+  int64e_t() : value_(detail::zero_uint64e()) {}
+  ~int64e_t() = default;
+
+  int64e_t(const int64e_t&) = default;
+  int64e_t(int64e_t&&) = default;
+  int64e_t& operator=(const int64e_t&) = default;
+  int64e_t& operator=(int64e_t&&) = default;
+
+  int64e_t(storage_type encrypted) : value_(encrypted) {}
+  int64e_t(value_type plain) : value_(_enc(static_cast<uint64_t>(plain))) {}
+  int64e_t(int plain) : value_(_enc(static_cast<uint64_t>(plain))) {}
+  int64e_t(const uint64e_t& plain);
+  int64e_t(const fp64e_t& plain);
+
+  int64e_t& operator=(storage_type encrypted) {
+    value_ = encrypted;
+    return *this;
+  }
+  int64e_t& operator=(value_type plain) {
+    value_ = _enc(static_cast<uint64_t>(plain));
+    return *this;
+  }
+
+  const storage_type& encrypted() const { return value_; }
+  storage_type& encrypted() { return value_; }
+  operator const storage_type&() const { return value_; }
+
+  int64e_t operator+() const { return *this; }
+  int64e_t operator-() const { return int64e_t(_neg(value_)); }
+  int64e_t operator~() const { return int64e_t(_comp(value_)); }
+  int64e_t operator!() const { return int64e_t(_lnot(value_)); }
+
+  int64e_t& operator+=(const int64e_t& rhs) { value_ = _add(value_, rhs.value_); return *this; }
+  int64e_t& operator+=(value_type rhs) { value_ = _addi(value_, static_cast<uint64_t>(rhs)); return *this; }
+  int64e_t& operator-=(const int64e_t& rhs) { value_ = _sub(value_, rhs.value_); return *this; }
+  int64e_t& operator-=(value_type rhs) { value_ = _subi(value_, static_cast<uint64_t>(rhs)); return *this; }
+  int64e_t& operator*=(const int64e_t& rhs) { value_ = _mul(value_, rhs.value_); return *this; }
+  int64e_t& operator*=(value_type rhs) { value_ = _muli(value_, rhs); return *this; }
+  int64e_t& operator/=(const int64e_t& rhs) { value_ = _div(value_, rhs.value_); return *this; }
+  int64e_t& operator/=(value_type rhs) { value_ = _divi(value_, rhs); return *this; }
+  int64e_t& operator%=(const int64e_t& rhs) { value_ = _mod(value_, rhs.value_); return *this; }
+  int64e_t& operator%=(value_type rhs) { value_ = _modi(value_, rhs); return *this; }
+  int64e_t& operator&=(const int64e_t& rhs) { value_ = _and(value_, rhs.value_); return *this; }
+  int64e_t& operator&=(value_type rhs) { value_ = _andi(value_, static_cast<uint64_t>(rhs)); return *this; }
+  int64e_t& operator|=(const int64e_t& rhs) { value_ = _or(value_, rhs.value_); return *this; }
+  int64e_t& operator|=(value_type rhs) { value_ = _ori(value_, static_cast<uint64_t>(rhs)); return *this; }
+  int64e_t& operator^=(const int64e_t& rhs) { value_ = _xor(value_, rhs.value_); return *this; }
+  int64e_t& operator^=(value_type rhs) { value_ = _xori(value_, static_cast<uint64_t>(rhs)); return *this; }
+  int64e_t& operator<<=(const int64e_t& rhs) { value_ = _sll(value_, rhs.value_); return *this; }
+  int64e_t& operator<<=(value_type rhs) { value_ = _slli(value_, static_cast<uint64_t>(rhs)); return *this; }
+  int64e_t& operator>>=(const int64e_t& rhs) { value_ = _sra(value_, rhs.value_); return *this; }
+  int64e_t& operator>>=(value_type rhs) { value_ = _srai(value_, static_cast<uint64_t>(rhs)); return *this; }
+
+  int64e_t& operator++() { value_ = _addi(value_, 1u); return *this; }
+  int64e_t operator++(int) { int64e_t tmp(*this); ++(*this); return tmp; }
+  int64e_t& operator--() { value_ = _subi(value_, 1u); return *this; }
+  int64e_t operator--(int) { int64e_t tmp(*this); --(*this); return tmp; }
+
+private:
+  storage_type value_;
+};
+
 /* Wraps a Mojo-V encrypted FP64 value so C++ floating-point expressions map to intrinsics.
  * Example: fp64e_t score = 1.5; */
 class fp64e_t {
@@ -237,6 +310,9 @@ public:
   /* Converts an encrypted uint64_t wrapper to encrypted FP64.
    * Example: fp64e_t fp(count); */
   fp64e_t(const uint64e_t& plain);
+  /* Converts an encrypted int64_t wrapper to encrypted FP64.
+   * Example: fp64e_t fp(delta); */
+  fp64e_t(const int64e_t& plain);
 
   /* Replaces this wrapper with a raw encrypted FP64 payload.
    * Example: v = _fenc(3.5); */
@@ -301,8 +377,17 @@ private:
 
 /* Converts encrypted FP64 to encrypted uint64_t using Mojo-V conversion. */
 inline uint64e_t::uint64e_t(const fp64e_t& plain) : value_(_fcvt_lu_d(plain.encrypted())) {}
+/* Converts encrypted uint64_t to encrypted int64_t without changing bits. */
+inline int64e_t::int64e_t(const uint64e_t& plain) : value_(plain.encrypted()) {}
+/* Converts encrypted FP64 to encrypted int64_t using Mojo-V conversion. */
+inline int64e_t::int64e_t(const fp64e_t& plain) : value_(_fcvt_l_d(plain.encrypted())) {}
 /* Converts encrypted uint64_t to encrypted FP64 using Mojo-V conversion. */
 inline fp64e_t::fp64e_t(const uint64e_t& plain) : value_(_fcvt_du(plain.encrypted())) {}
+/* Converts encrypted int64_t to encrypted FP64 using Mojo-V conversion. */
+inline fp64e_t::fp64e_t(const int64e_t& plain) : value_(_fcvt_d_l(plain.encrypted())) {}
+
+/* Converts encrypted int64_t to encrypted uint64_t without changing bits. */
+inline uint64e_t::uint64e_t(const int64e_t& plain) : value_(plain.encrypted()) {}
 
 /* Returns the encrypted sum of two encrypted integers.
  * Example: uint64e_t total = a + b; */
@@ -468,6 +553,62 @@ inline uint64e_t operator>=(const uint64e_t& lhs, uint64_t rhs) { return uint64e
  * Example: uint64e_t ge = (7u >= a); */
 inline uint64e_t operator>=(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sleui(rhs.encrypted(), lhs)); }
 
+inline int64e_t operator+(int64e_t lhs, const int64e_t& rhs) { lhs += rhs; return lhs; }
+inline int64e_t operator+(int64e_t lhs, int64_t rhs) { lhs += rhs; return lhs; }
+inline int64e_t operator+(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) + rhs; }
+inline int64e_t operator-(int64e_t lhs, const int64e_t& rhs) { lhs -= rhs; return lhs; }
+inline int64e_t operator-(int64e_t lhs, int64_t rhs) { lhs -= rhs; return lhs; }
+inline int64e_t operator-(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) - rhs; }
+inline int64e_t operator*(int64e_t lhs, const int64e_t& rhs) { lhs *= rhs; return lhs; }
+inline int64e_t operator*(int64e_t lhs, int64_t rhs) { lhs *= rhs; return lhs; }
+inline int64e_t operator*(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) * rhs; }
+inline int64e_t operator/(int64e_t lhs, const int64e_t& rhs) { lhs /= rhs; return lhs; }
+inline int64e_t operator/(int64e_t lhs, int64_t rhs) { lhs /= rhs; return lhs; }
+inline int64e_t operator/(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) / rhs; }
+inline int64e_t operator%(int64e_t lhs, const int64e_t& rhs) { lhs %= rhs; return lhs; }
+inline int64e_t operator%(int64e_t lhs, int64_t rhs) { lhs %= rhs; return lhs; }
+inline int64e_t operator%(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) % rhs; }
+inline int64e_t operator&(int64e_t lhs, const int64e_t& rhs) { lhs &= rhs; return lhs; }
+inline int64e_t operator&(int64e_t lhs, int64_t rhs) { lhs &= rhs; return lhs; }
+inline int64e_t operator&(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) & rhs; }
+inline int64e_t operator|(int64e_t lhs, const int64e_t& rhs) { lhs |= rhs; return lhs; }
+inline int64e_t operator|(int64e_t lhs, int64_t rhs) { lhs |= rhs; return lhs; }
+inline int64e_t operator|(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) | rhs; }
+inline int64e_t operator^(int64e_t lhs, const int64e_t& rhs) { lhs ^= rhs; return lhs; }
+inline int64e_t operator^(int64e_t lhs, int64_t rhs) { lhs ^= rhs; return lhs; }
+inline int64e_t operator^(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) ^ rhs; }
+inline int64e_t operator<<(int64e_t lhs, const int64e_t& rhs) { lhs <<= rhs; return lhs; }
+inline int64e_t operator<<(int64e_t lhs, int64_t rhs) { lhs <<= rhs; return lhs; }
+inline int64e_t operator<<(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) << rhs; }
+inline int64e_t operator>>(int64e_t lhs, const int64e_t& rhs) { lhs >>= rhs; return lhs; }
+inline int64e_t operator>>(int64e_t lhs, int64_t rhs) { lhs >>= rhs; return lhs; }
+inline int64e_t operator>>(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) >> rhs; }
+inline int64e_t operator&&(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_land(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator&&(const int64e_t& lhs, int64_t rhs) { return int64e_t(_landi(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
+inline int64e_t operator&&(int64_t lhs, const int64e_t& rhs) { return int64e_t(_landi(rhs.encrypted(), static_cast<uint64_t>(lhs))); }
+inline int64e_t operator||(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_lor(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator||(const int64e_t& lhs, int64_t rhs) { return int64e_t(_lori(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
+inline int64e_t operator||(int64_t lhs, const int64e_t& rhs) { return int64e_t(_lori(rhs.encrypted(), static_cast<uint64_t>(lhs))); }
+
+inline int64e_t operator==(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_seq(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator==(const int64e_t& lhs, int64_t rhs) { return int64e_t(_seqi(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
+inline int64e_t operator==(int64_t lhs, const int64e_t& rhs) { return rhs == lhs; }
+inline int64e_t operator!=(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sne(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator!=(const int64e_t& lhs, int64_t rhs) { return int64e_t(_snei(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
+inline int64e_t operator!=(int64_t lhs, const int64e_t& rhs) { return rhs != lhs; }
+inline int64e_t operator<(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_slt(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator<(const int64e_t& lhs, int64_t rhs) { return int64e_t(_slti(lhs.encrypted(), rhs)); }
+inline int64e_t operator<(int64_t lhs, const int64e_t& rhs) { return int64e_t(_sgti(rhs.encrypted(), lhs)); }
+inline int64e_t operator<=(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sle(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator<=(const int64e_t& lhs, int64_t rhs) { return int64e_t(_slei(lhs.encrypted(), rhs)); }
+inline int64e_t operator<=(int64_t lhs, const int64e_t& rhs) { return int64e_t(_sgei(rhs.encrypted(), lhs)); }
+inline int64e_t operator>(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sgt(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator>(const int64e_t& lhs, int64_t rhs) { return int64e_t(_sgti(lhs.encrypted(), rhs)); }
+inline int64e_t operator>(int64_t lhs, const int64e_t& rhs) { return int64e_t(_slti(rhs.encrypted(), lhs)); }
+inline int64e_t operator>=(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sge(lhs.encrypted(), rhs.encrypted())); }
+inline int64e_t operator>=(const int64e_t& lhs, int64_t rhs) { return int64e_t(_sgei(lhs.encrypted(), rhs)); }
+inline int64e_t operator>=(int64_t lhs, const int64e_t& rhs) { return int64e_t(_slei(rhs.encrypted(), lhs)); }
+
 /* Returns the encrypted sum of two encrypted FP64 values.
  * Example: fp64e_t total = a + b; */
 inline fp64e_t operator+(fp64e_t lhs, const fp64e_t& rhs) { lhs += rhs; return lhs; }
@@ -624,6 +765,7 @@ inline fp64e_t fabs(const fp64e_t& value) {
 
 using exo::cmov;
 using exo::fp64e_t;
+using exo::int64e_t;
 using exo::uint64e_t;
 
 #endif  // __cplusplus

@@ -123,6 +123,11 @@ static inline uint64_t mojov_decrypt_fast_u64(simon_state_t *simon_state, mojov_
   return ptval.pt.val;
 }
 
+static inline int64_t mojov_decrypt_fast_i64(simon_state_t *simon_state, mojov_mem_fast_u64_t ctval, uint64_t sig)
+{
+  return (int64_t)mojov_decrypt_fast_u64(simon_state, ctval, sig);
+}
+
 static inline double mojov_decrypt_fast_fp64(simon_state_t *simon_state, mojov_mem_fast_fp64_t ctval, uint64_t sig)
 {
   mojov_mem_fast_fp64_t ptval;
