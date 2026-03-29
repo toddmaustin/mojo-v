@@ -37,6 +37,34 @@ _fenc(double src)
   return dst;
 }
 
+/* Converts an encrypted unsigned 64-bit integer to encrypted FP64. */
+static inline _fp64e_t
+_fcvt_du(_uint64e_t src)
+{
+  _fp64e_t dst;
+  __asm__ volatile (
+    LDE(x28, %1, 0)
+    "fcvt.d.lu f28, x28\n\t"
+    FSDE(f28, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "x28", "f28", "memory");
+  return dst;
+}
+
+/* Converts an encrypted FP64 to encrypted unsigned 64-bit integer. */
+static inline _uint64e_t
+_fcvt_lu_d(_fp64e_t src)
+{
+  _uint64e_t dst;
+  __asm__ volatile (
+    FLDE(f28, %1, 0)
+    "fcvt.lu.d x28, f28\n\t"
+    SDE(x28, %0, 0)
+    : : "r"(&dst), "r"(&src)
+    : "x28", "f28", "memory");
+  return dst;
+}
+
 #define __MOJOV_DEF_BIN_U64(name, insn) \
 { \
   _uint64e_t dst; \
