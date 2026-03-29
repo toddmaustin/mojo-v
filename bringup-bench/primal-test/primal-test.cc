@@ -7,9 +7,9 @@ typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
 
 #define K 16ull
-#define PT_COMPOSITE 0
-#define PT_PRIME 1
-#define PT_PRIME_LIKELY 2
+#define PT_COMPOSITE 0ul
+#define PT_PRIME 1ul
+#define PT_PRIME_LIKELY 2ul
 #define Q_SIZE NTESTS
 #define NTESTS 200
 
@@ -119,8 +119,7 @@ miller_rabin_secret(uint64e_t n_enc, uint64_t n)
     composite_secret = (composite_secret || witness_composite);
   }
 
-  prim_secret = cmov(composite_secret, (uint64e_t)PT_COMPOSITE, PT_PRIME_LIKELY);
-  return prim_secret;
+  return cmov(composite_secret, PT_COMPOSITE, PT_PRIME_LIKELY);
 }
 
 int

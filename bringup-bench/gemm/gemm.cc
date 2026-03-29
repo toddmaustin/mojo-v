@@ -197,7 +197,7 @@ init_fp_matrices(void)
 }
 
 static void
-double_gemm_kernel(void)
+fp_gemm_kernel(void)
 {
   for (int i = 0; i < M; i++)
   {
@@ -214,7 +214,7 @@ double_gemm_kernel(void)
 }
 
 static void
-double_gemm_reference(void)
+fp_gemm_reference(void)
 {
   for (int i = 0; i < M; i++)
   {
@@ -234,9 +234,8 @@ double_gemm_reference(void)
   }
 }
 
-#if 0
 static uint64e_t
-double_checksum(void)
+fp_checksum(void)
 {
   uint64e_t checksum = 0;
   const uint64_t mod = 1000000007ul;
@@ -249,7 +248,7 @@ double_checksum(void)
   {
     for (int j = 0; j < N; j++)
     {
-      uint64e_t scaled = DC[i][j] * 256.0;
+      uint64e_t scaled = (uint64e_t)(DC[i][j] * 256.0);
       uint64e_t term = scaled + 100000l;
       checksum = ((checksum * 131ul) + term) % mod;
     }
@@ -257,7 +256,6 @@ double_checksum(void)
 
   return checksum;
 }
-#endif
 
 static int
 run_fp_gemm(void)
@@ -265,10 +263,10 @@ run_fp_gemm(void)
   init_fp_matrices();
 
   libtarg_start_perf();
-  double_gemm_kernel();
+  fp_gemm_kernel();
   libtarg_stop_perf();
 
-  double_gemm_reference();
+  fp_gemm_reference();
 
   for (int i = 0; i < M; i++)
   {
@@ -284,7 +282,7 @@ run_fp_gemm(void)
     }
   }
 
-  // libmin_printf("INFO: fp64 GEMM verified,  checksum=0x%08lx\n", _DEC_U64(fp_checksum()));
+  libmin_printf("INFO: fp64 GEMM verified,  checksum=0x%08lx\n", _DEC_U64(fp_checksum()));
   return 0;
 }
 

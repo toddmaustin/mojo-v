@@ -96,7 +96,7 @@ rabinkarp_search(
   {
     // Match found?
     uint64e_t found = (pattern_hash == window_hash);
-    res[i] = cmov(found, (uint64e_t)1, (uint64e_t)0);
+    res[i] = cmov(found, 1lu, 0lu);
     match_count = cmov(found, match_count + 1, match_count);
 
     if (i < (text_len - pattern_len))

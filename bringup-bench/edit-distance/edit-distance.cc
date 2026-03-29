@@ -38,7 +38,7 @@ EditDistance(uint64e_t *str1, uint64e_t *str2)
   {
     for (j = 0; j < GENE_LEN; j++ )
     {
-      uint64e_t edit = cmov(str1[i] == str2[j], (uint64e_t)0, (uint64e_t)1);
+      uint64e_t edit = cmov(str1[i] == str2[j], 0lu, 1lu);
       edit_matrix[i + 1][j + 1] = min3(edit_matrix[i][j+1] + 1, edit_matrix[i+1][j] + 1, edit_matrix[i][j] + edit);
     }
   }

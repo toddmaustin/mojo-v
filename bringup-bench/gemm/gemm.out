@@ -13,5 +13,5 @@ Decrypted data_contract_t fields:
   format_sel  = 0 (fast)
 After enable, mprivregcfg = 0x13, (mojov_en:t, key_valid:t, format_sel:fast, mojov_ver:1)
 INFO: int64 GEMM verified, checksum=0x04d64eae
-INFO: fp64 GEMM verified,  checksum=0x0d35ce22
+INFO: fp64 GEMM verified,  checksum=0x2c5ddf10
 INFO: all GEMM tests passed
