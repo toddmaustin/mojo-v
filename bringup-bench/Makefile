@@ -173,7 +173,9 @@ else ifeq ($(TARGET), mojov)
 TARGET_CC = /opt/riscv/bin/riscv64-unknown-elf-gcc -std=c23
 TARGET_CXX = /opt/riscv/bin/riscv64-unknown-elf-g++
 TARGET_AR = riscv64-unknown-elf-ar
-TARGET_CFLAGS = -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -static -Wall -fvisibility=hidden -nostdlib -ffreestanding -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31 -mcmodel=medany # -Wl,--no-relax -MMD -std=c23
+TARGET_REGOUT = -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31 -ffixed-f24 -ffixed-f25 -ffixed-f26 -ffixed-f27 -ffixed-f28 -ffixed-f29 -ffixed-f30 -ffixed-f31
+TARGET_CFLAGS = -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -Wall -fvisibility=hidden -nostdlib -ffreestanding -mcmodel=medany $(TARGET_REGOUT)# -Wl,--no-relax -MMD -std=c23
+TARGET_LFLAGS = -static -march=rv64gc_zicond -mabi=lp64 -fvisibility=hidden -nostdlib -ffreestanding -mcmodel=medany
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv64imac/lp64/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --mojov-pk=../target/pk-file.pem --mojov-sk=../target/sk-file.pem --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000 $(LOCAL_SIMOPTS)
 TARGET_DIFF = diff
@@ -203,7 +205,8 @@ endif
 
 TARGET_BMARKS = $(filter-out $(TARGET_EXCLUDES), $(BMARKS))
 
-CFLAGS = -Wall $(OPT_CFLAGS) -Wno-strict-aliasing $(TARGET_CFLAGS) $(LOCAL_CFLAGS)
+CFLAGS = $(OPT_CFLAGS) -Wno-strict-aliasing $(TARGET_CFLAGS) $(LOCAL_CFLAGS)
+LFLAGS = $(OPT_LFLAGS) $(TARGET_LFLAGS) $(LOCAL_LFLAGS)
 OBJS = $(LOCAL_OBJS) ../target/libtarg.o
 __LIBMIN_SRCS = libmin_abs.c libmin_acos.c libmin_asin.c libmin_atan.c libmin_atof.c \
   libmin_atoi.c libmin_atol.c libmin_ctype.c libmin_exp.c \
@@ -256,7 +259,7 @@ else ifeq ($(TARGET), spike32-pk)
 else ifeq ($(TARGET), spike64-pk)
 	$(TARGET_CC) $(CFLAGS) -o $@ $^ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), mojov)
-	$(TARGET_CC) $(CFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -nostartfiles -o $@ $(LIBS) $(TARGET_LIBS)
+	$(TARGET_CC) $(LFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -nostartfiles -o $@ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), mojov-llvm)
 	$(TARGET_CC) $(CFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -nostartfiles -o $@ $(LIBS) $(TARGET_LIBS)
 else
@@ -302,7 +305,7 @@ clean-all all-clean:
 spike-build:
 	$(MAKE) -C target clean build
 
-MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-pctests bubble-sort edit-distance nr-solver primal-test bitonic-sort # mojov-sectests
+MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-pctests bubble-sort edit-distance nr-solver primal-test bitonic-sort rabinkarp-search knapsack # mojov-sectests
 
 mojov-tests:
 	@for _BMARK in $(MOJOV_BMARKS) ; do \
