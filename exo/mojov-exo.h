@@ -44,7 +44,63 @@ static_assert(std::is_trivially_copyable<fp_storage_t>::value,
 inline uint_storage_t zero_uint64e() { return _enc(0u); }
 inline fp_storage_t zero_fp64e() { return _fenc(0.0); }
 
+inline simon_state_t& debug_simon_state() {
+  static simon_state_t state;
+  return state;
+}
+
+inline uint64_t& debug_contract_sig() {
+  static uint64_t sig = 0;
+  return sig;
+}
+
+inline bool& debug_context_ready() {
+  static bool ready = false;
+  return ready;
+}
+
+inline void debug_context_or_die() {
+  if (!debug_context_ready()) {
+    libmin_printf("ERROR: exo::debug_context() must be initialized before calling decrypt().\n");
+    libmin_fail(-1);
+  }
+}
+
+inline uint64_t decrypt_storage(const mojov_mem_fast_u64_t& value) {
+  return mojov_decrypt_fast_u64(&debug_simon_state(), value, debug_contract_sig());
+}
+
+inline uint64_t decrypt_storage(const mojov_mem_strong_u64_t& value) {
+  return mojov_decrypt_strong_u64(&debug_simon_state(), value, debug_contract_sig());
+}
+
+inline uint64_t decrypt_storage(const mojov_mem_proofcarrying_u64_t& value) {
+  return mojov_decrypt_proofcarrying_u64(&debug_simon_state(), value, debug_contract_sig());
+}
+
+inline double decrypt_storage(const mojov_mem_fast_fp64_t& value) {
+  return mojov_decrypt_fast_fp64(&debug_simon_state(), value, debug_contract_sig());
+}
+
+inline double decrypt_storage(const mojov_mem_strong_fp64_t& value) {
+  return mojov_decrypt_strong_fp64(&debug_simon_state(), value, debug_contract_sig());
+}
+
+inline double decrypt_storage(const mojov_mem_proofcarrying_fp64_t& value) {
+  return mojov_decrypt_proofcarrying_fp64(&debug_simon_state(), value, debug_contract_sig());
+}
+
 }  // namespace detail
+
+/* Initializes decrypt() support used by encrypted wrappers during debug.
+ * Returns 1 when key expansion succeeds and 0 otherwise.
+ * Example: int ok = debug_context(SIMON128_KEY, contract_sig); */
+inline int debug_context(uint128_t simon128_key, uint64_t contract_sig) {
+  const bool expanded = simon_128_128_keyexpand(&detail::debug_simon_state(), simon128_key, 0);
+  detail::debug_contract_sig() = contract_sig;
+  detail::debug_context_ready() = expanded;
+  return expanded ? 1 : 0;
+}
 
 /* Wraps a Mojo-V encrypted 64-bit integer so C++ expressions map to intrinsics.
  * Example: uint64e_t total = 4u; */
@@ -117,6 +173,12 @@ public:
   /* Returns the current encrypted value unchanged.
    * Example: uint64e_t same = +v; */
   uint64e_t operator+() const { return *this; }
+  /* Decrypts the value for debug/printing after debug_context() succeeds.
+   * Example: libmin_printf("%lu\n", v.decrypt()); */
+  value_type decrypt() const {
+    detail::debug_context_or_die();
+    return detail::decrypt_storage(value_);
+  }
   /* Returns the encrypted two's-complement negation of this value.
    * Example: uint64e_t neg = -v; */
   uint64e_t operator-() const { return uint64e_t(_neg(value_)); }
@@ -240,6 +302,10 @@ public:
   operator const storage_type&() const { return value_; }
 
   int64e_t operator+() const { return *this; }
+  value_type decrypt() const {
+    detail::debug_context_or_die();
+    return static_cast<value_type>(detail::decrypt_storage(value_));
+  }
   int64e_t operator-() const { return int64e_t(_neg(value_)); }
   int64e_t operator~() const { return int64e_t(_comp(value_)); }
   int64e_t operator!() const { return int64e_t(_lnot(value_)); }
@@ -342,6 +408,12 @@ public:
   /* Returns the current encrypted floating-point value unchanged.
    * Example: fp64e_t same = +v; */
   fp64e_t operator+() const { return *this; }
+  /* Decrypts the value for debug/printing after debug_context() succeeds.
+   * Example: libmin_printf("%lf\n", v.decrypt()); */
+  value_type decrypt() const {
+    detail::debug_context_or_die();
+    return detail::decrypt_storage(value_);
+  }
   /* Returns the encrypted arithmetic negation of this floating-point value.
    * Example: fp64e_t neg = -v; */
   fp64e_t operator-() const { return fp64e_t(_fneg(value_)); }
@@ -790,6 +862,7 @@ inline fp64e_t fabs(const fp64e_t& value) {
 }  // namespace exo
 
 using exo::cmov;
+using exo::debug_context;
 using exo::fp64e_t;
 using exo::int64e_t;
 using exo::uint64e_t;
