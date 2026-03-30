@@ -729,6 +729,32 @@ inline uint64e_t cmov(uint64_t predicate, uint64_t if_true, uint64_t if_false) {
   return cmov(uint64e_t(predicate), uint64e_t(if_true), uint64e_t(if_false));
 }
 
+/* Selects one encrypted signed integer or another based on encrypted/plain predicate. */
+inline int64e_t cmov(const uint64e_t& predicate, const int64e_t& if_true, const int64e_t& if_false) {
+  return int64e_t(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
+}
+inline int64e_t cmov(uint64_t predicate, const int64e_t& if_true, const int64e_t& if_false) {
+  return cmov(uint64e_t(predicate), if_true, if_false);
+}
+inline int64e_t cmov(const uint64e_t& predicate, int64_t if_true, const int64e_t& if_false) {
+  return cmov(predicate, int64e_t(if_true), if_false);
+}
+inline int64e_t cmov(const uint64e_t& predicate, const int64e_t& if_true, int64_t if_false) {
+  return cmov(predicate, if_true, int64e_t(if_false));
+}
+inline int64e_t cmov(uint64_t predicate, int64_t if_true, const int64e_t& if_false) {
+  return cmov(uint64e_t(predicate), int64e_t(if_true), if_false);
+}
+inline int64e_t cmov(uint64_t predicate, const int64e_t& if_true, int64_t if_false) {
+  return cmov(uint64e_t(predicate), if_true, int64e_t(if_false));
+}
+inline int64e_t cmov(const uint64e_t& predicate, int64_t if_true, int64_t if_false) {
+  return cmov(predicate, int64e_t(if_true), int64e_t(if_false));
+}
+inline int64e_t cmov(uint64_t predicate, int64_t if_true, int64_t if_false) {
+  return cmov(uint64e_t(predicate), int64e_t(if_true), int64e_t(if_false));
+}
+
 /* Selects one encrypted FP64 or another based on encrypted/plain predicate. */
 inline fp64e_t cmov(const uint64e_t& predicate, const fp64e_t& if_true, const fp64e_t& if_false) {
   return fp64e_t(_fcmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
