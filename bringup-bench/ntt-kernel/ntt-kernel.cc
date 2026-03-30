@@ -10,48 +10,51 @@ typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
 
-#include <stdint.h>
-#include "libmin.h"
+#define _DEC_U64(X)   (mojov_decrypt_fast_u64(&simon_state, (X), CONTRACT_SIG))
+#define _DEC_I64(X)   (mojov_decrypt_fast_i64(&simon_state, (X), CONTRACT_SIG))
+#define _DEC_FP64(X)  (mojov_decrypt_fast_fp64(&simon_state, (X), CONTRACT_SIG))
 
 #define N 256
-#define MOD 998244353ul
-#define PRIMITIVE_ROOT 3ul
+#define MOD 998244353l
+#define PRIMITIVE_ROOT 3l
 
-static int64_t a[N];
-static int64_t b[N];
-static int64_t fa[N];
-static int64_t fb[N];
-static int64_t conv[N];
+static int64e_t a[N];
+static int64_t a_ref[N];
+static int64e_t b[N];
+static int64_t b_ref[N];
+static int64e_t fa[N];
+static int64e_t fb[N];
+static int64e_t conv[N];
 static int64_t ref[N];
 
-static int64_t
-mod_add(int64_t x, int64_t y)
+static int64e_t
+mod_add(int64e_t x, int64e_t y)
 {
   x += y;
-  if (x >= MOD)
-    x -= MOD;
+  uint64e_t pred = (x >= MOD);
+  x = (int64e_t)cmov(pred, (uint64e_t)(x-MOD), (uint64e_t)x);
   return x;
 }
 
-static int64_t
-mod_sub(int64_t x, int64_t y)
+static int64e_t
+mod_sub(int64e_t x, int64e_t y)
 {
   x -= y;
-  if (x < 0)
-    x += MOD;
+  uint64e_t pred = (x < 0);
+  x = (int64e_t)cmov(pred, (uint64e_t)(x+MOD), (uint64e_t)x);
   return x;
 }
 
-static int64_t
-mod_mul(int64_t x, int64_t y)
+static int64e_t
+mod_mul(int64e_t x, int64e_t y)
 {
   return (x * y) % MOD;
 }
 
-static int64_t
-mod_pow(int64_t base, int64_t exp)
+static int64e_t
+mod_pow(int64e_t base, int64_t exp)
 {
-  int64_t result = 1;
+  int64e_t result = 1;
 
   while (exp > 0)
   {
@@ -65,7 +68,7 @@ mod_pow(int64_t base, int64_t exp)
 }
 
 static void
-bit_reverse_permute(int64_t *data)
+bit_reverse_permute(int64e_t *data)
 {
   int j = 0;
 
@@ -83,7 +86,7 @@ bit_reverse_permute(int64_t *data)
 
     if (i < j)
     {
-      int64_t tmp = data[i];
+      int64e_t tmp = data[i];
       data[i] = data[j];
       data[j] = tmp;
     }
@@ -91,25 +94,25 @@ bit_reverse_permute(int64_t *data)
 }
 
 static void
-ntt(int64_t *data, int invert)
+ntt(int64e_t *data, int invert)
 {
   bit_reverse_permute(data);
 
   for (int len = 2; len <= N; len <<= 1)
   {
-    int64_t wlen = mod_pow(PRIMITIVE_ROOT, (MOD - 1) / len);
+    int64e_t wlen = mod_pow(PRIMITIVE_ROOT, (MOD - 1) / len);
 
     if (invert)
       wlen = mod_pow(wlen, MOD - 2);
 
     for (int i = 0; i < N; i += len)
     {
-      int64_t w = 1;
+      int64e_t w = 1;
 
       for (int j = 0; j < len / 2; j++)
       {
-        int64_t u = data[i + j];
-        int64_t v = mod_mul(data[i + j + len / 2], w);
+        int64e_t u = data[i + j];
+        int64e_t v = mod_mul(data[i + j + len / 2], w);
 
         data[i + j] = mod_add(u, v);
         data[i + j + len / 2] = mod_sub(u, v);
@@ -121,7 +124,7 @@ ntt(int64_t *data, int invert)
 
   if (invert)
   {
-    int64_t inv_n = mod_pow(N, MOD - 2);
+    int64e_t inv_n = mod_pow(N, MOD - 2);
 
     for (int i = 0; i < N; i++)
       data[i] = mod_mul(data[i], inv_n);
@@ -133,8 +136,8 @@ init_data(void)
 {
   for (int i = 0; i < N; i++)
   {
-    a[i] = (int64_t)((i * 17 + 5) % 257);
-    b[i] = (int64_t)(((i * i * 7) + (i * 3) + 11) % 257);
+    a[i] = a_ref[i] = (int64_t)((i * 17 + 5) % 257);
+    b[i] = b_ref[i] = (int64_t)(((i * i * 7) + (i * 3) + 11) % 257);
 
     fa[i] = a[i];
     fb[i] = b[i];
@@ -163,20 +166,20 @@ reference_cyclic_convolution(void)
     for (int j = 0; j < N; j++)
     {
       int idx = (i + j) % N;
-      ref[idx] += a[i] * b[j];
+      ref[idx] += a_ref[i] * b_ref[j];
       ref[idx] %= MOD;
     }
   }
 }
 
-static int64_t
+static uint64e_t
 compute_checksum(void)
 {
-  uint64_t checksum = 0;
+  uint64e_t checksum = 0;
   const uint64_t mod = 1000000007ul;
 
   for (int i = 0; i < N; i++)
-    checksum = ((checksum * 131ul) + (uint64_t)conv[i]) % mod;
+    checksum = ((checksum * 131ul) + (uint64e_t)conv[i]) % mod;
 
   return checksum;
 }
@@ -225,20 +228,15 @@ main(void)
 
   for (int i = 0; i < N; i++)
   {
-    if (conv[i] != ref[i])
+    if (_DEC_U64(conv[i] != ref[i]))
     {
-      libmin_printf(
-        "ERROR: NTT mismatch at %d, got %ld expected %ld\n",
-        i,
-        (long long)conv[i],
-        (long long)ref[i]);
+      libmin_printf("ERROR: NTT mismatch at %d, got %ld expected %ld\n", i, _DEC_I64(conv[i]), ref[i]);
       libmin_fail(1);
       return 1;
     }
   }
 
-  libmin_printf("INFO: NTT convolution verified, checksum=0x%08lx\n",
-                (unsigned long long)compute_checksum());
+  libmin_printf("INFO: NTT convolution verified, checksum=0x%08lx\n", _DEC_U64(compute_checksum()));
 
   libmin_success();
   return 0;
