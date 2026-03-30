@@ -31,8 +31,8 @@ static int64e_t
 mod_add(int64e_t x, int64e_t y)
 {
   x += y;
-  uint64e_t pred = (x >= MOD);
-  x = (int64e_t)cmov(pred, (uint64e_t)(x-MOD), (uint64e_t)x);
+  int64e_t pred = (x >= MOD);
+  x = cmov(pred, x - MOD, x);
   return x;
 }
 
@@ -40,8 +40,8 @@ static int64e_t
 mod_sub(int64e_t x, int64e_t y)
 {
   x -= y;
-  uint64e_t pred = (x < 0);
-  x = (int64e_t)cmov(pred, (uint64e_t)(x+MOD), (uint64e_t)x);
+  int64e_t pred = (x < 0);
+  x = cmov(pred, x + MOD, x);
   return x;
 }
 
