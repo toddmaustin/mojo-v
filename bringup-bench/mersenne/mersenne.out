@@ -1,6 +1,4 @@
 INFO: KMSM contract open succeeded.
-** Running CSR[privreg] tests...
-Initial mprivregcfg = 0x12, (mojov_en:f, key_valid:t, format_sel:fast, mojov_ver:1)
 INFO: running with loaded data contract.
 INFO: simon_key = 0x27a48e9de04eadbc5297fe6330cea7d6
 SUCCESS: Mojo-V data contract validated and loaded.
@@ -11,7 +9,6 @@ Decrypted data_contract_t fields:
   contract_sig= 0x5d34f1ad3b2327b3
   ciphers     = 0x0000000000000000
   format_sel  = 0 (fast)
-After enable, mprivregcfg = 0x13, (mojov_en:t, key_valid:t, format_sel:fast, mojov_ver:1)
 4179544424,  615236124, 4165290828, 3119652344, 1623863471,  605280572, 1209526912, 2753559756, 
 1398721121,  776305894, 2682849101,  995603468,  272094241, 3770455004,  514825840, 1235731124, 
 2736247650, 1263887309, 2918393348, 2272249877,  266106667, 1421469273, 3256007838,  449617425, 

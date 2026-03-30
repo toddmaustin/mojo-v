@@ -3,16 +3,10 @@
 #include "mojov-utils.h"
 
 #include "dc-fast.h"
-uint128_t simon_key = SIMON128_KEY;
-simon_state_t simon_state;
 
 typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
-
-#define _DEC_U64(X)   (mojov_decrypt_fast_u64(&simon_state, (X), CONTRACT_SIG))
-#define _DEC_I64(X)   (mojov_decrypt_fast_i64(&simon_state, (X), CONTRACT_SIG))
-#define _DEC_FP64(X)  (mojov_decrypt_fast_fp64(&simon_state, (X), CONTRACT_SIG))
 
 #define N 256
 #define MOD 998244353l
@@ -190,30 +184,13 @@ main(void)
   if (mojov_configure_kmsm_from_dc_fast() != 0)
     return -1;
 
-  // initilize cipher engine, for checking results
-  simon_128_128_keyexpand(&simon_state, simon_key, 68);
-
-  //
-  // mprivregcfg tests
-  //
-  libmin_printf("** Running CSR[privreg] tests...\n");
-
-  uint64_t val;
-
-  // read reset value
-  val = mojov_read_mprivregcfg();
-  libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
-
   // enable private register semantics (bit 0 = 1)
   if (mojov_enable_and_verify() != 0)
     return -1;
 
-  val = mojov_read_mprivregcfg();
-  libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
+  // enable encrypted variable debugging
+  if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
+    return -1;
 
   // initialize the pseudo-RNG
   libmin_srand(42);
@@ -228,15 +205,15 @@ main(void)
 
   for (int i = 0; i < N; i++)
   {
-    if (_DEC_U64(conv[i] != ref[i]))
+    if ((conv[i] != ref[i]).decrypt())
     {
-      libmin_printf("ERROR: NTT mismatch at %d, got %ld expected %ld\n", i, _DEC_I64(conv[i]), ref[i]);
+      libmin_printf("ERROR: NTT mismatch at %d, got %ld expected %ld\n", i, conv[i].decrypt(), ref[i]);
       libmin_fail(1);
       return 1;
     }
   }
 
-  libmin_printf("INFO: NTT convolution verified, checksum=0x%08lx\n", _DEC_U64(compute_checksum()));
+  libmin_printf("INFO: NTT convolution verified, checksum=0x%08lx\n", compute_checksum().decrypt());
 
   libmin_success();
   return 0;

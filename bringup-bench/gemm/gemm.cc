@@ -3,16 +3,10 @@
 #include "mojov-utils.h"
 
 #include "dc-fast.h"
-uint128_t simon_key = SIMON128_KEY;
-simon_state_t simon_state;
 
 typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
-
-// debug support
-#define _DEC_U64(X)   (mojov_decrypt_fast_u64(&simon_state, (X), CONTRACT_SIG))
-#define _DEC_FP64(X)  (mojov_decrypt_fast_fp64(&simon_state, (X), CONTRACT_SIG))
 
 #define M 32
 #define N 32
@@ -25,11 +19,11 @@ typedef mojov_mem_fast_fp64_t _fp64e_t;
 #define D_BETA  0.5
 
 /* integer GEMM state */
-static uint64e_t IA[M][K];
+static int64e_t IA[M][K];
 static int64_t IA_ref[M][K];
-static uint64e_t IB[K][N];
+static int64e_t IB[K][N];
 static int64_t IB_ref[K][N];
-static uint64e_t IC[M][N];
+static int64e_t IC[M][N];
 static int64_t IC_ref[M][N];
 
 /* double GEMM state */
@@ -81,12 +75,12 @@ int_gemm_kernel(void)
   {
     for (int j = 0; j < N; j++)
     {
-      uint64e_t acc = 0;
+      int64e_t acc = 0;
 
       for (int k = 0; k < K; k++)
         acc += IA[i][k] * IB[k][j];
 
-      IC[i][j] = ((int64_t)I_ALPHA * acc) + ((int64_t)I_BETA * IC[i][j]);
+      IC[i][j] = ((int64_t)I_ALPHA * (int64e_t)acc) + ((int64_t)I_BETA * IC[i][j]);
     }
   }
 }
@@ -145,16 +139,16 @@ run_int_gemm(void)
   {
     for (int j = 0; j < N; j++)
     {
-      if (_DEC_U64(IC[i][j]) != (uint64_t)IC_ref[i][j])
+      if ((IC[i][j]).decrypt() != IC_ref[i][j])
       {
         libmin_printf("ERROR: int GEMM mismatch at (%d, %d), got %ld expected %ld\n",
-                      i, j, _DEC_U64(IC[i][j]), IC_ref[i][j]);
+                      i, j, (IC[i][j]).decrypt(), IC_ref[i][j]);
         return 1;
       }
     }
   }
 
-  libmin_printf("INFO: int64 GEMM verified, checksum=0x%08lx\n", _DEC_U64(int_checksum()));
+  libmin_printf("INFO: int64 GEMM verified, checksum=0x%08lx\n", int_checksum().decrypt());
   return 0;
 }
 
@@ -249,7 +243,7 @@ fp_checksum(void)
     for (int j = 0; j < N; j++)
     {
       uint64e_t scaled = (uint64e_t)(DC[i][j] * 256.0);
-      uint64e_t term = scaled + 100000l;
+      uint64e_t term = scaled + 100000lu;
       checksum = ((checksum * 131ul) + term) % mod;
     }
   }
@@ -272,7 +266,7 @@ run_fp_gemm(void)
   {
     for (int j = 0; j < N; j++)
     {
-      if (_DEC_FP64(DC[i][j]) != DC_ref[i][j])
+      if ((DC[i][j]).decrypt() != DC_ref[i][j])
       {
         libmin_printf(
           "ERROR: fp64 GEMM mismatch at (%d, %d)\n",
@@ -282,7 +276,7 @@ run_fp_gemm(void)
     }
   }
 
-  libmin_printf("INFO: fp64 GEMM verified,  checksum=0x%08lx\n", _DEC_U64(fp_checksum()));
+  libmin_printf("INFO: fp64 GEMM verified,  checksum=0x%08lx\n", fp_checksum().decrypt());
   return 0;
 }
 
@@ -292,30 +286,13 @@ main(void)
   if (mojov_configure_kmsm_from_dc_fast() != 0)
     return -1;
 
-  // initilize cipher engine, for checking results
-  simon_128_128_keyexpand(&simon_state, simon_key, 68);
-
-  //
-  // mprivregcfg tests
-  //
-  libmin_printf("** Running CSR[privreg] tests...\n");
-
-  uint64_t val;
-
-  // read reset value
-  val = mojov_read_mprivregcfg();
-  libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
-
   // enable private register semantics (bit 0 = 1)
   if (mojov_enable_and_verify() != 0)
     return -1;
 
-  val = mojov_read_mprivregcfg();
-  libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
+  // enable encrypted variable debugging
+  if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
+    return -1;
 
   // initialize the pseudo-RNG
   libmin_srand(142);

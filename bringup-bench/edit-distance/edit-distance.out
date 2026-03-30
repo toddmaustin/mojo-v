@@ -1,6 +1,4 @@
 INFO: KMSM contract open succeeded.
-** Running CSR[privreg] tests...
-Initial mprivregcfg = 0x12, (mojov_en:f, key_valid:t, format_sel:fast, mojov_ver:1)
 INFO: running with loaded data contract.
 INFO: simon_key = 0x27a48e9de04eadbc5297fe6330cea7d6
 SUCCESS: Mojo-V data contract validated and loaded.
@@ -11,7 +9,6 @@ Decrypted data_contract_t fields:
   contract_sig= 0x5d34f1ad3b2327b3
   ciphers     = 0x0000000000000000
   format_sel  = 0 (fast)
-After enable, mprivregcfg = 0x13, (mojov_en:t, key_valid:t, format_sel:fast, mojov_ver:1)
 ------Within the randoms array------
 ++ compute distance from `TTAAGCAA' ++
   edit_distance(TTAAGCAA, TTAAGCAA) == 0

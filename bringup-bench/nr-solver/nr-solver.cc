@@ -1,16 +1,15 @@
 #include "libmin.h"
 #include "simon.h"
 #include "mojov-utils.h"
+
 #include "dc-fast.h"
+
 typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
 
 #define MAXERR 0.00001
 #define MAXITER 20
-
-uint128_t simon_key = SIMON128_KEY;
-simon_state_t simon_state;
 
 static double sqrt_value;
 
@@ -53,33 +52,20 @@ main(void)
   if (mojov_configure_kmsm_from_dc_fast() != 0)
     return -1;
 
-  simon_128_128_keyexpand(&simon_state, simon_key, 68);
-
-  libmin_printf("** Running CSR[privreg] tests...\n");
-
-  uint64_t val = mojov_read_mprivregcfg();
-  libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
-
+  // enable private register semantics (bit 0 = 1)
   if (mojov_enable_and_verify() != 0)
     return -1;
 
-  val = mojov_read_mprivregcfg();
-  libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
+  // enable encrypted variable debugging
+  if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
+    return -1;
 
   for (unsigned i = 0; i < NTESTDATA; ++i)
   {
     uint64e_t converged;
     sqrt_value = testdata[i];
-    fp64e_t root_ct = nr_solver(&converged);
-    double root = mojov_decrypt_fast_fp64(&simon_state, root_ct, CONTRACT_SIG);
-    libmin_printf("sqrt(%lf) == %lf (converged:%c)\n",
-      sqrt_value,
-      root,
-      mojov_decrypt_fast_u64(&simon_state, converged, CONTRACT_SIG) ? 't' : 'f');
+    fp64e_t root = nr_solver(&converged);
+    libmin_printf("sqrt(%lf) == %lf (converged:%c)\n", sqrt_value, root.decrypt(), converged.decrypt() ? 't' : 'f');
   }
 
   libmin_success();

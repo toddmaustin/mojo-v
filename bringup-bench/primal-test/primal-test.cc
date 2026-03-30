@@ -1,7 +1,9 @@
 #include "libmin.h"
 #include "simon.h"
 #include "mojov-utils.h"
+
 #include "dc-fast.h"
+
 typedef mojov_mem_fast_u64_t _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-exo.h"
@@ -12,9 +14,6 @@ typedef mojov_mem_fast_fp64_t _fp64e_t;
 #define PT_PRIME_LIKELY 2ul
 #define Q_SIZE NTESTS
 #define NTESTS 200
-
-uint128_t simon_key = SIMON128_KEY;
-simon_state_t simon_state;
 
 struct primality_result {
   uint64e_t val;
@@ -128,26 +127,17 @@ main(void)
   if (mojov_configure_kmsm_from_dc_fast() != 0)
     return -1;
 
-  simon_128_128_keyexpand(&simon_state, simon_key, 68);
-
-  libmin_printf("** Running CSR[privreg] tests...\n");
-
-  uint64_t val = mojov_read_mprivregcfg();
-  libmin_printf("Initial mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
-
+  // enable private register semantics (bit 0 = 1)
   if (mojov_enable_and_verify() != 0)
     return -1;
 
-  val = mojov_read_mprivregcfg();
-  libmin_printf("After enable, mprivregcfg = 0x%lx, ", val);
-  mojov_print_mprivregcfg(val);
-  libmin_printf("\n");
+  // enable encrypted variable debugging
+  if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
+    return -1;
 
   libmin_srand(42);
 
-  val = 3;
+  uint64_t val = 3;
   for (uint32_t i = 0; i < NTESTS; ++i)
   {
     q[i].val = val;
@@ -159,20 +149,18 @@ main(void)
   uint32_t prime_count = 0;
   for (uint32_t i = 0; i < q_head; ++i)
   {
-    uint64_t prim = mojov_decrypt_fast_u64(&simon_state, q[i].prim, CONTRACT_SIG);
-    if (prim != PT_COMPOSITE)
+    if (q[i].prim.decrypt() != PT_COMPOSITE)
       prime_count++;
   }
 
   libmin_printf("Primality tests found %u primes...\n", prime_count);
   for (uint32_t i = 0; i < q_head; ++i)
   {
-    uint64_t val = mojov_decrypt_fast_u64(&simon_state, q[i].val, CONTRACT_SIG);
-    uint64_t prim = mojov_decrypt_fast_u64(&simon_state, q[i].prim, CONTRACT_SIG);
-    if (prim == PT_PRIME)
-      libmin_printf("Value %lu is `prime' with failure probability (0)\n", val);
-    else if (prim == PT_PRIME_LIKELY)
-      libmin_printf("Value %lu is `likely prime' with failure probability (1 in %lu)\n", val, 4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull);
+    if (q[i].prim.decrypt() == PT_PRIME)
+      libmin_printf("Value %lu is `prime' with failure probability (0)\n", q[i].val.decrypt());
+    else if (q[i].prim.decrypt() == PT_PRIME_LIKELY)
+      libmin_printf("Value %lu is `likely prime' with failure probability (1 in %lu)\n",
+                    q[i].val.decrypt(), 4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull*4ull);
   }
 
   libmin_success();

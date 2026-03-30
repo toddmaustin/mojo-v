@@ -79,6 +79,7 @@ simon_128_128_keyexpand(simon_state_t *simon_state, uint128_t key, unsigned roun
 {
   uint8_t result, iv = 0, counter = 0;
 
+  // libmin_printf("INFO: Simon-128 key expand: key = 0x%08lx:%08lx.\n", (uint64_t)(key >> 64), (uint64_t)key);
   result = Simon_Init(&simon_state->x, cfg_128_128, ECB, &key, &iv, &counter);
   simon_state->x.round_limit = round_limit;
   return (result == 0);
