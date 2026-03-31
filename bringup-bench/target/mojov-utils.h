@@ -117,7 +117,7 @@ static inline uint64_t mojov_decrypt_fast_u64(simon_state_t *simon_state, mojov_
   simon_128_128_decrypt(simon_state, ctval.ct, &ptval.ct);
   if (ptval.pt.sig != (uint32_t)sig)
   {
-    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08x).\n", ptval.pt.sig, (uint32_t)sig);
+    libmin_printf("ERROR: fast u64 decryption validation failed! (sig == 0x%08lx, expected == 0x%08x).\n", ptval.pt.sig, (uint32_t)sig);
     libmin_fail(-1);
   }
   return ptval.pt.val;
@@ -134,7 +134,7 @@ static inline double mojov_decrypt_fast_fp64(simon_state_t *simon_state, mojov_m
   simon_128_128_decrypt(simon_state, ctval.ct, &ptval.ct);
   if (ptval.pt.sig != (uint32_t)sig)
   {
-    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_printf("ERROR: fast fp64 decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
     libmin_fail(-1);
   }
   return ptval.pt.val;
@@ -148,7 +148,8 @@ static inline uint64_t mojov_decrypt_strong_u64(simon_state_t *simon_state, mojo
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
   if (ptval.pt.sig != sig)
   {
-    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_printf("ERROR: strong u64 decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_printf("ERROR: val=%lu, sig=0x%08lx.\n", ptval.pt.val, ptval.pt.sig);
     libmin_fail(-1);
   }
   return ptval.pt.val;
@@ -162,7 +163,7 @@ static inline double mojov_decrypt_strong_fp64(simon_state_t *simon_state, mojov
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
   if (ptval.pt.sig != sig)
   {
-    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_printf("ERROR: strong fp64 decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
     libmin_fail(-1);
   }
   return ptval.pt.val;
@@ -190,7 +191,7 @@ static inline uint64_t mojov_decrypt_proofcarrying_u64(simon_state_t *simon_stat
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
   if (ptval.pt.sig != sig)
   {
-    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_printf("ERROR: proofcarrying u64 decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
     libmin_fail(-1);
   }
   return ptval.pt.val;
@@ -204,7 +205,7 @@ static inline double mojov_decrypt_proofcarrying_fp64(simon_state_t *simon_state
   ptval.ct.ct_hi ^= ctval.ct.ct_lo;
   if (ptval.pt.sig != sig)
   {
-    libmin_printf("ERROR: decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
+    libmin_printf("ERROR: proofcarrying fp64 decryption validation failed! (sig == 0x%08lx, expected == 0x%08lx).\n", ptval.pt.sig, sig);
     libmin_fail(-1);
   }
   return ptval.pt.val;

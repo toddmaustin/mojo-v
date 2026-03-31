@@ -1,6 +1,5 @@
 INFO: KMSM contract open succeeded.
 INFO: running with loaded data contract.
-INFO: simon_key = 0x27a48e9de04eadbc5297fe6330cea7d6
 SUCCESS: Mojo-V data contract validated and loaded.
 Decrypted data_contract_t fields:
   salt        = 0xa1bd51183082e0ca

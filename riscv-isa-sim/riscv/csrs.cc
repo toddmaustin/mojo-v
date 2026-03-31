@@ -2300,6 +2300,7 @@ reg_t mojov_cfg_csr_t::read() const noexcept {
     val |= ((reg_t)1 << 1);
   else
     val &= ~((reg_t)1 << 1);
+  val = (val & ~0xclu) | ((proc->get_state()->mojov_dc.format_sel & 0x3) << 2);
   return val;
 }
 

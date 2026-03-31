@@ -93,13 +93,13 @@ inline double decrypt_storage(const mojov_mem_proofcarrying_fp64_t& value) {
 }  // namespace detail
 
 /* Initializes decrypt() support used by encrypted wrappers during debug.
- * Returns 1 when key expansion succeeds and 0 otherwise.
+ * Returns 0 when key expansion succeeds and 1 otherwise.
  * Example: int ok = debug_context(SIMON128_KEY, contract_sig); */
 inline int debug_context(uint128_t simon128_key, uint64_t contract_sig) {
-  const bool expanded = simon_128_128_keyexpand(&detail::debug_simon_state(), simon128_key, 0);
+  const bool expanded = simon_128_128_keyexpand(&detail::debug_simon_state(), simon128_key, 68);
   detail::debug_contract_sig() = contract_sig;
   detail::debug_context_ready() = expanded;
-  return expanded ? 1 : 0;
+  return expanded ? 0 : 1;
 }
 
 /* Wraps a Mojo-V encrypted 64-bit integer so C++ expressions map to intrinsics.

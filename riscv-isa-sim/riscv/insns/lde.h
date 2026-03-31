@@ -49,6 +49,8 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
     throw trap_security_exception(insn.bits());
   }
 
+  // fprintf(stderr, "LDE: val = %lu, sig = 0x%08lx\n", ptval.pt.val, ptval.pt.auth_sig);
+
   // Mojo-V: all good, write the decrypted 3rd-party value to the secret register
   WRITE_RD(ptval.pt.val);
 }

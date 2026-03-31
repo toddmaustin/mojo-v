@@ -435,10 +435,6 @@ public:
 
           // perform simon key expansion on the decrypted SIMON128 key
           simon_128_128_keyexpand(&simon_state, *((uint128_t *)state.mojov_dc.sym_key_128), 68);
-          if (cfg->mojov_verbose)
-          {
-            printf("INFO: simon_key = 0x"); for (int i = 0; i < 16; i++) printf("%02x", state.mojov_dc.sym_key_128[i]); printf("\n");
-          }
 
           if (cfg->mojov_verbose)
           {
