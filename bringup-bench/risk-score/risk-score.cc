@@ -4,8 +4,8 @@
 
 #include "dc-fast.h"
 
-typedef mojov_mem_fast_u64_t _uint64e_t;
-typedef mojov_mem_fast_fp64_t _fp64e_t;
+#define EXO_UINT64E_STORAGE_TYPE mojov_mem_fast_u64_t
+#define EXO_FP64E_STORAGE_TYPE mojov_mem_fast_fp64_t
 #include "mojov-exo.h"
 
 #define PATIENTS 10
@@ -61,7 +61,7 @@ compute_secret_risk_tier(uint64e_t score)
 {
   uint64e_t high = (score >= 180);
   uint64e_t moderate = (score >= 120) && (score < 180);
-  return cmov(high, 2, cmov(moderate, 1, 0));
+  return cmov(high, 2ul, cmov(moderate, 1ul, 0ul));
 }
 
 static uint64_t
