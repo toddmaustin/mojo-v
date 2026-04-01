@@ -1,0 +1,11 @@
+risk-score patient=0 score=123 tier=MODERATE
+risk-score patient=1 score=175 tier=MODERATE
+risk-score patient=2 score=226 tier=HIGH
+risk-score patient=3 score=277 tier=HIGH
+risk-score patient=4 score=146 tier=MODERATE
+risk-score patient=5 score=276 tier=HIGH
+risk-score patient=6 score=309 tier=HIGH
+risk-score patient=7 score=185 tier=HIGH
+risk-score patient=8 score=333 tier=HIGH
+risk-score patient=9 score=164 tier=MODERATE
+risk-score: encrypted scoring completed for 10 patients
