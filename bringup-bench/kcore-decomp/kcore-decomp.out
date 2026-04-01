@@ -1,0 +1,19 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+kcore-decomp coreness by vertex:
+  vertex 0 -> k = 3
+  vertex 1 -> k = 3
+  vertex 2 -> k = 3
+  vertex 3 -> k = 3
+  vertex 4 -> k = 2
+  vertex 5 -> k = 2
+  vertex 6 -> k = 2
+  vertex 7 -> k = 2

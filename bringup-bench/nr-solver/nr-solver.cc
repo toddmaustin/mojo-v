@@ -4,8 +4,8 @@
 
 #include "dc-fast.h"
 
-typedef mojov_mem_fast_u64_t _uint64e_t;
-typedef mojov_mem_fast_fp64_t _fp64e_t;
+#define EXO_UINT64E_STORAGE_TYPE mojov_mem_fast_u64_t
+#define EXO_FP64E_STORAGE_TYPE mojov_mem_fast_fp64_t
 #include "mojov-exo.h"
 
 #define MAXERR 0.00001
