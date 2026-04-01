@@ -1,0 +1,3 @@
+private-join count-only: 6
+private-join sum-after-join: 2720
+private-join join-with-filter: 1665
