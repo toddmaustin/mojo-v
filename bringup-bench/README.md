@@ -197,6 +197,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **rho-factor** - A Pollard's Rho integer factorization algorithm.
 
+- **risk-score** - Applies a fixed clinical risk model to encrypted patient features and reveals only each patient's final risk score and tier.
+
 - **rle-compress** - A run-length-encoding (RLE) compressor, with multiple tests.
 
 - **rsa-cipher** - Implements RSA encryption and decryption using reduced-strength 128-bit keys.
