@@ -7,6 +7,14 @@ PROG=mojov-sectests
 
 include ../Makefile
 
+#
+# Janky fix to make this build LLVM only.
+# GCC cannot build this due to a JAL relocation error in the linker, not yet debugged...
+#
+TARGET_CC = /opt/riscv/bin/clang
+TARGET_REGOUT = -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31
+
+
 test: $(TARGET_EXE)
 	rm -f FOO
 	for i in $(shell seq 0 246); do \
