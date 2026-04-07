@@ -80,7 +80,7 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_fp_result((LABEL), #EXPR, (double)_d, (double)((decltype(_d))(_e)); \
+    check_fp_result((LABEL), #EXPR, (double)_d, (double)((decltype(_d))(_e))); \
   } while (0)
 
 template <typename T>
