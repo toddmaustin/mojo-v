@@ -21,15 +21,17 @@ static void check_bool(const char *label, bool ok)
 #define CHECK_INT(LABEL, EXPR, EXPECTED) \
   do { \
     auto _v = (EXPR); \
+    auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_bool((LABEL), _v.decrypt() == _e); \
+    check_bool((LABEL), _d == (decltype(_d))(_e)); \
   } while (0)
 
 #define CHECK_FP(LABEL, EXPR, EXPECTED) \
   do { \
     auto _v = (EXPR); \
+    auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_bool((LABEL), _v.decrypt() == _e); \
+    check_bool((LABEL), _d == (decltype(_d))(_e)); \
   } while (0)
 
 template <typename T>
