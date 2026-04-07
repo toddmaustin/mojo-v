@@ -288,12 +288,44 @@ inline inte_t<B,S> operator>>(T l, const inte_t<B,S>& r){ return inte_t<B,S>(sta
 
 template <std::size_t B, bool S> inline inte_t<B,S> operator&&(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_land(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator||(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_lor(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator&&(const inte_t<B,S>& l, T r){ return inte_t<B,S>(_landi(l.encrypted(), static_cast<uint64_t>(r))); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator||(const inte_t<B,S>& l, T r){ return inte_t<B,S>(_lori(l.encrypted(), static_cast<uint64_t>(r))); }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator&&(T l, const inte_t<B,S>& r){ return inte_t<B,S>(_landi(r.encrypted(), static_cast<uint64_t>(l))); }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator||(T l, const inte_t<B,S>& r){ return inte_t<B,S>(_lori(r.encrypted(), static_cast<uint64_t>(l))); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator==(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_seq(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator!=(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_sne(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator<(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _slt(l.encrypted(), r.encrypted()) : _sltu(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator<=(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _sle(l.encrypted(), r.encrypted()) : _sleu(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator>(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _sgt(l.encrypted(), r.encrypted()) : _sgtu(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator>=(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _sge(l.encrypted(), r.encrypted()) : _sgeu(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator==(const inte_t<B,S>& l, T r){ return l == inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator!=(const inte_t<B,S>& l, T r){ return l != inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<(const inte_t<B,S>& l, T r){ return l < inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<=(const inte_t<B,S>& l, T r){ return l <= inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>(const inte_t<B,S>& l, T r){ return l > inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>=(const inte_t<B,S>& l, T r){ return l >= inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator==(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) == r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator!=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) != r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) < r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) <= r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) > r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) >= r; }
 
 // FP operators
 template <std::size_t B> inline fpe_t<B> operator+(fpe_t<B> l, const fpe_t<B>& r){ l += r; return l; }
