@@ -36,6 +36,7 @@ template <typename T>
 static void run_unsigned_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
   T a = a_in, b = b_in;
+  auto pred = inte_t<64, false>(a < b);
   CHECK_INT(name, +a, a_in);
   CHECK_INT(name, ~a, (typename T::value_type)(~a_in));
   CHECK_INT(name, !a, (typename T::value_type)(!a_in));
@@ -122,9 +123,9 @@ static void run_unsigned_ops(const char *name, typename T::value_type a_in, type
   x--;
   CHECK_INT(name, x, (typename T::value_type)(a_in - 1));
 
-  CHECK_INT(name, cmov(a < b, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
-  CHECK_INT(name, cmov(a < b, a_in, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
-  CHECK_INT(name, cmov(a < b, a, b_in), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_INT(name, cmov(pred, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_INT(name, cmov(pred, (typename T::value_type)(a_in), b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_INT(name, cmov(pred, a, (typename T::value_type)(b_in)), (typename T::value_type)(a_in < b_in ? a_in : b_in));
   CHECK_INT(name, cmov(true, a, b), a_in);
 }
 
@@ -132,6 +133,7 @@ template <typename T>
 static void run_signed_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
   T a = a_in, b = b_in;
+  auto pred = inte_t<64, false>(a < b);
   CHECK_INT(name, +a, a_in);
   CHECK_INT(name, -a, (typename T::value_type)(-a_in));
   CHECK_INT(name, ~a, (typename T::value_type)(~a_in));
@@ -164,13 +166,14 @@ static void run_signed_ops(const char *name, typename T::value_type a_in, typena
   x = a; x %= b; CHECK_INT(name, x, (typename T::value_type)(a_in % b_in));
   x = a; x >>= 1; CHECK_INT(name, x, (typename T::value_type)(a_in >> 1));
 
-  CHECK_INT(name, cmov(a < b, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_INT(name, cmov(pred, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
 }
 
 template <typename T>
 static void run_fp_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
   T a = a_in, b = b_in;
+  auto pred = inte_t<64, false>(a < b);
   CHECK_FP(name, +a, a_in);
   CHECK_FP(name, -a, (typename T::value_type)(-a_in));
   CHECK_FP(name, a + b, (typename T::value_type)(a_in + b_in));
@@ -198,9 +201,9 @@ static void run_fp_ops(const char *name, typename T::value_type a_in, typename T
   x = a; x *= b; CHECK_FP(name, x, (typename T::value_type)(a_in * b_in));
   x = a; x /= b; CHECK_FP(name, x, (typename T::value_type)(a_in / b_in));
 
-  CHECK_FP(name, cmov(a < b, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
-  CHECK_FP(name, cmov(a < b, a_in, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
-  CHECK_FP(name, cmov(a < b, a, b_in), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_FP(name, cmov(pred, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_FP(name, cmov(pred, (typename T::value_type)(a_in), b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
+  CHECK_FP(name, cmov(pred, a, (typename T::value_type)(b_in)), (typename T::value_type)(a_in < b_in ? a_in : b_in));
 }
 
 #define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; check_bool(LABEL, d.decrypt() == (typename DST::value_type)(V)); } while (0)
