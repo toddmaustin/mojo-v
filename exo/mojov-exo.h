@@ -378,6 +378,14 @@ inline inte_t<B,S> cmov(const inte_t<64,false>& predicate, const inte_t<B,S>& if
   return inte_t<B,S>(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
 }
 
+template <typename T, typename std::enable_if<std::is_integral<T>::value && !std::is_same<typename std::decay<T>::type, bool>::value, int>::type = 0>
+inline auto cmov(const inte_t<64,false>& predicate, T if_true, T if_false) {
+  using result_t = inte_t<sizeof(T) * 8u, std::is_signed<T>::value>;
+  return cmov(predicate,
+              result_t(static_cast<typename result_t::value_type>(if_true)),
+              result_t(static_cast<typename result_t::value_type>(if_false)));
+}
+
 template <typename Pred, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<Pred>::value>::type>
 inline inte_t<B,S> cmov(Pred predicate, const inte_t<B,S>& if_true, const inte_t<B,S>& if_false) {
   return cmov(inte_t<64, false>(static_cast<uint64_t>(predicate)), if_true, if_false);
@@ -389,6 +397,19 @@ inline fpe_t<B> cmov(const inte_t<64,false>& predicate, const fpe_t<B>& if_true,
 }
 template <typename Pred, std::size_t B, typename = typename std::enable_if<std::is_integral<Pred>::value>::type>
 inline fpe_t<B> cmov(Pred predicate, const fpe_t<B>& if_true, const fpe_t<B>& if_false) {
+  return cmov(inte_t<64, false>(static_cast<uint64_t>(predicate)), if_true, if_false);
+}
+
+template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+inline auto cmov(const inte_t<64,false>& predicate, T if_true, T if_false) {
+  using result_t = fpe_t<sizeof(T) * 8u>;
+  return cmov(predicate,
+              result_t(static_cast<typename result_t::value_type>(if_true)),
+              result_t(static_cast<typename result_t::value_type>(if_false)));
+}
+
+template <typename Pred, typename T, typename std::enable_if<std::is_integral<Pred>::value && ((std::is_integral<T>::value && !std::is_same<typename std::decay<T>::type, bool>::value) || std::is_floating_point<T>::value), int>::type = 0>
+inline auto cmov(Pred predicate, T if_true, T if_false) {
   return cmov(inte_t<64, false>(static_cast<uint64_t>(predicate)), if_true, if_false);
 }
 
