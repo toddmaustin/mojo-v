@@ -72,7 +72,9 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    auto _ed = decltype(_v)(_e).decrypt(); \
+    using _v_t = decltype(_v); \
+    using _plain_t = typename _v_t::value_type; \
+    auto _ed = _v_t((_plain_t)_e).decrypt(); \
     check_int_result((LABEL), #EXPR, (int64_t)_d, (int64_t)_ed); \
   } while (0)
 
@@ -81,7 +83,9 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    auto _ed = decltype(_v)(_e).decrypt(); \
+    using _v_t = decltype(_v); \
+    using _plain_t = typename _v_t::value_type; \
+    auto _ed = _v_t((_plain_t)_e).decrypt(); \
     check_fp_result((LABEL), #EXPR, (double)_d, (double)_ed); \
   } while (0)
 
