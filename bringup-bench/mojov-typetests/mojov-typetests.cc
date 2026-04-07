@@ -11,6 +11,7 @@
 using namespace exo;
 
 static int g_failures = 0;
+static uint64_t g_test_id = 0;
 static int g_input_mode = 0; // 0=unsigned, 1=signed, 2=float
 static uint64_t g_u_a = 0, g_u_b = 0;
 static int64_t g_s_a = 0, g_s_b = 0;
@@ -32,8 +33,9 @@ static void print_fail_inputs(void)
 
 static void check_int_result(const char *suite, const char *operation, int64_t got, int64_t expected)
 {
+  const uint64_t test_id = ++g_test_id;
   const bool ok = (got == expected);
-  libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
+  libmin_printf("TEST[%lu]: %s :: %s (got=%ld expected=%ld) : %s\n", test_id, suite, operation, got, expected, ok ? "PASS" : "FAIL");
   if (!ok)
   {
     print_fail_inputs();
@@ -44,8 +46,9 @@ static void check_int_result(const char *suite, const char *operation, int64_t g
 
 static void check_fp_result(const char *suite, const char *operation, double got, double expected)
 {
+  const uint64_t test_id = ++g_test_id;
   const bool ok = (got == expected);
-  libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
+  libmin_printf("TEST[%lu]: %s :: %s (got=%f expected=%f) : %s\n", test_id, suite, operation, got, expected, ok ? "PASS" : "FAIL");
   if (!ok)
   {
     print_fail_inputs();
@@ -57,8 +60,9 @@ static void check_fp_result(const char *suite, const char *operation, double got
 template <typename G, typename E>
 static void check_cast_result(const char *suite, const char *operation, G got, E expected)
 {
+  const uint64_t test_id = ++g_test_id;
   const bool ok = (got == expected);
-  libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
+  libmin_printf("TEST[%lu]: %s :: %s (got=%f expected=%f) : %s\n", test_id, suite, operation, (double)got, (double)expected, ok ? "PASS" : "FAIL");
   if (!ok)
   {
     print_fail_inputs();
