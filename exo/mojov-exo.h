@@ -300,12 +300,32 @@ template <std::size_t B> inline fpe_t<B> operator+(fpe_t<B> l, const fpe_t<B>& r
 template <std::size_t B> inline fpe_t<B> operator-(fpe_t<B> l, const fpe_t<B>& r){ l -= r; return l; }
 template <std::size_t B> inline fpe_t<B> operator*(fpe_t<B> l, const fpe_t<B>& r){ l *= r; return l; }
 template <std::size_t B> inline fpe_t<B> operator/(fpe_t<B> l, const fpe_t<B>& r){ l /= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator+(fpe_t<B> l, typename fpe_t<B>::value_type r){ l += r; return l; }
+template <std::size_t B> inline fpe_t<B> operator-(fpe_t<B> l, typename fpe_t<B>::value_type r){ l -= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator*(fpe_t<B> l, typename fpe_t<B>::value_type r){ l *= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator/(fpe_t<B> l, typename fpe_t<B>::value_type r){ l /= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator+(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) + r; }
+template <std::size_t B> inline fpe_t<B> operator-(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) - r; }
+template <std::size_t B> inline fpe_t<B> operator*(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) * r; }
+template <std::size_t B> inline fpe_t<B> operator/(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) / r; }
 template <std::size_t B> inline auto operator==(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fseq(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator!=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsne(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator<(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fslt(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator<=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsle(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator>(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsgt(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator>=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsge(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator==(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fseqi(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator!=(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fsnei(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator<(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fslti(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator<=(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fslei(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator>(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fsgti(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator>=(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fsgei(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator==(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return r == l; }
+template <std::size_t B> inline auto operator!=(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return r != l; }
+template <std::size_t B> inline auto operator<(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fsgti(r.encrypted(), static_cast<double>(l))); }
+template <std::size_t B> inline auto operator<=(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fsgei(r.encrypted(), static_cast<double>(l))); }
+template <std::size_t B> inline auto operator>(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fslti(r.encrypted(), static_cast<double>(l))); }
+template <std::size_t B> inline auto operator>=(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fslei(r.encrypted(), static_cast<double>(l))); }
 
 using uint8e_t = inte_t<8, false>;
 using uint16e_t = inte_t<16, false>;
