@@ -6,6 +6,7 @@
 #else
 
 // #include <cstdint>
+#include <cstddef>
 #include <type_traits>
 
 #include "../bringup-bench/target/mojov-utils.h"
@@ -26,10 +27,6 @@ typedef EXO_FP64E_STORAGE_TYPE _fp64e_t;
 #include "mojov-intrinsics.h"
 
 namespace exo {
-
-class uint64e_t;
-class int64e_t;
-class fp64e_t;
 
 namespace detail {
 
@@ -102,770 +99,319 @@ inline int debug_context(uint128_t simon128_key, uint64_t contract_sig) {
   return expanded ? 0 : 1;
 }
 
-/* Wraps a Mojo-V encrypted 64-bit integer so C++ expressions map to intrinsics.
- * Example: uint64e_t total = 4u; */
-class uint64e_t {
+/* Unified encrypted scalar templates.
+ *
+ * uint64e_t/int64e_t/fp64e_t are now aliases of these generic templates.
+ */
+
+template <std::size_t Bits, bool IsSigned>
+class inte_t;
+
+template <std::size_t Bits>
+class fpe_t;
+
+template <std::size_t Bits, bool IsSigned>
+class inte_t {
+  static_assert(Bits > 0 && Bits <= 64, "Bits must be in [1, 64]");
 public:
-  using value_type = uint64_t;
   using storage_type = detail::uint_storage_t;
+  using value_type = typename std::conditional<IsSigned, int64_t, uint64_t>::type;
 
-  /* Constructs an encrypted integer initialized to encrypted zero.
-   * Example: uint64e_t counter; */
-  uint64e_t() : value_(detail::zero_uint64e()) {}
-  /* Destroys the wrapper without additional cleanup because storage is POD-like.
-   * Example: { uint64e_t tmp; } // destructor runs at scope exit */
-  ~uint64e_t() = default;
+  inte_t() : value_(detail::zero_uint64e()) {}
+  inte_t(storage_type encrypted) : value_(normalize(encrypted)) {}
+  inte_t(value_type plain) : value_(normalize(_enc(static_cast<uint64_t>(plain)))) {}
+  inte_t(int plain) : value_(normalize(_enc(static_cast<uint64_t>(plain)))) {}
 
-  /* Copies an encrypted integer wrapper without decrypting the payload.
-   * Example: uint64e_t b(a); */
-  uint64e_t(const uint64e_t&) = default;
-  /* Moves an encrypted integer wrapper.
-   * Example: uint64e_t b(make_value()); */
-  uint64e_t(uint64e_t&&) = default;
-  /* Replaces this encrypted value with another encrypted wrapper.
-   * Example: dst = src; */
-  uint64e_t& operator=(const uint64e_t&) = default;
-  /* Move-assigns another encrypted wrapper into this object.
-   * Example: dst = make_value(); */
-  uint64e_t& operator=(uint64e_t&&) = default;
+  template <std::size_t OBits, bool OSigned>
+  inte_t(const inte_t<OBits, OSigned>& other) : value_(normalize(other.encrypted())) {}
 
-  /* Wraps a pre-existing raw Mojo-V encrypted integer object.
-   * Example: _uint64e_t raw = _enc(7u); uint64e_t v(raw); */
-  uint64e_t(storage_type encrypted) : value_(encrypted) {}
-  /* Encrypts a plain uint64_t into a uint64e_t wrapper.
-   * Example: uint64e_t v(42u); */
-  uint64e_t(value_type plain) : value_(_enc(plain)) {}
-  /* Encrypts a plain int after promoting it to uint64_t.
-   * Example: uint64e_t v(5); */
-  uint64e_t(int plain) : value_(_enc(static_cast<value_type>(plain))) {}
-  /* Converts an encrypted FP64 wrapper to encrypted uint64_t.
-   * Example: uint64e_t bits(fp); */
-  uint64e_t(const fp64e_t& plain);
-  /* Converts an encrypted int64 wrapper to encrypted uint64_t without changing bits.
-   * Example: uint64e_t bits(signed_bits); */
-  uint64e_t(const int64e_t& plain);
+  template <std::size_t FBits>
+  inte_t(const fpe_t<FBits>& plain)
+      : value_(normalize(IsSigned ? _fcvt_l_d(plain.encrypted()) : _fcvt_lu_d(plain.encrypted()))) {}
 
-  /* Replaces this wrapper with a raw encrypted integer payload.
-   * Example: v = _enc(9u); */
-  uint64e_t& operator=(storage_type encrypted) {
-    value_ = encrypted;
-    return *this;
-  }
-
-  /* Replaces this wrapper with the encrypted form of a plain uint64_t.
-   * Example: v = 9u; */
-  uint64e_t& operator=(value_type plain) {
-    value_ = _enc(plain);
-    return *this;
-  }
-
-  /* Returns the underlying encrypted payload as a const reference.
-   * Example: const _uint64e_t &raw = v.encrypted(); */
   const storage_type& encrypted() const { return value_; }
-  /* Returns the underlying encrypted payload as a mutable reference.
-   * Example: v.encrypted() = _add(v.encrypted(), _enc(1u)); */
   storage_type& encrypted() { return value_; }
-
-  /* Implicitly exposes the wrapped encrypted payload for intrinsic calls.
-   * Example: _uint64e_t raw = static_cast<const _uint64e_t&>(v); */
   operator const storage_type&() const { return value_; }
 
-  /* Returns the current encrypted value unchanged.
-   * Example: uint64e_t same = +v; */
-  uint64e_t operator+() const { return *this; }
-  /* Decrypts the value for debug/printing after debug_context() succeeds.
-   * Example: libmin_printf("%lu\n", v.decrypt()); */
   value_type decrypt() const {
     detail::debug_context_or_die();
-    return detail::decrypt_storage(value_);
+    const uint64_t raw = detail::decrypt_storage(value_);
+    if constexpr (IsSigned) return static_cast<value_type>(sign_extend(raw));
+    return static_cast<value_type>(truncate(raw));
   }
-  /* Returns the encrypted two's-complement negation of this value.
-   * Example: uint64e_t neg = -v; */
-  uint64e_t operator-() const { return uint64e_t(_neg(value_)); }
-  /* Returns the encrypted bitwise complement of this value.
-   * Example: uint64e_t flipped = ~mask; */
-  uint64e_t operator~() const { return uint64e_t(_comp(value_)); }
-  /* Returns the encrypted logical negation of this value.
-   * Example: uint64e_t is_zero = !flag; */
-  uint64e_t operator!() const { return uint64e_t(_lnot(value_)); }
 
-  /* Adds another encrypted integer into this one.
-   * Example: total += subtotal; */
-  uint64e_t& operator+=(const uint64e_t& rhs) { value_ = _add(value_, rhs.value_); return *this; }
-  /* Adds a plain integer into this encrypted one.
-   * Example: total += 8u; */
-  uint64e_t& operator+=(value_type rhs) { value_ = _addi(value_, rhs); return *this; }
-  /* Subtracts another encrypted integer from this one.
-   * Example: total -= subtotal; */
-  uint64e_t& operator-=(const uint64e_t& rhs) { value_ = _sub(value_, rhs.value_); return *this; }
-  /* Subtracts a plain integer from this encrypted one.
-   * Example: total -= 8u; */
-  uint64e_t& operator-=(value_type rhs) { value_ = _subi(value_, rhs); return *this; }
-  /* Multiplies this encrypted integer by another encrypted integer.
-   * Example: area *= width; */
-  uint64e_t& operator*=(const uint64e_t& rhs) { value_ = _mulu(value_, rhs.value_); return *this; }
-  /* Multiplies this encrypted integer by a plain integer.
-   * Example: area *= 4u; */
-  uint64e_t& operator*=(value_type rhs) { value_ = _mului(value_, rhs); return *this; }
-  /* Divides this encrypted integer by another encrypted integer.
-   * Example: quotient /= divisor; */
-  uint64e_t& operator/=(const uint64e_t& rhs) { value_ = _divu(value_, rhs.value_); return *this; }
-  /* Divides this encrypted integer by a plain integer.
-   * Example: quotient /= 2u; */
-  uint64e_t& operator/=(value_type rhs) { value_ = _divui(value_, rhs); return *this; }
-  /* Computes encrypted remainder with another encrypted integer.
-   * Example: residue %= modulus; */
-  uint64e_t& operator%=(const uint64e_t& rhs) { value_ = _modu(value_, rhs.value_); return *this; }
-  /* Computes encrypted remainder with a plain integer.
-   * Example: residue %= 16u; */
-  uint64e_t& operator%=(value_type rhs) { value_ = _modui(value_, rhs); return *this; }
-  /* Applies encrypted bitwise AND with another encrypted integer.
-   * Example: bits &= mask; */
-  uint64e_t& operator&=(const uint64e_t& rhs) { value_ = _and(value_, rhs.value_); return *this; }
-  /* Applies encrypted bitwise AND with a plain integer.
-   * Example: bits &= 0xffu; */
-  uint64e_t& operator&=(value_type rhs) { value_ = _andi(value_, rhs); return *this; }
-  /* Applies encrypted bitwise OR with another encrypted integer.
-   * Example: bits |= mask; */
-  uint64e_t& operator|=(const uint64e_t& rhs) { value_ = _or(value_, rhs.value_); return *this; }
-  /* Applies encrypted bitwise OR with a plain integer.
-   * Example: bits |= 0x10u; */
-  uint64e_t& operator|=(value_type rhs) { value_ = _ori(value_, rhs); return *this; }
-  /* Applies encrypted bitwise XOR with another encrypted integer.
-   * Example: bits ^= mask; */
-  uint64e_t& operator^=(const uint64e_t& rhs) { value_ = _xor(value_, rhs.value_); return *this; }
-  /* Applies encrypted bitwise XOR with a plain integer.
-   * Example: bits ^= 0x10u; */
-  uint64e_t& operator^=(value_type rhs) { value_ = _xori(value_, rhs); return *this; }
-  /* Left-shifts this encrypted integer by another encrypted shift amount.
-   * Example: bits <<= shift; */
-  uint64e_t& operator<<=(const uint64e_t& rhs) { value_ = _sll(value_, rhs.value_); return *this; }
-  /* Left-shifts this encrypted integer by a plain shift amount.
-   * Example: bits <<= 3u; */
-  uint64e_t& operator<<=(value_type rhs) { value_ = _slli(value_, rhs); return *this; }
-  /* Right-shifts this encrypted integer by another encrypted shift amount.
-   * Example: bits >>= shift; */
-  uint64e_t& operator>>=(const uint64e_t& rhs) { value_ = _srl(value_, rhs.value_); return *this; }
-  /* Right-shifts this encrypted integer by a plain shift amount.
-   * Example: bits >>= 3u; */
-  uint64e_t& operator>>=(value_type rhs) { value_ = _srli(value_, rhs); return *this; }
+  inte_t& operator=(storage_type encrypted) { value_ = normalize(encrypted); return *this; }
+  inte_t& operator=(value_type plain) { value_ = normalize(_enc(static_cast<uint64_t>(plain))); return *this; }
 
-  /* Pre-increments this encrypted integer by one.
-   * Example: ++counter; */
-  uint64e_t& operator++() { value_ = _addi(value_, 1u); return *this; }
-  /* Post-increments this encrypted integer by one and returns the prior value.
-   * Example: counter++; */
-  uint64e_t operator++(int) { uint64e_t tmp(*this); ++(*this); return tmp; }
-  /* Pre-decrements this encrypted integer by one.
-   * Example: --counter; */
-  uint64e_t& operator--() { value_ = _subi(value_, 1u); return *this; }
-  /* Post-decrements this encrypted integer by one and returns the prior value.
-   * Example: counter--; */
-  uint64e_t operator--(int) { uint64e_t tmp(*this); --(*this); return tmp; }
+  inte_t operator+() const { return *this; }
+  inte_t operator-() const { return inte_t(normalize(_neg(value_))); }
+  inte_t operator~() const { return inte_t(normalize(_comp(value_))); }
+  inte_t operator!() const { return inte_t(_lnot(value_)); }
+
+  inte_t& operator+=(const inte_t& rhs) { value_ = normalize(_add(value_, rhs.value_)); return *this; }
+  inte_t& operator+=(value_type rhs) { value_ = normalize(_addi(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator-=(const inte_t& rhs) { value_ = normalize(_sub(value_, rhs.value_)); return *this; }
+  inte_t& operator-=(value_type rhs) { value_ = normalize(_subi(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator*=(const inte_t& rhs) { value_ = normalize(IsSigned ? _mul(value_, rhs.value_) : _mulu(value_, rhs.value_)); return *this; }
+  inte_t& operator*=(value_type rhs) { value_ = normalize(IsSigned ? _muli(value_, static_cast<int64_t>(rhs)) : _mului(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator/=(const inte_t& rhs) { value_ = normalize(IsSigned ? _div(value_, rhs.value_) : _divu(value_, rhs.value_)); return *this; }
+  inte_t& operator/=(value_type rhs) { value_ = normalize(IsSigned ? _divi(value_, static_cast<int64_t>(rhs)) : _divui(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator%=(const inte_t& rhs) { value_ = normalize(IsSigned ? _mod(value_, rhs.value_) : _modu(value_, rhs.value_)); return *this; }
+  inte_t& operator%=(value_type rhs) { value_ = normalize(IsSigned ? _modi(value_, static_cast<int64_t>(rhs)) : _modui(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator&=(const inte_t& rhs) { value_ = normalize(_and(value_, rhs.value_)); return *this; }
+  inte_t& operator&=(value_type rhs) { value_ = normalize(_andi(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator|=(const inte_t& rhs) { value_ = normalize(_or(value_, rhs.value_)); return *this; }
+  inte_t& operator|=(value_type rhs) { value_ = normalize(_ori(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator^=(const inte_t& rhs) { value_ = normalize(_xor(value_, rhs.value_)); return *this; }
+  inte_t& operator^=(value_type rhs) { value_ = normalize(_xori(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator<<=(const inte_t& rhs) { value_ = normalize(_sll(value_, rhs.value_)); return *this; }
+  inte_t& operator<<=(value_type rhs) { value_ = normalize(_slli(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator>>=(const inte_t& rhs) { value_ = normalize(IsSigned ? _sra(value_, rhs.value_) : _srl(value_, rhs.value_)); return *this; }
+  inte_t& operator>>=(value_type rhs) { value_ = normalize(IsSigned ? _srai(value_, static_cast<uint64_t>(rhs)) : _srli(value_, static_cast<uint64_t>(rhs))); return *this; }
+  inte_t& operator++() { return *this += 1; }
+  inte_t operator++(int) { inte_t tmp(*this); ++(*this); return tmp; }
+  inte_t& operator--() { return *this -= 1; }
+  inte_t operator--(int) { inte_t tmp(*this); --(*this); return tmp; }
 
 private:
+  static constexpr uint64_t kMask = (Bits == 64) ? ~uint64_t(0) : ((uint64_t(1) << Bits) - 1u);
+  static constexpr uint64_t truncate(uint64_t x) { return x & kMask; }
+  static constexpr int64_t sign_extend(uint64_t x) {
+    if constexpr (Bits == 64) return static_cast<int64_t>(x);
+    const uint64_t bit = uint64_t(1) << (Bits - 1);
+    const uint64_t masked = x & kMask;
+    return static_cast<int64_t>((masked ^ bit) - bit);
+  }
+  static storage_type normalize(storage_type raw) {
+    if constexpr (Bits == 64) return raw;
+    if constexpr (IsSigned) { constexpr uint64_t sh = 64u - Bits; return _srai(_slli(raw, sh), sh); }
+    return _andi(raw, kMask);
+  }
+
   storage_type value_;
 };
 
-/* Wraps a Mojo-V encrypted signed 64-bit integer so C++ expressions map to intrinsics.
- * Example: int64e_t total = -4; */
-class int64e_t {
+template <std::size_t Bits>
+class fpe_t {
+  static_assert(Bits == 32 || Bits == 64, "Only 32-bit and 64-bit encrypted FP are supported");
 public:
-  using value_type = int64_t;
-  using storage_type = detail::uint_storage_t;
+  using storage_type = detail::fp_storage_t;
+  using value_type = typename std::conditional<Bits == 32, float, double>::type;
 
-  int64e_t() : value_(detail::zero_uint64e()) {}
-  ~int64e_t() = default;
+  fpe_t() : value_(detail::zero_fp64e()) {}
+  fpe_t(storage_type encrypted) : value_(encrypted) {}
+  fpe_t(value_type plain) : value_(_fenc(static_cast<double>(plain))) {}
 
-  int64e_t(const int64e_t&) = default;
-  int64e_t(int64e_t&&) = default;
-  int64e_t& operator=(const int64e_t&) = default;
-  int64e_t& operator=(int64e_t&&) = default;
-
-  int64e_t(storage_type encrypted) : value_(encrypted) {}
-  int64e_t(value_type plain) : value_(_enc(static_cast<uint64_t>(plain))) {}
-  int64e_t(int plain) : value_(_enc(static_cast<uint64_t>(plain))) {}
-  int64e_t(const uint64e_t& plain);
-  int64e_t(const fp64e_t& plain);
-
-  int64e_t& operator=(storage_type encrypted) {
-    value_ = encrypted;
-    return *this;
-  }
-  int64e_t& operator=(value_type plain) {
-    value_ = _enc(static_cast<uint64_t>(plain));
-    return *this;
-  }
+  template <std::size_t IBits, bool ISigned>
+  fpe_t(const inte_t<IBits, ISigned>& plain)
+      : value_(IBits == 64 ? (ISigned ? _fcvt_d_l(plain.encrypted()) : _fcvt_du(plain.encrypted()))
+                           : (ISigned ? _fcvt_d_l(inte_t<64, true>(plain).encrypted())
+                                      : _fcvt_du(inte_t<64, false>(plain).encrypted()))) {}
 
   const storage_type& encrypted() const { return value_; }
   storage_type& encrypted() { return value_; }
   operator const storage_type&() const { return value_; }
 
-  int64e_t operator+() const { return *this; }
   value_type decrypt() const {
     detail::debug_context_or_die();
     return static_cast<value_type>(detail::decrypt_storage(value_));
   }
-  int64e_t operator-() const { return int64e_t(_neg(value_)); }
-  int64e_t operator~() const { return int64e_t(_comp(value_)); }
-  int64e_t operator!() const { return int64e_t(_lnot(value_)); }
 
-  int64e_t& operator+=(const int64e_t& rhs) { value_ = _add(value_, rhs.value_); return *this; }
-  int64e_t& operator+=(value_type rhs) { value_ = _addi(value_, static_cast<uint64_t>(rhs)); return *this; }
-  int64e_t& operator-=(const int64e_t& rhs) { value_ = _sub(value_, rhs.value_); return *this; }
-  int64e_t& operator-=(value_type rhs) { value_ = _subi(value_, static_cast<uint64_t>(rhs)); return *this; }
-  int64e_t& operator*=(const int64e_t& rhs) { value_ = _mul(value_, rhs.value_); return *this; }
-  int64e_t& operator*=(value_type rhs) { value_ = _muli(value_, rhs); return *this; }
-  int64e_t& operator/=(const int64e_t& rhs) { value_ = _div(value_, rhs.value_); return *this; }
-  int64e_t& operator/=(value_type rhs) { value_ = _divi(value_, rhs); return *this; }
-  int64e_t& operator%=(const int64e_t& rhs) { value_ = _mod(value_, rhs.value_); return *this; }
-  int64e_t& operator%=(value_type rhs) { value_ = _modi(value_, rhs); return *this; }
-  int64e_t& operator&=(const int64e_t& rhs) { value_ = _and(value_, rhs.value_); return *this; }
-  int64e_t& operator&=(value_type rhs) { value_ = _andi(value_, static_cast<uint64_t>(rhs)); return *this; }
-  int64e_t& operator|=(const int64e_t& rhs) { value_ = _or(value_, rhs.value_); return *this; }
-  int64e_t& operator|=(value_type rhs) { value_ = _ori(value_, static_cast<uint64_t>(rhs)); return *this; }
-  int64e_t& operator^=(const int64e_t& rhs) { value_ = _xor(value_, rhs.value_); return *this; }
-  int64e_t& operator^=(value_type rhs) { value_ = _xori(value_, static_cast<uint64_t>(rhs)); return *this; }
-  int64e_t& operator<<=(const int64e_t& rhs) { value_ = _sll(value_, rhs.value_); return *this; }
-  int64e_t& operator<<=(value_type rhs) { value_ = _slli(value_, static_cast<uint64_t>(rhs)); return *this; }
-  int64e_t& operator>>=(const int64e_t& rhs) { value_ = _sra(value_, rhs.value_); return *this; }
-  int64e_t& operator>>=(value_type rhs) { value_ = _srai(value_, static_cast<uint64_t>(rhs)); return *this; }
-
-  int64e_t& operator++() { value_ = _addi(value_, 1u); return *this; }
-  int64e_t operator++(int) { int64e_t tmp(*this); ++(*this); return tmp; }
-  int64e_t& operator--() { value_ = _subi(value_, 1u); return *this; }
-  int64e_t operator--(int) { int64e_t tmp(*this); --(*this); return tmp; }
+  fpe_t operator+() const { return *this; }
+  fpe_t operator-() const { return fpe_t(_fneg(value_)); }
+  fpe_t& operator+=(const fpe_t& rhs) { value_ = _fadd(value_, rhs.value_); return *this; }
+  fpe_t& operator+=(value_type rhs) { value_ = _faddi(value_, static_cast<double>(rhs)); return *this; }
+  fpe_t& operator-=(const fpe_t& rhs) { value_ = _fsub(value_, rhs.value_); return *this; }
+  fpe_t& operator-=(value_type rhs) { value_ = _fsubi(value_, static_cast<double>(rhs)); return *this; }
+  fpe_t& operator*=(const fpe_t& rhs) { value_ = _fmul(value_, rhs.value_); return *this; }
+  fpe_t& operator*=(value_type rhs) { value_ = _fmuli(value_, static_cast<double>(rhs)); return *this; }
+  fpe_t& operator/=(const fpe_t& rhs) { value_ = _fdiv(value_, rhs.value_); return *this; }
+  fpe_t& operator/=(value_type rhs) { value_ = _fdivi(value_, static_cast<double>(rhs)); return *this; }
 
 private:
   storage_type value_;
 };
 
-/* Wraps a Mojo-V encrypted FP64 value so C++ floating-point expressions map to intrinsics.
- * Example: fp64e_t score = 1.5; */
-class fp64e_t {
-public:
-  using value_type = double;
-  using storage_type = detail::fp_storage_t;
+// Integer non-member operators
+template <std::size_t B, bool S> inline inte_t<B,S> operator+(inte_t<B,S> l, const inte_t<B,S>& r){ l+=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator-(inte_t<B,S> l, const inte_t<B,S>& r){ l-=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator*(inte_t<B,S> l, const inte_t<B,S>& r){ l*=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator/(inte_t<B,S> l, const inte_t<B,S>& r){ l/=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator%(inte_t<B,S> l, const inte_t<B,S>& r){ l%=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator&(inte_t<B,S> l, const inte_t<B,S>& r){ l&=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator|(inte_t<B,S> l, const inte_t<B,S>& r){ l|=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator^(inte_t<B,S> l, const inte_t<B,S>& r){ l^=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator<<(inte_t<B,S> l, const inte_t<B,S>& r){ l<<=r; return l; }
+template <std::size_t B, bool S> inline inte_t<B,S> operator>>(inte_t<B,S> l, const inte_t<B,S>& r){ l>>=r; return l; }
 
-  /* Constructs an encrypted floating-point value initialized to 0.0.
-   * Example: fp64e_t x; */
-  fp64e_t() : value_(detail::zero_fp64e()) {}
-  /* Destroys the wrapper without additional cleanup.
-   * Example: { fp64e_t tmp; } */
-  ~fp64e_t() = default;
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator+(inte_t<B,S> l, T r){ l += static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator-(inte_t<B,S> l, T r){ l -= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator*(inte_t<B,S> l, T r){ l *= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator/(inte_t<B,S> l, T r){ l /= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator%(inte_t<B,S> l, T r){ l %= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator&(inte_t<B,S> l, T r){ l &= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator|(inte_t<B,S> l, T r){ l |= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator^(inte_t<B,S> l, T r){ l ^= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<<(inte_t<B,S> l, T r){ l <<= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>>(inte_t<B,S> l, T r){ l >>= static_cast<typename inte_t<B,S>::value_type>(r); return l; }
 
-  /* Copies an encrypted floating-point wrapper.
-   * Example: fp64e_t b(a); */
-  fp64e_t(const fp64e_t&) = default;
-  /* Moves an encrypted floating-point wrapper.
-   * Example: fp64e_t b(make_fp()); */
-  fp64e_t(fp64e_t&&) = default;
-  /* Copy-assigns another encrypted floating-point wrapper.
-   * Example: dst = src; */
-  fp64e_t& operator=(const fp64e_t&) = default;
-  /* Move-assigns another encrypted floating-point wrapper.
-   * Example: dst = make_fp(); */
-  fp64e_t& operator=(fp64e_t&&) = default;
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator+(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) + r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator-(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) - r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator*(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) * r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator/(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) / r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator%(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) % r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator&(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) & r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator|(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) | r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator^(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) ^ r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<<(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) << r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>>(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) >> r; }
 
-  /* Wraps a pre-existing raw encrypted FP64 payload.
-   * Example: _fp64e_t raw = _fenc(2.5); fp64e_t v(raw); */
-  fp64e_t(storage_type encrypted) : value_(encrypted) {}
-  /* Encrypts a plain double into an fp64e_t wrapper.
-   * Example: fp64e_t v(2.5); */
-  fp64e_t(value_type plain) : value_(_fenc(plain)) {}
-  /* Converts an encrypted uint64_t wrapper to encrypted FP64.
-   * Example: fp64e_t fp(count); */
-  fp64e_t(const uint64e_t& plain);
-  /* Converts an encrypted int64_t wrapper to encrypted FP64.
-   * Example: fp64e_t fp(delta); */
-  fp64e_t(const int64e_t& plain);
+template <std::size_t B, bool S> inline inte_t<B,S> operator&&(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_land(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator||(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_lor(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator&&(const inte_t<B,S>& l, T r){ return inte_t<B,S>(_landi(l.encrypted(), static_cast<uint64_t>(r))); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator||(const inte_t<B,S>& l, T r){ return inte_t<B,S>(_lori(l.encrypted(), static_cast<uint64_t>(r))); }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator&&(T l, const inte_t<B,S>& r){ return inte_t<B,S>(_landi(r.encrypted(), static_cast<uint64_t>(l))); }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator||(T l, const inte_t<B,S>& r){ return inte_t<B,S>(_lori(r.encrypted(), static_cast<uint64_t>(l))); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator==(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_seq(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator!=(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_sne(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator<(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _slt(l.encrypted(), r.encrypted()) : _sltu(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator<=(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _sle(l.encrypted(), r.encrypted()) : _sleu(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator>(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _sgt(l.encrypted(), r.encrypted()) : _sgtu(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S> inline inte_t<B,S> operator>=(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(S ? _sge(l.encrypted(), r.encrypted()) : _sgeu(l.encrypted(), r.encrypted())); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator==(const inte_t<B,S>& l, T r){ return l == inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator!=(const inte_t<B,S>& l, T r){ return l != inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<(const inte_t<B,S>& l, T r){ return l < inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<=(const inte_t<B,S>& l, T r){ return l <= inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>(const inte_t<B,S>& l, T r){ return l > inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>=(const inte_t<B,S>& l, T r){ return l >= inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(r)); }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator==(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) == r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator!=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) != r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) < r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator<=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) <= r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) > r; }
+template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline inte_t<B,S> operator>=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) >= r; }
 
-  /* Replaces this wrapper with a raw encrypted FP64 payload.
-   * Example: v = _fenc(3.5); */
-  fp64e_t& operator=(storage_type encrypted) {
-    value_ = encrypted;
-    return *this;
-  }
+// FP operators
+template <std::size_t B> inline fpe_t<B> operator+(fpe_t<B> l, const fpe_t<B>& r){ l += r; return l; }
+template <std::size_t B> inline fpe_t<B> operator-(fpe_t<B> l, const fpe_t<B>& r){ l -= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator*(fpe_t<B> l, const fpe_t<B>& r){ l *= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator/(fpe_t<B> l, const fpe_t<B>& r){ l /= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator+(fpe_t<B> l, typename fpe_t<B>::value_type r){ l += r; return l; }
+template <std::size_t B> inline fpe_t<B> operator-(fpe_t<B> l, typename fpe_t<B>::value_type r){ l -= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator*(fpe_t<B> l, typename fpe_t<B>::value_type r){ l *= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator/(fpe_t<B> l, typename fpe_t<B>::value_type r){ l /= r; return l; }
+template <std::size_t B> inline fpe_t<B> operator+(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) + r; }
+template <std::size_t B> inline fpe_t<B> operator-(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) - r; }
+template <std::size_t B> inline fpe_t<B> operator*(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) * r; }
+template <std::size_t B> inline fpe_t<B> operator/(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) / r; }
+template <std::size_t B> inline auto operator==(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fseq(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator!=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsne(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator<(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fslt(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator<=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsle(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator>(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsgt(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator>=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsge(l.encrypted(), r.encrypted())); }
+template <std::size_t B> inline auto operator==(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fseqi(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator!=(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fsnei(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator<(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fslti(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator<=(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fslei(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator>(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fsgti(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator>=(const fpe_t<B>& l, typename fpe_t<B>::value_type r){ return inte_t<64,false>(_fsgei(l.encrypted(), static_cast<double>(r))); }
+template <std::size_t B> inline auto operator==(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return r == l; }
+template <std::size_t B> inline auto operator!=(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return r != l; }
+template <std::size_t B> inline auto operator<(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fsgti(r.encrypted(), static_cast<double>(l))); }
+template <std::size_t B> inline auto operator<=(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fsgei(r.encrypted(), static_cast<double>(l))); }
+template <std::size_t B> inline auto operator>(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fslti(r.encrypted(), static_cast<double>(l))); }
+template <std::size_t B> inline auto operator>=(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return inte_t<64,false>(_fslei(r.encrypted(), static_cast<double>(l))); }
 
-  /* Replaces this wrapper with the encrypted form of a plain double.
-   * Example: v = 3.5; */
-  fp64e_t& operator=(value_type plain) {
-    value_ = _fenc(plain);
-    return *this;
-  }
+using uint8e_t = inte_t<8, false>;
+using uint16e_t = inte_t<16, false>;
+using uint32e_t = inte_t<32, false>;
+using uint64_generic_t = inte_t<64, false>;
+using uint64e_t = inte_t<64, false>;
+using int8e_t = inte_t<8, true>;
+using int16e_t = inte_t<16, true>;
+using int32e_t = inte_t<32, true>;
+using int64_generic_t = inte_t<64, true>;
+using int64e_t = inte_t<64, true>;
+using fp32e_t = fpe_t<32>;
+using fp64_generic_t = fpe_t<64>;
+using fp64e_t = fpe_t<64>;
 
-  /* Returns the underlying encrypted FP64 payload as a const reference.
-   * Example: const _fp64e_t &raw = v.encrypted(); */
-  const storage_type& encrypted() const { return value_; }
-  /* Returns the underlying encrypted FP64 payload as a mutable reference.
-   * Example: v.encrypted() = _fadd(v.encrypted(), _fenc(1.0)); */
-  storage_type& encrypted() { return value_; }
-
-  /* Implicitly exposes the wrapped encrypted FP64 payload for intrinsic calls.
-   * Example: _fp64e_t raw = static_cast<const _fp64e_t&>(v); */
-  operator const storage_type&() const { return value_; }
-
-  /* Returns the current encrypted floating-point value unchanged.
-   * Example: fp64e_t same = +v; */
-  fp64e_t operator+() const { return *this; }
-  /* Decrypts the value for debug/printing after debug_context() succeeds.
-   * Example: libmin_printf("%lf\n", v.decrypt()); */
-  value_type decrypt() const {
-    detail::debug_context_or_die();
-    return detail::decrypt_storage(value_);
-  }
-  /* Returns the encrypted arithmetic negation of this floating-point value.
-   * Example: fp64e_t neg = -v; */
-  fp64e_t operator-() const { return fp64e_t(_fneg(value_)); }
-
-  /* Adds another encrypted FP64 into this one.
-   * Example: total += delta; */
-  fp64e_t& operator+=(const fp64e_t& rhs) { value_ = _fadd(value_, rhs.value_); return *this; }
-  /* Adds a plain double into this encrypted one.
-   * Example: total += 0.5; */
-  fp64e_t& operator+=(value_type rhs) { value_ = _faddi(value_, rhs); return *this; }
-  /* Subtracts another encrypted FP64 from this one.
-   * Example: total -= delta; */
-  fp64e_t& operator-=(const fp64e_t& rhs) { value_ = _fsub(value_, rhs.value_); return *this; }
-  /* Subtracts a plain double from this encrypted one.
-   * Example: total -= 0.5; */
-  fp64e_t& operator-=(value_type rhs) { value_ = _fsubi(value_, rhs); return *this; }
-  /* Multiplies this encrypted FP64 by another encrypted FP64.
-   * Example: total *= scale; */
-  fp64e_t& operator*=(const fp64e_t& rhs) { value_ = _fmul(value_, rhs.value_); return *this; }
-  /* Multiplies this encrypted FP64 by a plain double.
-   * Example: total *= 1.5; */
-  fp64e_t& operator*=(value_type rhs) { value_ = _fmuli(value_, rhs); return *this; }
-  /* Divides this encrypted FP64 by another encrypted FP64.
-   * Example: total /= divisor; */
-  fp64e_t& operator/=(const fp64e_t& rhs) { value_ = _fdiv(value_, rhs.value_); return *this; }
-  /* Divides this encrypted FP64 by a plain double.
-   * Example: total /= 2.0; */
-  fp64e_t& operator/=(value_type rhs) { value_ = _fdivi(value_, rhs); return *this; }
-
-private:
-  storage_type value_;
-};
-
-/* Converts encrypted FP64 to encrypted uint64_t using Mojo-V conversion. */
-inline uint64e_t::uint64e_t(const fp64e_t& plain) : value_(_fcvt_lu_d(plain.encrypted())) {}
-/* Converts encrypted uint64_t to encrypted int64_t without changing bits. */
-inline int64e_t::int64e_t(const uint64e_t& plain) : value_(plain.encrypted()) {}
-/* Converts encrypted FP64 to encrypted int64_t using Mojo-V conversion. */
-inline int64e_t::int64e_t(const fp64e_t& plain) : value_(_fcvt_l_d(plain.encrypted())) {}
-/* Converts encrypted uint64_t to encrypted FP64 using Mojo-V conversion. */
-inline fp64e_t::fp64e_t(const uint64e_t& plain) : value_(_fcvt_du(plain.encrypted())) {}
-/* Converts encrypted int64_t to encrypted FP64 using Mojo-V conversion. */
-inline fp64e_t::fp64e_t(const int64e_t& plain) : value_(_fcvt_d_l(plain.encrypted())) {}
-
-/* Converts encrypted int64_t to encrypted uint64_t without changing bits. */
-inline uint64e_t::uint64e_t(const int64e_t& plain) : value_(plain.encrypted()) {}
-
-/* Returns the encrypted sum of two encrypted integers.
- * Example: uint64e_t total = a + b; */
-inline uint64e_t operator+(uint64e_t lhs, const uint64e_t& rhs) { lhs += rhs; return lhs; }
-/* Returns the encrypted sum of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t total = a + 4u; */
-inline uint64e_t operator+(uint64e_t lhs, uint64_t rhs) { lhs += rhs; return lhs; }
-/* Returns the encrypted sum of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t total = 4u + a; */
-inline uint64e_t operator+(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) + rhs; }
-/* Returns the encrypted difference of two encrypted integers.
- * Example: uint64e_t diff = a - b; */
-inline uint64e_t operator-(uint64e_t lhs, const uint64e_t& rhs) { lhs -= rhs; return lhs; }
-/* Returns the encrypted difference of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t diff = a - 4u; */
-inline uint64e_t operator-(uint64e_t lhs, uint64_t rhs) { lhs -= rhs; return lhs; }
-/* Returns the encrypted difference of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t diff = 9u - a; */
-inline uint64e_t operator-(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) - rhs; }
-/* Returns the encrypted product of two encrypted integers.
- * Example: uint64e_t prod = a * b; */
-inline uint64e_t operator*(uint64e_t lhs, const uint64e_t& rhs) { lhs *= rhs; return lhs; }
-/* Returns the encrypted product of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t prod = a * 8u; */
-inline uint64e_t operator*(uint64e_t lhs, uint64_t rhs) { lhs *= rhs; return lhs; }
-/* Returns the encrypted product of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t prod = 8u * a; */
-inline uint64e_t operator*(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) * rhs; }
-/* Returns the encrypted quotient of two encrypted integers.
- * Example: uint64e_t q = a / b; */
-inline uint64e_t operator/(uint64e_t lhs, const uint64e_t& rhs) { lhs /= rhs; return lhs; }
-/* Returns the encrypted quotient of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t q = a / 2u; */
-inline uint64e_t operator/(uint64e_t lhs, uint64_t rhs) { lhs /= rhs; return lhs; }
-/* Returns the encrypted quotient of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t q = 16u / a; */
-inline uint64e_t operator/(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) / rhs; }
-/* Returns the encrypted remainder of two encrypted integers.
- * Example: uint64e_t r = a % b; */
-inline uint64e_t operator%(uint64e_t lhs, const uint64e_t& rhs) { lhs %= rhs; return lhs; }
-/* Returns the encrypted remainder of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t r = a % 16u; */
-inline uint64e_t operator%(uint64e_t lhs, uint64_t rhs) { lhs %= rhs; return lhs; }
-/* Returns the encrypted remainder of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t r = 16u % a; */
-inline uint64e_t operator%(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) % rhs; }
-/* Returns the encrypted bitwise AND of two encrypted integers.
- * Example: uint64e_t both = a & b; */
-inline uint64e_t operator&(uint64e_t lhs, const uint64e_t& rhs) { lhs &= rhs; return lhs; }
-/* Returns the encrypted bitwise AND of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t masked = a & 0xffu; */
-inline uint64e_t operator&(uint64e_t lhs, uint64_t rhs) { lhs &= rhs; return lhs; }
-/* Returns the encrypted bitwise AND of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t masked = 0xffu & a; */
-inline uint64e_t operator&(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) & rhs; }
-/* Returns the encrypted bitwise OR of two encrypted integers.
- * Example: uint64e_t bits = a | b; */
-inline uint64e_t operator|(uint64e_t lhs, const uint64e_t& rhs) { lhs |= rhs; return lhs; }
-/* Returns the encrypted bitwise OR of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t bits = a | 0x10u; */
-inline uint64e_t operator|(uint64e_t lhs, uint64_t rhs) { lhs |= rhs; return lhs; }
-/* Returns the encrypted bitwise OR of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t bits = 0x10u | a; */
-inline uint64e_t operator|(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) | rhs; }
-/* Returns the encrypted bitwise XOR of two encrypted integers.
- * Example: uint64e_t bits = a ^ b; */
-inline uint64e_t operator^(uint64e_t lhs, const uint64e_t& rhs) { lhs ^= rhs; return lhs; }
-/* Returns the encrypted bitwise XOR of an encrypted integer and a plain uint64_t.
- * Example: uint64e_t bits = a ^ 0x10u; */
-inline uint64e_t operator^(uint64e_t lhs, uint64_t rhs) { lhs ^= rhs; return lhs; }
-/* Returns the encrypted bitwise XOR of a plain uint64_t and an encrypted integer.
- * Example: uint64e_t bits = 0x10u ^ a; */
-inline uint64e_t operator^(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) ^ rhs; }
-/* Returns the encrypted left shift of an integer by another encrypted amount.
- * Example: uint64e_t shifted = a << b; */
-inline uint64e_t operator<<(uint64e_t lhs, const uint64e_t& rhs) { lhs <<= rhs; return lhs; }
-/* Returns the encrypted left shift of an integer by a plain amount.
- * Example: uint64e_t shifted = a << 3u; */
-inline uint64e_t operator<<(uint64e_t lhs, uint64_t rhs) { lhs <<= rhs; return lhs; }
-/* Returns the encrypted left shift of a plain value by an encrypted amount.
- * Example: uint64e_t shifted = 1u << a; */
-inline uint64e_t operator<<(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) << rhs; }
-/* Returns the encrypted right shift of an integer by another encrypted amount.
- * Example: uint64e_t shifted = a >> b; */
-inline uint64e_t operator>>(uint64e_t lhs, const uint64e_t& rhs) { lhs >>= rhs; return lhs; }
-/* Returns the encrypted right shift of an integer by a plain amount.
- * Example: uint64e_t shifted = a >> 3u; */
-inline uint64e_t operator>>(uint64e_t lhs, uint64_t rhs) { lhs >>= rhs; return lhs; }
-/* Returns the encrypted right shift of a plain value by an encrypted amount.
- * Example: uint64e_t shifted = 8u >> a; */
-inline uint64e_t operator>>(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(lhs) >> rhs; }
-/* Computes encrypted logical AND without C++ short-circuiting.
- * Example: uint64e_t both = a && b; */
-inline uint64e_t operator&&(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_land(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted logical AND between an encrypted integer and a plain integer.
- * Example: uint64e_t both = a && 1u; */
-inline uint64e_t operator&&(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_landi(lhs.encrypted(), rhs)); }
-/* Computes encrypted logical AND between a plain integer and an encrypted integer.
- * Example: uint64e_t both = 1u && a; */
-inline uint64e_t operator&&(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_landi(rhs.encrypted(), lhs)); }
-/* Computes encrypted logical OR without C++ short-circuiting.
- * Example: uint64e_t either = a || b; */
-inline uint64e_t operator||(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_lor(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted logical OR between an encrypted integer and a plain integer.
- * Example: uint64e_t either = a || 0u; */
-inline uint64e_t operator||(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_lori(lhs.encrypted(), rhs)); }
-/* Computes encrypted logical OR between a plain integer and an encrypted integer.
- * Example: uint64e_t either = 0u || a; */
-inline uint64e_t operator||(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_lori(rhs.encrypted(), lhs)); }
-
-/* Computes encrypted equality for two encrypted integers.
- * Example: uint64e_t eq = (a == b); */
-inline uint64e_t operator==(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_seq(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted equality for an encrypted integer and a plain integer.
- * Example: uint64e_t eq = (a == 7u); */
-inline uint64e_t operator==(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_seqi(lhs.encrypted(), rhs)); }
-/* Computes encrypted equality for a plain integer and an encrypted integer.
- * Example: uint64e_t eq = (7u == a); */
-inline uint64e_t operator==(uint64_t lhs, const uint64e_t& rhs) { return rhs == lhs; }
-/* Computes encrypted inequality for two encrypted integers.
- * Example: uint64e_t ne = (a != b); */
-inline uint64e_t operator!=(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sne(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted inequality for an encrypted integer and a plain integer.
- * Example: uint64e_t ne = (a != 7u); */
-inline uint64e_t operator!=(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_snei(lhs.encrypted(), rhs)); }
-/* Computes encrypted inequality for a plain integer and an encrypted integer.
- * Example: uint64e_t ne = (7u != a); */
-inline uint64e_t operator!=(uint64_t lhs, const uint64e_t& rhs) { return rhs != lhs; }
-/* Computes encrypted unsigned less-than for two encrypted integers.
- * Example: uint64e_t lt = (a < b); */
-inline uint64e_t operator<(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sltu(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted unsigned less-than for an encrypted integer and a plain integer.
- * Example: uint64e_t lt = (a < 7u); */
-inline uint64e_t operator<(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sltui(lhs.encrypted(), rhs)); }
-/* Computes encrypted unsigned less-than for a plain integer and an encrypted integer.
- * Example: uint64e_t lt = (7u < a); */
-inline uint64e_t operator<(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sgtui(rhs.encrypted(), lhs)); }
-/* Computes encrypted unsigned less-than-or-equal for two encrypted integers.
- * Example: uint64e_t le = (a <= b); */
-inline uint64e_t operator<=(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sleu(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted unsigned less-than-or-equal for an encrypted integer and a plain integer.
- * Example: uint64e_t le = (a <= 7u); */
-inline uint64e_t operator<=(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sleui(lhs.encrypted(), rhs)); }
-/* Computes encrypted unsigned less-than-or-equal for a plain integer and an encrypted integer.
- * Example: uint64e_t le = (7u <= a); */
-inline uint64e_t operator<=(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sgeui(rhs.encrypted(), lhs)); }
-/* Computes encrypted unsigned greater-than for two encrypted integers.
- * Example: uint64e_t gt = (a > b); */
-inline uint64e_t operator>(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sgtu(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted unsigned greater-than for an encrypted integer and a plain integer.
- * Example: uint64e_t gt = (a > 7u); */
-inline uint64e_t operator>(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sgtui(lhs.encrypted(), rhs)); }
-/* Computes encrypted unsigned greater-than for a plain integer and an encrypted integer.
- * Example: uint64e_t gt = (7u > a); */
-inline uint64e_t operator>(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sltui(rhs.encrypted(), lhs)); }
-/* Computes encrypted unsigned greater-than-or-equal for two encrypted integers.
- * Example: uint64e_t ge = (a >= b); */
-inline uint64e_t operator>=(const uint64e_t& lhs, const uint64e_t& rhs) { return uint64e_t(_sgeu(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted unsigned greater-than-or-equal for an encrypted integer and a plain integer.
- * Example: uint64e_t ge = (a >= 7u); */
-inline uint64e_t operator>=(const uint64e_t& lhs, uint64_t rhs) { return uint64e_t(_sgeui(lhs.encrypted(), rhs)); }
-/* Computes encrypted unsigned greater-than-or-equal for a plain integer and an encrypted integer.
- * Example: uint64e_t ge = (7u >= a); */
-inline uint64e_t operator>=(uint64_t lhs, const uint64e_t& rhs) { return uint64e_t(_sleui(rhs.encrypted(), lhs)); }
-
-inline int64e_t operator+(int64e_t lhs, const int64e_t& rhs) { lhs += rhs; return lhs; }
-inline int64e_t operator+(int64e_t lhs, int64_t rhs) { lhs += rhs; return lhs; }
-inline int64e_t operator+(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) + rhs; }
-inline int64e_t operator-(int64e_t lhs, const int64e_t& rhs) { lhs -= rhs; return lhs; }
-inline int64e_t operator-(int64e_t lhs, int64_t rhs) { lhs -= rhs; return lhs; }
-inline int64e_t operator-(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) - rhs; }
-inline int64e_t operator*(int64e_t lhs, const int64e_t& rhs) { lhs *= rhs; return lhs; }
-inline int64e_t operator*(int64e_t lhs, int64_t rhs) { lhs *= rhs; return lhs; }
-inline int64e_t operator*(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) * rhs; }
-inline int64e_t operator/(int64e_t lhs, const int64e_t& rhs) { lhs /= rhs; return lhs; }
-inline int64e_t operator/(int64e_t lhs, int64_t rhs) { lhs /= rhs; return lhs; }
-inline int64e_t operator/(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) / rhs; }
-inline int64e_t operator%(int64e_t lhs, const int64e_t& rhs) { lhs %= rhs; return lhs; }
-inline int64e_t operator%(int64e_t lhs, int64_t rhs) { lhs %= rhs; return lhs; }
-inline int64e_t operator%(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) % rhs; }
-inline int64e_t operator&(int64e_t lhs, const int64e_t& rhs) { lhs &= rhs; return lhs; }
-inline int64e_t operator&(int64e_t lhs, int64_t rhs) { lhs &= rhs; return lhs; }
-inline int64e_t operator&(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) & rhs; }
-inline int64e_t operator|(int64e_t lhs, const int64e_t& rhs) { lhs |= rhs; return lhs; }
-inline int64e_t operator|(int64e_t lhs, int64_t rhs) { lhs |= rhs; return lhs; }
-inline int64e_t operator|(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) | rhs; }
-inline int64e_t operator^(int64e_t lhs, const int64e_t& rhs) { lhs ^= rhs; return lhs; }
-inline int64e_t operator^(int64e_t lhs, int64_t rhs) { lhs ^= rhs; return lhs; }
-inline int64e_t operator^(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) ^ rhs; }
-inline int64e_t operator<<(int64e_t lhs, const int64e_t& rhs) { lhs <<= rhs; return lhs; }
-inline int64e_t operator<<(int64e_t lhs, int64_t rhs) { lhs <<= rhs; return lhs; }
-inline int64e_t operator<<(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) << rhs; }
-inline int64e_t operator>>(int64e_t lhs, const int64e_t& rhs) { lhs >>= rhs; return lhs; }
-inline int64e_t operator>>(int64e_t lhs, int64_t rhs) { lhs >>= rhs; return lhs; }
-inline int64e_t operator>>(int64_t lhs, const int64e_t& rhs) { return int64e_t(lhs) >> rhs; }
-inline int64e_t operator&&(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_land(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator&&(const int64e_t& lhs, int64_t rhs) { return int64e_t(_landi(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
-inline int64e_t operator&&(int64_t lhs, const int64e_t& rhs) { return int64e_t(_landi(rhs.encrypted(), static_cast<uint64_t>(lhs))); }
-inline int64e_t operator||(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_lor(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator||(const int64e_t& lhs, int64_t rhs) { return int64e_t(_lori(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
-inline int64e_t operator||(int64_t lhs, const int64e_t& rhs) { return int64e_t(_lori(rhs.encrypted(), static_cast<uint64_t>(lhs))); }
-
-inline int64e_t operator==(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_seq(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator==(const int64e_t& lhs, int64_t rhs) { return int64e_t(_seqi(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
-inline int64e_t operator==(int64_t lhs, const int64e_t& rhs) { return rhs == lhs; }
-inline int64e_t operator!=(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sne(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator!=(const int64e_t& lhs, int64_t rhs) { return int64e_t(_snei(lhs.encrypted(), static_cast<uint64_t>(rhs))); }
-inline int64e_t operator!=(int64_t lhs, const int64e_t& rhs) { return rhs != lhs; }
-inline int64e_t operator<(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_slt(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator<(const int64e_t& lhs, int64_t rhs) { return int64e_t(_slti(lhs.encrypted(), rhs)); }
-inline int64e_t operator<(int64_t lhs, const int64e_t& rhs) { return int64e_t(_sgti(rhs.encrypted(), lhs)); }
-inline int64e_t operator<=(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sle(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator<=(const int64e_t& lhs, int64_t rhs) { return int64e_t(_slei(lhs.encrypted(), rhs)); }
-inline int64e_t operator<=(int64_t lhs, const int64e_t& rhs) { return int64e_t(_sgei(rhs.encrypted(), lhs)); }
-inline int64e_t operator>(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sgt(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator>(const int64e_t& lhs, int64_t rhs) { return int64e_t(_sgti(lhs.encrypted(), rhs)); }
-inline int64e_t operator>(int64_t lhs, const int64e_t& rhs) { return int64e_t(_slti(rhs.encrypted(), lhs)); }
-inline int64e_t operator>=(const int64e_t& lhs, const int64e_t& rhs) { return int64e_t(_sge(lhs.encrypted(), rhs.encrypted())); }
-inline int64e_t operator>=(const int64e_t& lhs, int64_t rhs) { return int64e_t(_sgei(lhs.encrypted(), rhs)); }
-inline int64e_t operator>=(int64_t lhs, const int64e_t& rhs) { return int64e_t(_slei(rhs.encrypted(), lhs)); }
-
-/* Returns the encrypted sum of two encrypted FP64 values.
- * Example: fp64e_t total = a + b; */
-inline fp64e_t operator+(fp64e_t lhs, const fp64e_t& rhs) { lhs += rhs; return lhs; }
-/* Returns the encrypted sum of an encrypted FP64 and a plain double.
- * Example: fp64e_t total = a + 0.5; */
-inline fp64e_t operator+(fp64e_t lhs, double rhs) { lhs += rhs; return lhs; }
-/* Returns the encrypted sum of a plain double and an encrypted FP64.
- * Example: fp64e_t total = 0.5 + a; */
-inline fp64e_t operator+(double lhs, const fp64e_t& rhs) { return fp64e_t(lhs) + rhs; }
-/* Returns the encrypted difference of two encrypted FP64 values.
- * Example: fp64e_t diff = a - b; */
-inline fp64e_t operator-(fp64e_t lhs, const fp64e_t& rhs) { lhs -= rhs; return lhs; }
-/* Returns the encrypted difference of an encrypted FP64 and a plain double.
- * Example: fp64e_t diff = a - 0.5; */
-inline fp64e_t operator-(fp64e_t lhs, double rhs) { lhs -= rhs; return lhs; }
-/* Returns the encrypted difference of a plain double and an encrypted FP64.
- * Example: fp64e_t diff = 3.0 - a; */
-inline fp64e_t operator-(double lhs, const fp64e_t& rhs) { return fp64e_t(lhs) - rhs; }
-/* Returns the encrypted product of two encrypted FP64 values.
- * Example: fp64e_t prod = a * b; */
-inline fp64e_t operator*(fp64e_t lhs, const fp64e_t& rhs) { lhs *= rhs; return lhs; }
-/* Returns the encrypted product of an encrypted FP64 and a plain double.
- * Example: fp64e_t prod = a * 2.0; */
-inline fp64e_t operator*(fp64e_t lhs, double rhs) { lhs *= rhs; return lhs; }
-/* Returns the encrypted product of a plain double and an encrypted FP64.
- * Example: fp64e_t prod = 2.0 * a; */
-inline fp64e_t operator*(double lhs, const fp64e_t& rhs) { return fp64e_t(lhs) * rhs; }
-/* Returns the encrypted quotient of two encrypted FP64 values.
- * Example: fp64e_t q = a / b; */
-inline fp64e_t operator/(fp64e_t lhs, const fp64e_t& rhs) { lhs /= rhs; return lhs; }
-/* Returns the encrypted quotient of an encrypted FP64 and a plain double.
- * Example: fp64e_t q = a / 2.0; */
-inline fp64e_t operator/(fp64e_t lhs, double rhs) { lhs /= rhs; return lhs; }
-/* Returns the encrypted quotient of a plain double and an encrypted FP64.
- * Example: fp64e_t q = 8.0 / a; */
-inline fp64e_t operator/(double lhs, const fp64e_t& rhs) { return fp64e_t(lhs) / rhs; }
-
-/* Computes encrypted floating-point equality for two encrypted FP64 values.
- * Example: uint64e_t eq = (a == b); */
-inline uint64e_t operator==(const fp64e_t& lhs, const fp64e_t& rhs) { return uint64e_t(_fseq(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted floating-point equality for an encrypted FP64 and a plain double.
- * Example: uint64e_t eq = (a == 1.0); */
-inline uint64e_t operator==(const fp64e_t& lhs, double rhs) { return uint64e_t(_fseqi(lhs.encrypted(), rhs)); }
-/* Computes encrypted floating-point equality for a plain double and an encrypted FP64.
- * Example: uint64e_t eq = (1.0 == a); */
-inline uint64e_t operator==(double lhs, const fp64e_t& rhs) { return rhs == lhs; }
-/* Computes encrypted floating-point inequality for two encrypted FP64 values.
- * Example: uint64e_t ne = (a != b); */
-inline uint64e_t operator!=(const fp64e_t& lhs, const fp64e_t& rhs) { return uint64e_t(_fsne(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted floating-point inequality for an encrypted FP64 and a plain double.
- * Example: uint64e_t ne = (a != 1.0); */
-inline uint64e_t operator!=(const fp64e_t& lhs, double rhs) { return uint64e_t(_fsnei(lhs.encrypted(), rhs)); }
-/* Computes encrypted floating-point inequality for a plain double and an encrypted FP64.
- * Example: uint64e_t ne = (1.0 != a); */
-inline uint64e_t operator!=(double lhs, const fp64e_t& rhs) { return rhs != lhs; }
-/* Computes encrypted floating-point less-than for two encrypted FP64 values.
- * Example: uint64e_t lt = (a < b); */
-inline uint64e_t operator<(const fp64e_t& lhs, const fp64e_t& rhs) { return uint64e_t(_fslt(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted floating-point less-than for an encrypted FP64 and a plain double.
- * Example: uint64e_t lt = (a < 1.0); */
-inline uint64e_t operator<(const fp64e_t& lhs, double rhs) { return uint64e_t(_fslti(lhs.encrypted(), rhs)); }
-/* Computes encrypted floating-point less-than for a plain double and an encrypted FP64.
- * Example: uint64e_t lt = (1.0 < a); */
-inline uint64e_t operator<(double lhs, const fp64e_t& rhs) { return uint64e_t(_fsgti(rhs.encrypted(), lhs)); }
-/* Computes encrypted floating-point less-than-or-equal for two encrypted FP64 values.
- * Example: uint64e_t le = (a <= b); */
-inline uint64e_t operator<=(const fp64e_t& lhs, const fp64e_t& rhs) { return uint64e_t(_fsle(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted floating-point less-than-or-equal for an encrypted FP64 and a plain double.
- * Example: uint64e_t le = (a <= 1.0); */
-inline uint64e_t operator<=(const fp64e_t& lhs, double rhs) { return uint64e_t(_fslei(lhs.encrypted(), rhs)); }
-/* Computes encrypted floating-point less-than-or-equal for a plain double and an encrypted FP64.
- * Example: uint64e_t le = (1.0 <= a); */
-inline uint64e_t operator<=(double lhs, const fp64e_t& rhs) { return uint64e_t(_fsgei(rhs.encrypted(), lhs)); }
-/* Computes encrypted floating-point greater-than for two encrypted FP64 values.
- * Example: uint64e_t gt = (a > b); */
-inline uint64e_t operator>(const fp64e_t& lhs, const fp64e_t& rhs) { return uint64e_t(_fsgt(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted floating-point greater-than for an encrypted FP64 and a plain double.
- * Example: uint64e_t gt = (a > 1.0); */
-inline uint64e_t operator>(const fp64e_t& lhs, double rhs) { return uint64e_t(_fsgti(lhs.encrypted(), rhs)); }
-/* Computes encrypted floating-point greater-than for a plain double and an encrypted FP64.
- * Example: uint64e_t gt = (1.0 > a); */
-inline uint64e_t operator>(double lhs, const fp64e_t& rhs) { return uint64e_t(_fslti(rhs.encrypted(), lhs)); }
-/* Computes encrypted floating-point greater-than-or-equal for two encrypted FP64 values.
- * Example: uint64e_t ge = (a >= b); */
-inline uint64e_t operator>=(const fp64e_t& lhs, const fp64e_t& rhs) { return uint64e_t(_fsge(lhs.encrypted(), rhs.encrypted())); }
-/* Computes encrypted floating-point greater-than-or-equal for an encrypted FP64 and a plain double.
- * Example: uint64e_t ge = (a >= 1.0); */
-inline uint64e_t operator>=(const fp64e_t& lhs, double rhs) { return uint64e_t(_fsgei(lhs.encrypted(), rhs)); }
-/* Computes encrypted floating-point greater-than-or-equal for a plain double and an encrypted FP64.
- * Example: uint64e_t ge = (1.0 >= a); */
-inline uint64e_t operator>=(double lhs, const fp64e_t& rhs) { return uint64e_t(_fslei(rhs.encrypted(), lhs)); }
-
-/* Selects one encrypted integer or another based on an encrypted predicate.
- * Example: uint64e_t chosen = cmov(pred, on_true, on_false); */
-inline uint64e_t cmov(const uint64e_t& predicate, const uint64e_t& if_true, const uint64e_t& if_false) {
-  return uint64e_t(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
-}
-/* Selects one encrypted integer or another based on a plain predicate. */
-inline uint64e_t cmov(uint64_t predicate, const uint64e_t& if_true, const uint64e_t& if_false) {
-  return cmov(uint64e_t(predicate), if_true, if_false);
-}
-inline uint64e_t cmov(const uint64e_t& predicate, uint64_t if_true, const uint64e_t& if_false) {
-  return cmov(predicate, uint64e_t(if_true), if_false);
-}
-inline uint64e_t cmov(const uint64e_t& predicate, const uint64e_t& if_true, uint64_t if_false) {
-  return cmov(predicate, if_true, uint64e_t(if_false));
-}
-inline uint64e_t cmov(uint64_t predicate, uint64_t if_true, const uint64e_t& if_false) {
-  return cmov(uint64e_t(predicate), uint64e_t(if_true), if_false);
-}
-inline uint64e_t cmov(uint64_t predicate, const uint64e_t& if_true, uint64_t if_false) {
-  return cmov(uint64e_t(predicate), if_true, uint64e_t(if_false));
-}
-inline uint64e_t cmov(const uint64e_t& predicate, uint64_t if_true, uint64_t if_false) {
-  return cmov(predicate, uint64e_t(if_true), uint64e_t(if_false));
-}
-inline uint64e_t cmov(uint64_t predicate, uint64_t if_true, uint64_t if_false) {
-  return cmov(uint64e_t(predicate), uint64e_t(if_true), uint64e_t(if_false));
+template <std::size_t B, bool S>
+inline inte_t<B,S> cmov(const inte_t<64,false>& predicate, const inte_t<B,S>& if_true, const inte_t<B,S>& if_false) {
+  return inte_t<B,S>(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
 }
 
-/* Selects one encrypted signed integer or another based on encrypted/plain predicate. */
-inline int64e_t cmov(const uint64e_t& predicate, const int64e_t& if_true, const int64e_t& if_false) {
-  return int64e_t(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
-}
-inline int64e_t cmov(uint64_t predicate, const int64e_t& if_true, const int64e_t& if_false) {
-  return cmov(uint64e_t(predicate), if_true, if_false);
-}
-inline int64e_t cmov(const uint64e_t& predicate, int64_t if_true, const int64e_t& if_false) {
-  return cmov(predicate, int64e_t(if_true), if_false);
-}
-inline int64e_t cmov(const uint64e_t& predicate, const int64e_t& if_true, int64_t if_false) {
-  return cmov(predicate, if_true, int64e_t(if_false));
-}
-inline int64e_t cmov(uint64_t predicate, int64_t if_true, const int64e_t& if_false) {
-  return cmov(uint64e_t(predicate), int64e_t(if_true), if_false);
-}
-inline int64e_t cmov(uint64_t predicate, const int64e_t& if_true, int64_t if_false) {
-  return cmov(uint64e_t(predicate), if_true, int64e_t(if_false));
-}
-inline int64e_t cmov(const uint64e_t& predicate, int64_t if_true, int64_t if_false) {
-  return cmov(predicate, int64e_t(if_true), int64e_t(if_false));
-}
-inline int64e_t cmov(uint64_t predicate, int64_t if_true, int64_t if_false) {
-  return cmov(uint64e_t(predicate), int64e_t(if_true), int64e_t(if_false));
+template <typename Pred, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<Pred>::value>::type>
+inline inte_t<B,S> cmov(Pred predicate, const inte_t<B,S>& if_true, const inte_t<B,S>& if_false) {
+  return cmov(inte_t<64, false>(static_cast<uint64_t>(predicate)), if_true, if_false);
 }
 
-/* Selects one encrypted FP64 or another based on encrypted/plain predicate. */
-inline fp64e_t cmov(const uint64e_t& predicate, const fp64e_t& if_true, const fp64e_t& if_false) {
-  return fp64e_t(_fcmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
+template <std::size_t B>
+inline fpe_t<B> cmov(const inte_t<64,false>& predicate, const fpe_t<B>& if_true, const fpe_t<B>& if_false) {
+  return fpe_t<B>(_fcmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
 }
-inline fp64e_t cmov(uint64_t predicate, const fp64e_t& if_true, const fp64e_t& if_false) {
-  return cmov(uint64e_t(predicate), if_true, if_false);
-}
-inline fp64e_t cmov(const uint64e_t& predicate, double if_true, const fp64e_t& if_false) {
-  return cmov(predicate, fp64e_t(if_true), if_false);
-}
-inline fp64e_t cmov(const uint64e_t& predicate, const fp64e_t& if_true, double if_false) {
-  return cmov(predicate, if_true, fp64e_t(if_false));
-}
-inline fp64e_t cmov(uint64_t predicate, double if_true, const fp64e_t& if_false) {
-  return cmov(uint64e_t(predicate), fp64e_t(if_true), if_false);
-}
-inline fp64e_t cmov(uint64_t predicate, const fp64e_t& if_true, double if_false) {
-  return cmov(uint64e_t(predicate), if_true, fp64e_t(if_false));
-}
-inline fp64e_t cmov(const uint64e_t& predicate, double if_true, double if_false) {
-  return cmov(predicate, fp64e_t(if_true), fp64e_t(if_false));
-}
-inline fp64e_t cmov(uint64_t predicate, double if_true, double if_false) {
-  return cmov(uint64e_t(predicate), fp64e_t(if_true), fp64e_t(if_false));
+template <typename Pred, std::size_t B, typename = typename std::enable_if<std::is_integral<Pred>::value>::type>
+inline fpe_t<B> cmov(Pred predicate, const fpe_t<B>& if_true, const fpe_t<B>& if_false) {
+  return cmov(inte_t<64, false>(static_cast<uint64_t>(predicate)), if_true, if_false);
 }
 
-/* Returns the encrypted absolute value of an encrypted FP64.
- * Example: fp64e_t mag = abs(delta); */
-inline fp64e_t fabs(const fp64e_t& value) {
-  return fp64e_t(_fabs(value.encrypted()));
-}
-
+inline fp64e_t fabs(const fp64e_t& value) { return fp64e_t(_fabs(value.encrypted())); }
 }  // namespace exo
 
 using exo::cmov;
 using exo::debug_context;
+using exo::fp32e_t;
 using exo::fp64e_t;
+using exo::fp64_generic_t;
+using exo::fpe_t;
+using exo::int8e_t;
+using exo::int16e_t;
+using exo::int32e_t;
 using exo::int64e_t;
+using exo::int64_generic_t;
+using exo::inte_t;
+using exo::uint8e_t;
+using exo::uint16e_t;
+using exo::uint32e_t;
 using exo::uint64e_t;
+using exo::uint64_generic_t;
 
 #endif  // __cplusplus
 
