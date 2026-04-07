@@ -72,7 +72,7 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_int_result((LABEL), #EXPR, (int64_t)_d, (int64_t)((decltype(_d))(_e)); \
+    check_int_result((LABEL), #EXPR, (int64_t)_d, (int64_t)((decltype(_d))(_e))); \
   } while (0)
 
 #define CHECK_FP(LABEL, EXPR, EXPECTED) \
