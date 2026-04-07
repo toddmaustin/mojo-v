@@ -72,7 +72,8 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_int_result((LABEL), #EXPR, (int64_t)_d, (int64_t)((decltype(_d))(_e))); \
+    auto _ed = decltype(_v)(_e).decrypt(); \
+    check_int_result((LABEL), #EXPR, (int64_t)_d, (int64_t)_ed); \
   } while (0)
 
 #define CHECK_FP(LABEL, EXPR, EXPECTED) \
@@ -80,7 +81,8 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_fp_result((LABEL), #EXPR, (double)_d, (double)((decltype(_d))(_e))); \
+    auto _ed = decltype(_v)(_e).decrypt(); \
+    check_fp_result((LABEL), #EXPR, (double)_d, (double)_ed); \
   } while (0)
 
 template <typename T>
