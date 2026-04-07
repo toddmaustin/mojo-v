@@ -12,9 +12,9 @@ using namespace exo;
 
 static int g_failures = 0;
 
-static void check_bool(const char *label, bool ok)
+static void check_bool(const char *suite, const char *operation, bool ok)
 {
-  libmin_printf("TEST: %s : %s\n", label, ok ? "PASS" : "FAIL");
+  libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
   if (!ok) g_failures++;
 }
 
@@ -23,7 +23,7 @@ static void check_bool(const char *label, bool ok)
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_bool((LABEL), _d == (decltype(_d))(_e)); \
+    check_bool((LABEL), #EXPR, _d == (decltype(_d))(_e)); \
   } while (0)
 
 #define CHECK_FP(LABEL, EXPR, EXPECTED) \
@@ -31,7 +31,7 @@ static void check_bool(const char *label, bool ok)
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_bool((LABEL), _d == (decltype(_d))(_e)); \
+    check_bool((LABEL), #EXPR, _d == (decltype(_d))(_e)); \
   } while (0)
 
 template <typename T>
@@ -208,7 +208,7 @@ static void run_fp_ops(const char *name, typename T::value_type a_in, typename T
   CHECK_FP(name, cmov(pred, a, (typename T::value_type)(b_in)), (typename T::value_type)(a_in < b_in ? a_in : b_in));
 }
 
-#define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; check_bool(LABEL, d.decrypt() == (typename DST::value_type)(V)); } while (0)
+#define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; check_bool("cast", LABEL, d.decrypt() == (typename DST::value_type)(V)); } while (0)
 
 int main(void)
 {
