@@ -52,11 +52,11 @@ const char inp_txt[] =
 // Returns the total number of matches found.
 uint64e_t
 rabinkarp_search(
-    const uint64e_t *text,
+    const uint8e_t *text,
     uint64_t text_len,
-    const uint64e_t *pattern,
+    const uint8e_t *pattern,
     uint64_t pattern_len,
-    uint64e_t res[])
+    uint8e_t res[])
 {
   if (text == NULL || pattern == NULL || res == NULL)
     return 0;
@@ -84,8 +84,8 @@ rabinkarp_search(
   // Compute initial hashes
   for (size_t i = 0; i < pattern_len; i++)
   {
-    pattern_hash = pattern_hash * RK_BASE + /*(unsigned char)*/pattern[i];
-    window_hash  = window_hash  * RK_BASE + /*(unsigned char)*/text[i];
+    pattern_hash = pattern_hash * RK_BASE + (uint64e_t)pattern[i];
+    window_hash  = window_hash  * RK_BASE + (uint64e_t)text[i];
   }
 
   uint64e_t match_count = 0;
@@ -94,14 +94,14 @@ rabinkarp_search(
   {
     // Match found?
     uint64e_t found = (pattern_hash == window_hash);
-    res[i] = cmov(found, 1lu, 0lu);
+    res[i] = (uint8e_t)cmov(found, 1lu, 0lu);
     match_count = cmov(found, match_count + 1, match_count);
 
     if (i < (text_len - pattern_len))
     {
       // Remove outgoing byte, shift, add incoming byte
-      window_hash -= text[i] * high_pow;
-      window_hash = window_hash * RK_BASE + text[i + pattern_len];
+      window_hash -= (uint64e_t)text[i] * high_pow;
+      window_hash = window_hash * RK_BASE + (uint64e_t)text[i + pattern_len];
     }
   }
 
@@ -129,16 +129,16 @@ main(void)
   int pat_len = libmin_strlen(inp_pat); // String lengths are public
   libmin_printf("Input data: txt_len = %d, pat_len = %d\n", txt_len, pat_len);
   
-  uint64e_t txt[txt_len];
+  uint8e_t txt[txt_len];
   for (int k=0; k < txt_len; k++)
     txt[k] = inp_txt[k];
 
-  uint64e_t pat[pat_len];
+  uint8e_t pat[pat_len];
   for (int k=0; k < pat_len; k++)
     pat[k] = inp_pat[k];
 
   // Return vector
-  uint64e_t ret[txt_len];
+  uint8e_t ret[txt_len];
   for(int i=0; i<txt_len; i++)
     ret[i] = /* false */0; 
 
