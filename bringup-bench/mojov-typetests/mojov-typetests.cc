@@ -11,11 +11,60 @@
 using namespace exo;
 
 static int g_failures = 0;
+static int g_input_mode = 0; // 0=unsigned, 1=signed, 2=float
+static uint64_t g_u_a = 0, g_u_b = 0;
+static int64_t g_s_a = 0, g_s_b = 0;
+static double g_f_a = 0.0, g_f_b = 0.0;
 
-static void check_bool(const char *suite, const char *operation, bool ok)
+static void set_unsigned_inputs(uint64_t a, uint64_t b) { g_input_mode = 0; g_u_a = a; g_u_b = b; }
+static void set_signed_inputs(int64_t a, int64_t b) { g_input_mode = 1; g_s_a = a; g_s_b = b; }
+static void set_fp_inputs(double a, double b) { g_input_mode = 2; g_f_a = a; g_f_b = b; }
+
+static void print_fail_inputs(void)
 {
+  if (g_input_mode == 0)
+    libmin_printf("      inputs(u): a=%lu b=%lu\n", g_u_a, g_u_b);
+  else if (g_input_mode == 1)
+    libmin_printf("      inputs(s): a=%ld b=%ld\n", g_s_a, g_s_b);
+  else
+    libmin_printf("      inputs(f): a=%f b=%f\n", g_f_a, g_f_b);
+}
+
+static void check_int_result(const char *suite, const char *operation, int64_t got, int64_t expected)
+{
+  const bool ok = (got == expected);
   libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
-  if (!ok) g_failures++;
+  if (!ok)
+  {
+    print_fail_inputs();
+    libmin_printf("      got(int)=%ld expected(int)=%ld\n", got, expected);
+    g_failures++;
+  }
+}
+
+static void check_fp_result(const char *suite, const char *operation, double got, double expected)
+{
+  const bool ok = (got == expected);
+  libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
+  if (!ok)
+  {
+    print_fail_inputs();
+    libmin_printf("      got(fp)=%f expected(fp)=%f\n", got, expected);
+    g_failures++;
+  }
+}
+
+template <typename G, typename E>
+static void check_cast_result(const char *suite, const char *operation, G got, E expected)
+{
+  const bool ok = (got == expected);
+  libmin_printf("TEST: %s :: %s : %s\n", suite, operation, ok ? "PASS" : "FAIL");
+  if (!ok)
+  {
+    print_fail_inputs();
+    libmin_printf("      got(cast)=%f expected(cast)=%f\n", (double)got, (double)expected);
+    g_failures++;
+  }
 }
 
 #define CHECK_INT(LABEL, EXPR, EXPECTED) \
@@ -23,7 +72,7 @@ static void check_bool(const char *suite, const char *operation, bool ok)
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_bool((LABEL), #EXPR, _d == (decltype(_d))(_e)); \
+    check_int_result((LABEL), #EXPR, (int64_t)_d, (int64_t)((decltype(_d))(_e)); \
   } while (0)
 
 #define CHECK_FP(LABEL, EXPR, EXPECTED) \
@@ -31,12 +80,13 @@ static void check_bool(const char *suite, const char *operation, bool ok)
     auto _v = (EXPR); \
     auto _d = _v.decrypt(); \
     auto _e = (EXPECTED); \
-    check_bool((LABEL), #EXPR, _d == (decltype(_d))(_e)); \
+    check_fp_result((LABEL), #EXPR, (double)_d, (double)((decltype(_d))(_e)); \
   } while (0)
 
 template <typename T>
 static void run_unsigned_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
+  set_unsigned_inputs((uint64_t)a_in, (uint64_t)b_in);
   T a = a_in, b = b_in;
   auto pred = inte_t<64, false>(a < b);
   CHECK_INT(name, +a, a_in);
@@ -134,6 +184,7 @@ static void run_unsigned_ops(const char *name, typename T::value_type a_in, type
 template <typename T>
 static void run_signed_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
+  set_signed_inputs((int64_t)a_in, (int64_t)b_in);
   T a = a_in, b = b_in;
   auto pred = inte_t<64, false>(a < b);
   CHECK_INT(name, +a, a_in);
@@ -174,6 +225,7 @@ static void run_signed_ops(const char *name, typename T::value_type a_in, typena
 template <typename T>
 static void run_fp_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
+  set_fp_inputs((double)a_in, (double)b_in);
   T a = a_in, b = b_in;
   auto pred = inte_t<64, false>(a < b);
   CHECK_FP(name, +a, a_in);
@@ -208,7 +260,7 @@ static void run_fp_ops(const char *name, typename T::value_type a_in, typename T
   CHECK_FP(name, cmov(pred, a, (typename T::value_type)(b_in)), (typename T::value_type)(a_in < b_in ? a_in : b_in));
 }
 
-#define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; check_bool("cast", LABEL, d.decrypt() == (typename DST::value_type)(V)); } while (0)
+#define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; set_fp_inputs((double)(V), 0.0); auto _g = d.decrypt(); auto _e = (typename DST::value_type)(V); check_cast_result("cast", LABEL, _g, _e); } while (0)
 
 int main(void)
 {
