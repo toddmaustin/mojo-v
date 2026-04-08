@@ -140,14 +140,17 @@ public:
     return static_cast<value_type>(truncate(raw));
   }
 
+  // Integer: assignments (plain and encrypted payloads).
   inte_t& operator=(storage_type encrypted) { value_ = normalize(encrypted); return *this; }
   inte_t& operator=(value_type plain) { value_ = normalize(_enc(static_cast<uint64_t>(plain))); return *this; }
 
+  // Integer: arithmetic / bitwise unary operators.
   inte_t operator+() const { return *this; }
   inte_t operator-() const { return inte_t(normalize(_neg(value_))); }
   inte_t operator~() const { return inte_t(normalize(_comp(value_))); }
   inte_t operator!() const { return inte_t(_lnot(value_)); }
 
+  // Integer: assignments + arithmetic / bitwise compound operators.
   inte_t& operator+=(const inte_t& rhs) { value_ = normalize(_add(value_, rhs.value_)); return *this; }
   inte_t& operator+=(value_type rhs) { value_ = normalize(_addi(value_, static_cast<uint64_t>(rhs))); return *this; }
   inte_t& operator-=(const inte_t& rhs) { value_ = normalize(_sub(value_, rhs.value_)); return *this; }
@@ -217,8 +220,11 @@ public:
     return static_cast<value_type>(detail::decrypt_storage(value_));
   }
 
+  // Floating point: arithmetic unary operators.
   fpe_t operator+() const { return *this; }
   fpe_t operator-() const { return fpe_t(_fneg(value_)); }
+
+  // Floating point: assignments + arithmetic compound operators.
   fpe_t& operator+=(const fpe_t& rhs) { value_ = _fadd(value_, rhs.value_); return *this; }
   fpe_t& operator+=(value_type rhs) { value_ = _faddi(value_, static_cast<double>(rhs)); return *this; }
   fpe_t& operator-=(const fpe_t& rhs) { value_ = _fsub(value_, rhs.value_); return *this; }
@@ -232,7 +238,11 @@ private:
   storage_type value_;
 };
 
-// Integer non-member operators
+// ============================================================================
+// Integer groups
+// ============================================================================
+
+// Integer / arithmetic operators.
 template <std::size_t B, bool S> inline inte_t<B,S> operator+(inte_t<B,S> l, const inte_t<B,S>& r){ l+=r; return l; }
 template <std::size_t B, bool S> inline inte_t<B,S> operator-(inte_t<B,S> l, const inte_t<B,S>& r){ l-=r; return l; }
 template <std::size_t B, bool S> inline inte_t<B,S> operator*(inte_t<B,S> l, const inte_t<B,S>& r){ l*=r; return l; }
@@ -286,6 +296,7 @@ inline inte_t<B,S> operator<<(T l, const inte_t<B,S>& r){ return inte_t<B,S>(sta
 template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline inte_t<B,S> operator>>(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) >> r; }
 
+// Integer / relational operators (including logical boolean-as-encrypted-int results).
 template <std::size_t B, bool S> inline inte_t<B,S> operator&&(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_land(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S> inline inte_t<B,S> operator||(const inte_t<B,S>& l, const inte_t<B,S>& r){ return inte_t<B,S>(_lor(l.encrypted(), r.encrypted())); }
 template <std::size_t B, bool S, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
@@ -327,7 +338,11 @@ inline inte_t<B,S> operator>(T l, const inte_t<B,S>& r){ return inte_t<B,S>(stat
 template <typename T, std::size_t B, bool S, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline inte_t<B,S> operator>=(T l, const inte_t<B,S>& r){ return inte_t<B,S>(static_cast<typename inte_t<B,S>::value_type>(l)) >= r; }
 
-// FP operators
+// ============================================================================
+// Floating-point groups
+// ============================================================================
+
+// Floating point / arithmetic operators.
 template <std::size_t B> inline fpe_t<B> operator+(fpe_t<B> l, const fpe_t<B>& r){ l += r; return l; }
 template <std::size_t B> inline fpe_t<B> operator-(fpe_t<B> l, const fpe_t<B>& r){ l -= r; return l; }
 template <std::size_t B> inline fpe_t<B> operator*(fpe_t<B> l, const fpe_t<B>& r){ l *= r; return l; }
@@ -340,6 +355,7 @@ template <std::size_t B> inline fpe_t<B> operator+(typename fpe_t<B>::value_type
 template <std::size_t B> inline fpe_t<B> operator-(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) - r; }
 template <std::size_t B> inline fpe_t<B> operator*(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) * r; }
 template <std::size_t B> inline fpe_t<B> operator/(typename fpe_t<B>::value_type l, const fpe_t<B>& r){ return fpe_t<B>(l) / r; }
+// Floating point / relational operators.
 template <std::size_t B> inline auto operator==(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fseq(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator!=(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fsne(l.encrypted(), r.encrypted())); }
 template <std::size_t B> inline auto operator<(const fpe_t<B>& l, const fpe_t<B>& r){ return inte_t<64,false>(_fslt(l.encrypted(), r.encrypted())); }
@@ -373,6 +389,8 @@ using fp32e_t = fpe_t<32>;
 using fp64_generic_t = fpe_t<64>;
 using fp64e_t = fpe_t<64>;
 
+// Integer / special functions.
+// Conditional move for encrypted integer results.
 template <std::size_t B, bool S>
 inline inte_t<B,S> cmov(const inte_t<64,false>& predicate, const inte_t<B,S>& if_true, const inte_t<B,S>& if_false) {
   return inte_t<B,S>(_cmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
@@ -435,6 +453,8 @@ inline inte_t<B,S> cmov(const inte_t<64,PS>& predicate, const inte_t<B,S>& if_tr
   return cmov(predicate, if_true, inte_t<B,S>(static_cast<plain_t>(if_false)));
 }
 
+// Floating point / special functions.
+// Conditional move overloads for encrypted floating-point results.
 template <std::size_t B>
 inline fpe_t<B> cmov(const inte_t<64,false>& predicate, const fpe_t<B>& if_true, const fpe_t<B>& if_false) {
   return fpe_t<B>(_fcmov(predicate.encrypted(), if_true.encrypted(), if_false.encrypted()));
@@ -496,6 +516,7 @@ inline auto cmov(Pred predicate, T if_true, T if_false) {
   return cmov(inte_t<64, false>(static_cast<uint64_t>(predicate)), if_true, if_false);
 }
 
+// Absolute value for encrypted FP64.
 inline fp64e_t fabs(const fp64e_t& value) { return fp64e_t(_fabs(value.encrypted())); }
 }  // namespace exo
 
