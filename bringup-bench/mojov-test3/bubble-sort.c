@@ -107,8 +107,6 @@ bubblesort(mojov_mem_fast_fp64_t *data, unsigned size)
         : "r" (&data[j]), "r" (&data[j+1]), "r" (&swaps)
         : "t3", "t4", "t5", "t6", "f28", "f29", "f30", "f31" // clobbered registers
       );
-
-
     }
   }
 }
