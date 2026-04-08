@@ -1,0 +1,407 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+INFO: Running encrypted type tests.
+TEST[1]: u8 operators :: +a (got=21 expected=21) : PASS
+TEST[2]: u8 operators :: ~a (got=234 expected=234) : PASS
+TEST[3]: u8 operators :: !a (got=0 expected=0) : PASS
+TEST[4]: u8 operators :: a + b (got=26 expected=26) : PASS
+TEST[5]: u8 operators :: a - b (got=16 expected=16) : PASS
+TEST[6]: u8 operators :: a * b (got=105 expected=105) : PASS
+TEST[7]: u8 operators :: a / b (got=4 expected=4) : PASS
+TEST[8]: u8 operators :: a % b (got=1 expected=1) : PASS
+TEST[9]: u8 operators :: a & b (got=5 expected=5) : PASS
+TEST[10]: u8 operators :: a | b (got=21 expected=21) : PASS
+TEST[11]: u8 operators :: a ^ b (got=16 expected=16) : PASS
+TEST[12]: u8 operators :: a << 1 (got=42 expected=42) : PASS
+TEST[13]: u8 operators :: a >> 1 (got=10 expected=10) : PASS
+TEST[14]: u8 operators :: a + b_in (got=26 expected=26) : PASS
+TEST[15]: u8 operators :: a - b_in (got=16 expected=16) : PASS
+TEST[16]: u8 operators :: a * b_in (got=105 expected=105) : PASS
+TEST[17]: u8 operators :: a / b_in (got=4 expected=4) : PASS
+TEST[18]: u8 operators :: a % b_in (got=1 expected=1) : PASS
+TEST[19]: u8 operators :: a_in + b (got=26 expected=26) : PASS
+TEST[20]: u8 operators :: a_in - b (got=16 expected=16) : PASS
+TEST[21]: u8 operators :: a_in * b (got=105 expected=105) : PASS
+TEST[22]: u8 operators :: a_in / b (got=4 expected=4) : PASS
+TEST[23]: u8 operators :: a_in % b (got=1 expected=1) : PASS
+TEST[24]: u8 operators :: a == b (got=0 expected=0) : PASS
+TEST[25]: u8 operators :: a != b (got=1 expected=1) : PASS
+TEST[26]: u8 operators :: a < b (got=0 expected=0) : PASS
+TEST[27]: u8 operators :: a <= b (got=0 expected=0) : PASS
+TEST[28]: u8 operators :: a > b (got=1 expected=1) : PASS
+TEST[29]: u8 operators :: a >= b (got=1 expected=1) : PASS
+TEST[30]: u8 operators :: a < (typename T::value_type)(a_in + b_in) (got=1 expected=1) : PASS
+TEST[31]: u8 operators :: a > (typename T::value_type)(a_in + b_in) (got=0 expected=0) : PASS
+TEST[32]: u8 operators :: a && b (got=1 expected=1) : PASS
+TEST[33]: u8 operators :: a || b (got=1 expected=1) : PASS
+TEST[34]: u8 operators :: assign x=b (got=5 expected=5) : PASS
+TEST[35]: u8 operators :: x+=b (got=26 expected=26) : PASS
+TEST[36]: u8 operators :: x-=b (got=16 expected=16) : PASS
+TEST[37]: u8 operators :: x*=b (got=105 expected=105) : PASS
+TEST[38]: u8 operators :: x/=b (got=4 expected=4) : PASS
+TEST[39]: u8 operators :: x%=b (got=1 expected=1) : PASS
+TEST[40]: u8 operators :: x&=b (got=5 expected=5) : PASS
+TEST[41]: u8 operators :: x|=b (got=21 expected=21) : PASS
+TEST[42]: u8 operators :: x^=b (got=16 expected=16) : PASS
+TEST[43]: u8 operators :: x<<=1 (got=42 expected=42) : PASS
+TEST[44]: u8 operators :: x>>=1 (got=10 expected=10) : PASS
+TEST[45]: u8 operators :: ++x (got=22 expected=22) : PASS
+TEST[46]: u8 operators :: x++ (got=22 expected=22) : PASS
+TEST[47]: u8 operators :: --x (got=20 expected=20) : PASS
+TEST[48]: u8 operators :: x-- (got=20 expected=20) : PASS
+TEST[49]: u8 operators :: cmov(pred, a, b) (got=5 expected=5) : PASS
+TEST[50]: u8 operators :: cmov(pred, (typename T::value_type)(a_in), b) (got=5 expected=5) : PASS
+TEST[51]: u8 operators :: cmov(pred, a, (typename T::value_type)(b_in)) (got=5 expected=5) : PASS
+TEST[52]: u8 operators :: cmov(true, a, b) (got=21 expected=21) : PASS
+TEST[53]: u16 operators :: +a (got=300 expected=300) : PASS
+TEST[54]: u16 operators :: ~a (got=65235 expected=65235) : PASS
+TEST[55]: u16 operators :: !a (got=0 expected=0) : PASS
+TEST[56]: u16 operators :: a + b (got=307 expected=307) : PASS
+TEST[57]: u16 operators :: a - b (got=293 expected=293) : PASS
+TEST[58]: u16 operators :: a * b (got=2100 expected=2100) : PASS
+TEST[59]: u16 operators :: a / b (got=42 expected=42) : PASS
+TEST[60]: u16 operators :: a % b (got=6 expected=6) : PASS
+TEST[61]: u16 operators :: a & b (got=4 expected=4) : PASS
+TEST[62]: u16 operators :: a | b (got=303 expected=303) : PASS
+TEST[63]: u16 operators :: a ^ b (got=299 expected=299) : PASS
+TEST[64]: u16 operators :: a << 1 (got=600 expected=600) : PASS
+TEST[65]: u16 operators :: a >> 1 (got=150 expected=150) : PASS
+TEST[66]: u16 operators :: a + b_in (got=307 expected=307) : PASS
+TEST[67]: u16 operators :: a - b_in (got=293 expected=293) : PASS
+TEST[68]: u16 operators :: a * b_in (got=2100 expected=2100) : PASS
+TEST[69]: u16 operators :: a / b_in (got=42 expected=42) : PASS
+TEST[70]: u16 operators :: a % b_in (got=6 expected=6) : PASS
+TEST[71]: u16 operators :: a_in + b (got=307 expected=307) : PASS
+TEST[72]: u16 operators :: a_in - b (got=293 expected=293) : PASS
+TEST[73]: u16 operators :: a_in * b (got=2100 expected=2100) : PASS
+TEST[74]: u16 operators :: a_in / b (got=42 expected=42) : PASS
+TEST[75]: u16 operators :: a_in % b (got=6 expected=6) : PASS
+TEST[76]: u16 operators :: a == b (got=0 expected=0) : PASS
+TEST[77]: u16 operators :: a != b (got=1 expected=1) : PASS
+TEST[78]: u16 operators :: a < b (got=0 expected=0) : PASS
+TEST[79]: u16 operators :: a <= b (got=0 expected=0) : PASS
+TEST[80]: u16 operators :: a > b (got=1 expected=1) : PASS
+TEST[81]: u16 operators :: a >= b (got=1 expected=1) : PASS
+TEST[82]: u16 operators :: a < (typename T::value_type)(a_in + b_in) (got=1 expected=1) : PASS
+TEST[83]: u16 operators :: a > (typename T::value_type)(a_in + b_in) (got=0 expected=0) : PASS
+TEST[84]: u16 operators :: a && b (got=1 expected=1) : PASS
+TEST[85]: u16 operators :: a || b (got=1 expected=1) : PASS
+TEST[86]: u16 operators :: assign x=b (got=7 expected=7) : PASS
+TEST[87]: u16 operators :: x+=b (got=307 expected=307) : PASS
+TEST[88]: u16 operators :: x-=b (got=293 expected=293) : PASS
+TEST[89]: u16 operators :: x*=b (got=2100 expected=2100) : PASS
+TEST[90]: u16 operators :: x/=b (got=42 expected=42) : PASS
+TEST[91]: u16 operators :: x%=b (got=6 expected=6) : PASS
+TEST[92]: u16 operators :: x&=b (got=4 expected=4) : PASS
+TEST[93]: u16 operators :: x|=b (got=303 expected=303) : PASS
+TEST[94]: u16 operators :: x^=b (got=299 expected=299) : PASS
+TEST[95]: u16 operators :: x<<=1 (got=600 expected=600) : PASS
+TEST[96]: u16 operators :: x>>=1 (got=150 expected=150) : PASS
+TEST[97]: u16 operators :: ++x (got=301 expected=301) : PASS
+TEST[98]: u16 operators :: x++ (got=301 expected=301) : PASS
+TEST[99]: u16 operators :: --x (got=299 expected=299) : PASS
+TEST[100]: u16 operators :: x-- (got=299 expected=299) : PASS
+TEST[101]: u16 operators :: cmov(pred, a, b) (got=7 expected=7) : PASS
+TEST[102]: u16 operators :: cmov(pred, (typename T::value_type)(a_in), b) (got=7 expected=7) : PASS
+TEST[103]: u16 operators :: cmov(pred, a, (typename T::value_type)(b_in)) (got=7 expected=7) : PASS
+TEST[104]: u16 operators :: cmov(true, a, b) (got=300 expected=300) : PASS
+TEST[105]: u32 operators :: +a (got=70000 expected=70000) : PASS
+TEST[106]: u32 operators :: ~a (got=4294897295 expected=4294897295) : PASS
+TEST[107]: u32 operators :: !a (got=0 expected=0) : PASS
+TEST[108]: u32 operators :: a + b (got=70097 expected=70097) : PASS
+TEST[109]: u32 operators :: a - b (got=69903 expected=69903) : PASS
+TEST[110]: u32 operators :: a * b (got=6790000 expected=6790000) : PASS
+TEST[111]: u32 operators :: a / b (got=721 expected=721) : PASS
+TEST[112]: u32 operators :: a % b (got=63 expected=63) : PASS
+TEST[113]: u32 operators :: a & b (got=96 expected=96) : PASS
+TEST[114]: u32 operators :: a | b (got=70001 expected=70001) : PASS
+TEST[115]: u32 operators :: a ^ b (got=69905 expected=69905) : PASS
+TEST[116]: u32 operators :: a << 1 (got=140000 expected=140000) : PASS
+TEST[117]: u32 operators :: a >> 1 (got=35000 expected=35000) : PASS
+TEST[118]: u32 operators :: a + b_in (got=70097 expected=70097) : PASS
+TEST[119]: u32 operators :: a - b_in (got=69903 expected=69903) : PASS
+TEST[120]: u32 operators :: a * b_in (got=6790000 expected=6790000) : PASS
+TEST[121]: u32 operators :: a / b_in (got=721 expected=721) : PASS
+TEST[122]: u32 operators :: a % b_in (got=63 expected=63) : PASS
+TEST[123]: u32 operators :: a_in + b (got=70097 expected=70097) : PASS
+TEST[124]: u32 operators :: a_in - b (got=69903 expected=69903) : PASS
+TEST[125]: u32 operators :: a_in * b (got=6790000 expected=6790000) : PASS
+TEST[126]: u32 operators :: a_in / b (got=721 expected=721) : PASS
+TEST[127]: u32 operators :: a_in % b (got=63 expected=63) : PASS
+TEST[128]: u32 operators :: a == b (got=0 expected=0) : PASS
+TEST[129]: u32 operators :: a != b (got=1 expected=1) : PASS
+TEST[130]: u32 operators :: a < b (got=0 expected=0) : PASS
+TEST[131]: u32 operators :: a <= b (got=0 expected=0) : PASS
+TEST[132]: u32 operators :: a > b (got=1 expected=1) : PASS
+TEST[133]: u32 operators :: a >= b (got=1 expected=1) : PASS
+TEST[134]: u32 operators :: a < (typename T::value_type)(a_in + b_in) (got=1 expected=1) : PASS
+TEST[135]: u32 operators :: a > (typename T::value_type)(a_in + b_in) (got=0 expected=0) : PASS
+TEST[136]: u32 operators :: a && b (got=1 expected=1) : PASS
+TEST[137]: u32 operators :: a || b (got=1 expected=1) : PASS
+TEST[138]: u32 operators :: assign x=b (got=97 expected=97) : PASS
+TEST[139]: u32 operators :: x+=b (got=70097 expected=70097) : PASS
+TEST[140]: u32 operators :: x-=b (got=69903 expected=69903) : PASS
+TEST[141]: u32 operators :: x*=b (got=6790000 expected=6790000) : PASS
+TEST[142]: u32 operators :: x/=b (got=721 expected=721) : PASS
+TEST[143]: u32 operators :: x%=b (got=63 expected=63) : PASS
+TEST[144]: u32 operators :: x&=b (got=96 expected=96) : PASS
+TEST[145]: u32 operators :: x|=b (got=70001 expected=70001) : PASS
+TEST[146]: u32 operators :: x^=b (got=69905 expected=69905) : PASS
+TEST[147]: u32 operators :: x<<=1 (got=140000 expected=140000) : PASS
+TEST[148]: u32 operators :: x>>=1 (got=35000 expected=35000) : PASS
+TEST[149]: u32 operators :: ++x (got=70001 expected=70001) : PASS
+TEST[150]: u32 operators :: x++ (got=70001 expected=70001) : PASS
+TEST[151]: u32 operators :: --x (got=69999 expected=69999) : PASS
+TEST[152]: u32 operators :: x-- (got=69999 expected=69999) : PASS
+TEST[153]: u32 operators :: cmov(pred, a, b) (got=97 expected=97) : PASS
+TEST[154]: u32 operators :: cmov(pred, (typename T::value_type)(a_in), b) (got=97 expected=97) : PASS
+TEST[155]: u32 operators :: cmov(pred, a, (typename T::value_type)(b_in)) (got=97 expected=97) : PASS
+TEST[156]: u32 operators :: cmov(true, a, b) (got=70000 expected=70000) : PASS
+TEST[157]: u64 operators :: +a (got=1000000000 expected=1000000000) : PASS
+TEST[158]: u64 operators :: ~a (got=-1000000001 expected=-1000000001) : PASS
+TEST[159]: u64 operators :: !a (got=0 expected=0) : PASS
+TEST[160]: u64 operators :: a + b (got=1000000257 expected=1000000257) : PASS
+TEST[161]: u64 operators :: a - b (got=999999743 expected=999999743) : PASS
+TEST[162]: u64 operators :: a * b (got=257000000000 expected=257000000000) : PASS
+TEST[163]: u64 operators :: a / b (got=3891050 expected=3891050) : PASS
+TEST[164]: u64 operators :: a % b (got=150 expected=150) : PASS
+TEST[165]: u64 operators :: a & b (got=0 expected=0) : PASS
+TEST[166]: u64 operators :: a | b (got=1000000257 expected=1000000257) : PASS
+TEST[167]: u64 operators :: a ^ b (got=1000000257 expected=1000000257) : PASS
+TEST[168]: u64 operators :: a << 1 (got=2000000000 expected=2000000000) : PASS
+TEST[169]: u64 operators :: a >> 1 (got=500000000 expected=500000000) : PASS
+TEST[170]: u64 operators :: a + b_in (got=1000000257 expected=1000000257) : PASS
+TEST[171]: u64 operators :: a - b_in (got=999999743 expected=999999743) : PASS
+TEST[172]: u64 operators :: a * b_in (got=257000000000 expected=257000000000) : PASS
+TEST[173]: u64 operators :: a / b_in (got=3891050 expected=3891050) : PASS
+TEST[174]: u64 operators :: a % b_in (got=150 expected=150) : PASS
+TEST[175]: u64 operators :: a_in + b (got=1000000257 expected=1000000257) : PASS
+TEST[176]: u64 operators :: a_in - b (got=999999743 expected=999999743) : PASS
+TEST[177]: u64 operators :: a_in * b (got=257000000000 expected=257000000000) : PASS
+TEST[178]: u64 operators :: a_in / b (got=3891050 expected=3891050) : PASS
+TEST[179]: u64 operators :: a_in % b (got=150 expected=150) : PASS
+TEST[180]: u64 operators :: a == b (got=0 expected=0) : PASS
+TEST[181]: u64 operators :: a != b (got=1 expected=1) : PASS
+TEST[182]: u64 operators :: a < b (got=0 expected=0) : PASS
+TEST[183]: u64 operators :: a <= b (got=0 expected=0) : PASS
+TEST[184]: u64 operators :: a > b (got=1 expected=1) : PASS
+TEST[185]: u64 operators :: a >= b (got=1 expected=1) : PASS
+TEST[186]: u64 operators :: a < (typename T::value_type)(a_in + b_in) (got=1 expected=1) : PASS
+TEST[187]: u64 operators :: a > (typename T::value_type)(a_in + b_in) (got=0 expected=0) : PASS
+TEST[188]: u64 operators :: a && b (got=1 expected=1) : PASS
+TEST[189]: u64 operators :: a || b (got=1 expected=1) : PASS
+TEST[190]: u64 operators :: assign x=b (got=257 expected=257) : PASS
+TEST[191]: u64 operators :: x+=b (got=1000000257 expected=1000000257) : PASS
+TEST[192]: u64 operators :: x-=b (got=999999743 expected=999999743) : PASS
+TEST[193]: u64 operators :: x*=b (got=257000000000 expected=257000000000) : PASS
+TEST[194]: u64 operators :: x/=b (got=3891050 expected=3891050) : PASS
+TEST[195]: u64 operators :: x%=b (got=150 expected=150) : PASS
+TEST[196]: u64 operators :: x&=b (got=0 expected=0) : PASS
+TEST[197]: u64 operators :: x|=b (got=1000000257 expected=1000000257) : PASS
+TEST[198]: u64 operators :: x^=b (got=1000000257 expected=1000000257) : PASS
+TEST[199]: u64 operators :: x<<=1 (got=2000000000 expected=2000000000) : PASS
+TEST[200]: u64 operators :: x>>=1 (got=500000000 expected=500000000) : PASS
+TEST[201]: u64 operators :: ++x (got=1000000001 expected=1000000001) : PASS
+TEST[202]: u64 operators :: x++ (got=1000000001 expected=1000000001) : PASS
+TEST[203]: u64 operators :: --x (got=999999999 expected=999999999) : PASS
+TEST[204]: u64 operators :: x-- (got=999999999 expected=999999999) : PASS
+TEST[205]: u64 operators :: cmov(pred, a, b) (got=257 expected=257) : PASS
+TEST[206]: u64 operators :: cmov(pred, (typename T::value_type)(a_in), b) (got=257 expected=257) : PASS
+TEST[207]: u64 operators :: cmov(pred, a, (typename T::value_type)(b_in)) (got=257 expected=257) : PASS
+TEST[208]: u64 operators :: cmov(true, a, b) (got=1000000000 expected=1000000000) : PASS
+TEST[209]: i8 operators :: +a (got=-61 expected=-61) : PASS
+TEST[210]: i8 operators :: -a (got=61 expected=61) : PASS
+TEST[211]: i8 operators :: ~a (got=60 expected=60) : PASS
+TEST[212]: i8 operators :: !a (got=0 expected=0) : PASS
+TEST[213]: i8 operators :: a + b (got=-56 expected=-56) : PASS
+TEST[214]: i8 operators :: a - b (got=-66 expected=-66) : PASS
+TEST[215]: i8 operators :: a * b (got=-49 expected=-49) : PASS
+TEST[216]: i8 operators :: a / b (got=-12 expected=-12) : PASS
+TEST[217]: i8 operators :: a % b (got=-1 expected=-1) : PASS
+TEST[218]: i8 operators :: a >> 1 (got=-31 expected=-31) : PASS
+TEST[219]: i8 operators :: a < b (got=1 expected=1) : PASS
+TEST[220]: i8 operators :: a <= b (got=1 expected=1) : PASS
+TEST[221]: i8 operators :: a > b (got=0 expected=0) : PASS
+TEST[222]: i8 operators :: a >= b (got=0 expected=0) : PASS
+TEST[223]: i8 operators :: a == b (got=0 expected=0) : PASS
+TEST[224]: i8 operators :: a != b (got=1 expected=1) : PASS
+TEST[225]: i8 operators :: a < (typename T::value_type)(-1) (got=1 expected=1) : PASS
+TEST[226]: i8 operators :: a > (typename T::value_type)(-1) (got=0 expected=0) : PASS
+TEST[227]: i8 operators :: assign x=b (got=5 expected=5) : PASS
+TEST[228]: i8 operators :: x+=b (got=-56 expected=-56) : PASS
+TEST[229]: i8 operators :: x-=b (got=-66 expected=-66) : PASS
+TEST[230]: i8 operators :: x*=b (got=-49 expected=-49) : PASS
+TEST[231]: i8 operators :: x/=b (got=-12 expected=-12) : PASS
+TEST[232]: i8 operators :: x%=b (got=-1 expected=-1) : PASS
+TEST[233]: i8 operators :: x>>=1 (got=-31 expected=-31) : PASS
+TEST[234]: i8 operators :: cmov(pred, a, b) (got=-61 expected=-61) : PASS
+TEST[235]: i16 operators :: +a (got=-5000 expected=-5000) : PASS
+TEST[236]: i16 operators :: -a (got=5000 expected=5000) : PASS
+TEST[237]: i16 operators :: ~a (got=4999 expected=4999) : PASS
+TEST[238]: i16 operators :: !a (got=0 expected=0) : PASS
+TEST[239]: i16 operators :: a + b (got=-4989 expected=-4989) : PASS
+TEST[240]: i16 operators :: a - b (got=-5011 expected=-5011) : PASS
+TEST[241]: i16 operators :: a * b (got=10536 expected=10536) : PASS
+TEST[242]: i16 operators :: a / b (got=-454 expected=-454) : PASS
+TEST[243]: i16 operators :: a % b (got=-6 expected=-6) : PASS
+TEST[244]: i16 operators :: a >> 1 (got=-2500 expected=-2500) : PASS
+TEST[245]: i16 operators :: a < b (got=1 expected=1) : PASS
+TEST[246]: i16 operators :: a <= b (got=1 expected=1) : PASS
+TEST[247]: i16 operators :: a > b (got=0 expected=0) : PASS
+TEST[248]: i16 operators :: a >= b (got=0 expected=0) : PASS
+TEST[249]: i16 operators :: a == b (got=0 expected=0) : PASS
+TEST[250]: i16 operators :: a != b (got=1 expected=1) : PASS
+TEST[251]: i16 operators :: a < (typename T::value_type)(-1) (got=1 expected=1) : PASS
+TEST[252]: i16 operators :: a > (typename T::value_type)(-1) (got=0 expected=0) : PASS
+TEST[253]: i16 operators :: assign x=b (got=11 expected=11) : PASS
+TEST[254]: i16 operators :: x+=b (got=-4989 expected=-4989) : PASS
+TEST[255]: i16 operators :: x-=b (got=-5011 expected=-5011) : PASS
+TEST[256]: i16 operators :: x*=b (got=10536 expected=10536) : PASS
+TEST[257]: i16 operators :: x/=b (got=-454 expected=-454) : PASS
+TEST[258]: i16 operators :: x%=b (got=-6 expected=-6) : PASS
+TEST[259]: i16 operators :: x>>=1 (got=-2500 expected=-2500) : PASS
+TEST[260]: i16 operators :: cmov(pred, a, b) (got=-5000 expected=-5000) : PASS
+TEST[261]: i32 operators :: +a (got=-2000000 expected=-2000000) : PASS
+TEST[262]: i32 operators :: -a (got=2000000 expected=2000000) : PASS
+TEST[263]: i32 operators :: ~a (got=1999999 expected=1999999) : PASS
+TEST[264]: i32 operators :: !a (got=0 expected=0) : PASS
+TEST[265]: i32 operators :: a + b (got=-1999987 expected=-1999987) : PASS
+TEST[266]: i32 operators :: a - b (got=-2000013 expected=-2000013) : PASS
+TEST[267]: i32 operators :: a * b (got=-26000000 expected=-26000000) : PASS
+TEST[268]: i32 operators :: a / b (got=-153846 expected=-153846) : PASS
+TEST[269]: i32 operators :: a % b (got=-2 expected=-2) : PASS
+TEST[270]: i32 operators :: a >> 1 (got=-1000000 expected=-1000000) : PASS
+TEST[271]: i32 operators :: a < b (got=1 expected=1) : PASS
+TEST[272]: i32 operators :: a <= b (got=1 expected=1) : PASS
+TEST[273]: i32 operators :: a > b (got=0 expected=0) : PASS
+TEST[274]: i32 operators :: a >= b (got=0 expected=0) : PASS
+TEST[275]: i32 operators :: a == b (got=0 expected=0) : PASS
+TEST[276]: i32 operators :: a != b (got=1 expected=1) : PASS
+TEST[277]: i32 operators :: a < (typename T::value_type)(-1) (got=1 expected=1) : PASS
+TEST[278]: i32 operators :: a > (typename T::value_type)(-1) (got=0 expected=0) : PASS
+TEST[279]: i32 operators :: assign x=b (got=13 expected=13) : PASS
+TEST[280]: i32 operators :: x+=b (got=-1999987 expected=-1999987) : PASS
+TEST[281]: i32 operators :: x-=b (got=-2000013 expected=-2000013) : PASS
+TEST[282]: i32 operators :: x*=b (got=-26000000 expected=-26000000) : PASS
+TEST[283]: i32 operators :: x/=b (got=-153846 expected=-153846) : PASS
+TEST[284]: i32 operators :: x%=b (got=-2 expected=-2) : PASS
+TEST[285]: i32 operators :: x>>=1 (got=-1000000 expected=-1000000) : PASS
+TEST[286]: i32 operators :: cmov(pred, a, b) (got=-2000000 expected=-2000000) : PASS
+TEST[287]: i64 operators :: +a (got=-9000000000 expected=-9000000000) : PASS
+TEST[288]: i64 operators :: -a (got=9000000000 expected=9000000000) : PASS
+TEST[289]: i64 operators :: ~a (got=8999999999 expected=8999999999) : PASS
+TEST[290]: i64 operators :: !a (got=0 expected=0) : PASS
+TEST[291]: i64 operators :: a + b (got=-8999999983 expected=-8999999983) : PASS
+TEST[292]: i64 operators :: a - b (got=-9000000017 expected=-9000000017) : PASS
+TEST[293]: i64 operators :: a * b (got=-153000000000 expected=-153000000000) : PASS
+TEST[294]: i64 operators :: a / b (got=-529411764 expected=-529411764) : PASS
+TEST[295]: i64 operators :: a % b (got=-12 expected=-12) : PASS
+TEST[296]: i64 operators :: a >> 1 (got=-4500000000 expected=-4500000000) : PASS
+TEST[297]: i64 operators :: a < b (got=1 expected=1) : PASS
+TEST[298]: i64 operators :: a <= b (got=1 expected=1) : PASS
+TEST[299]: i64 operators :: a > b (got=0 expected=0) : PASS
+TEST[300]: i64 operators :: a >= b (got=0 expected=0) : PASS
+TEST[301]: i64 operators :: a == b (got=0 expected=0) : PASS
+TEST[302]: i64 operators :: a != b (got=1 expected=1) : PASS
+TEST[303]: i64 operators :: a < (typename T::value_type)(-1) (got=1 expected=1) : PASS
+TEST[304]: i64 operators :: a > (typename T::value_type)(-1) (got=0 expected=0) : PASS
+TEST[305]: i64 operators :: assign x=b (got=17 expected=17) : PASS
+TEST[306]: i64 operators :: x+=b (got=-8999999983 expected=-8999999983) : PASS
+TEST[307]: i64 operators :: x-=b (got=-9000000017 expected=-9000000017) : PASS
+TEST[308]: i64 operators :: x*=b (got=-153000000000 expected=-153000000000) : PASS
+TEST[309]: i64 operators :: x/=b (got=-529411764 expected=-529411764) : PASS
+TEST[310]: i64 operators :: x%=b (got=-12 expected=-12) : PASS
+TEST[311]: i64 operators :: x>>=1 (got=-4500000000 expected=-4500000000) : PASS
+TEST[312]: i64 operators :: cmov(pred, a, b) (got=-9000000000 expected=-9000000000) : PASS
+TEST[313]: fp32 operators :: +a (got=6.500000 expected=6.500000) : PASS
+TEST[314]: fp32 operators :: -a (got=-6.500000 expected=-6.500000) : PASS
+TEST[315]: fp32 operators :: a + b (got=8.500000 expected=8.500000) : PASS
+TEST[316]: fp32 operators :: a - b (got=4.500000 expected=4.500000) : PASS
+TEST[317]: fp32 operators :: a * b (got=13.000000 expected=13.000000) : PASS
+TEST[318]: fp32 operators :: a / b (got=3.250000 expected=3.250000) : PASS
+TEST[319]: fp32 operators :: a + b_in (got=8.500000 expected=8.500000) : PASS
+TEST[320]: fp32 operators :: a_in + b (got=8.500000 expected=8.500000) : PASS
+TEST[321]: fp32 operators :: a - b_in (got=4.500000 expected=4.500000) : PASS
+TEST[322]: fp32 operators :: a_in - b (got=4.500000 expected=4.500000) : PASS
+TEST[323]: fp32 operators :: a < b (got=0 expected=0) : PASS
+TEST[324]: fp32 operators :: a <= b (got=0 expected=0) : PASS
+TEST[325]: fp32 operators :: a == b (got=0 expected=0) : PASS
+TEST[326]: fp32 operators :: a > b (got=1 expected=1) : PASS
+TEST[327]: fp32 operators :: a >= b (got=1 expected=1) : PASS
+TEST[328]: fp32 operators :: a != b (got=1 expected=1) : PASS
+TEST[329]: fp32 operators :: assign x=b (got=2.000000 expected=2.000000) : PASS
+TEST[330]: fp32 operators :: x+=b (got=8.500000 expected=8.500000) : PASS
+TEST[331]: fp32 operators :: x-=b (got=4.500000 expected=4.500000) : PASS
+TEST[332]: fp32 operators :: x*=b (got=13.000000 expected=13.000000) : PASS
+TEST[333]: fp32 operators :: x/=b (got=3.250000 expected=3.250000) : PASS
+TEST[334]: fp32 operators :: cmov(pred, a, b) (got=2.000000 expected=2.000000) : PASS
+TEST[335]: fp32 operators :: cmov(pred, (typename T::value_type)(a_in), b) (got=2.000000 expected=2.000000) : PASS
+TEST[336]: fp32 operators :: cmov(pred, a, (typename T::value_type)(b_in)) (got=2.000000 expected=2.000000) : PASS
+TEST[337]: fp64 operators :: +a (got=10.250000 expected=10.250000) : PASS
+TEST[338]: fp64 operators :: -a (got=-10.250000 expected=-10.250000) : PASS
+TEST[339]: fp64 operators :: a + b (got=14.250000 expected=14.250000) : PASS
+TEST[340]: fp64 operators :: a - b (got=6.250000 expected=6.250000) : PASS
+TEST[341]: fp64 operators :: a * b (got=41.000000 expected=41.000000) : PASS
+TEST[342]: fp64 operators :: a / b (got=2.562500 expected=2.562500) : PASS
+TEST[343]: fp64 operators :: a + b_in (got=14.250000 expected=14.250000) : PASS
+TEST[344]: fp64 operators :: a_in + b (got=14.250000 expected=14.250000) : PASS
+TEST[345]: fp64 operators :: a - b_in (got=6.250000 expected=6.250000) : PASS
+TEST[346]: fp64 operators :: a_in - b (got=6.250000 expected=6.250000) : PASS
+TEST[347]: fp64 operators :: a < b (got=0 expected=0) : PASS
+TEST[348]: fp64 operators :: a <= b (got=0 expected=0) : PASS
+TEST[349]: fp64 operators :: a == b (got=0 expected=0) : PASS
+TEST[350]: fp64 operators :: a > b (got=1 expected=1) : PASS
+TEST[351]: fp64 operators :: a >= b (got=1 expected=1) : PASS
+TEST[352]: fp64 operators :: a != b (got=1 expected=1) : PASS
+TEST[353]: fp64 operators :: assign x=b (got=4.000000 expected=4.000000) : PASS
+TEST[354]: fp64 operators :: x+=b (got=14.250000 expected=14.250000) : PASS
+TEST[355]: fp64 operators :: x-=b (got=6.250000 expected=6.250000) : PASS
+TEST[356]: fp64 operators :: x*=b (got=41.000000 expected=41.000000) : PASS
+TEST[357]: fp64 operators :: x/=b (got=2.562500 expected=2.562500) : PASS
+TEST[358]: fp64 operators :: cmov(pred, a, b) (got=4.000000 expected=4.000000) : PASS
+TEST[359]: fp64 operators :: cmov(pred, (typename T::value_type)(a_in), b) (got=4.000000 expected=4.000000) : PASS
+TEST[360]: fp64 operators :: cmov(pred, a, (typename T::value_type)(b_in)) (got=4.000000 expected=4.000000) : PASS
+TEST[361]: support fabs(fp64e_t) :: fabs(fp64e_t(-5.5)) (got=5.500000 expected=5.500000) : PASS
+TEST[362]: cast :: cast i8->i16 (got=-7.000000 expected=-7.000000) : PASS
+TEST[363]: cast :: cast i8->i32 (got=-7.000000 expected=-7.000000) : PASS
+TEST[364]: cast :: cast i8->i64 (got=-7.000000 expected=-7.000000) : PASS
+TEST[365]: cast :: cast i8->u8 (got=249.000000 expected=249.000000) : PASS
+TEST[366]: cast :: cast i8->u16 (got=65529.000000 expected=65529.000000) : PASS
+TEST[367]: cast :: cast i8->u32 (got=4294967289.000000 expected=4294967289.000000) : PASS
+TEST[368]: cast :: cast i8->u64 (got=18446744073709558000.000000 expected=18446744073709558000.000000) : PASS
+TEST[369]: cast :: cast u32->i8 (got=123.000000 expected=123.000000) : PASS
+TEST[370]: cast :: cast u32->i16 (got=123.000000 expected=123.000000) : PASS
+TEST[371]: cast :: cast u32->i32 (got=123.000000 expected=123.000000) : PASS
+TEST[372]: cast :: cast u32->i64 (got=123.000000 expected=123.000000) : PASS
+TEST[373]: cast :: cast u32->u8 (got=123.000000 expected=123.000000) : PASS
+TEST[374]: cast :: cast u32->u16 (got=123.000000 expected=123.000000) : PASS
+TEST[375]: cast :: cast u32->u64 (got=123.000000 expected=123.000000) : PASS
+TEST[376]: cast :: cast i32->fp32 (got=123.000000 expected=123.000000) : PASS
+TEST[377]: cast :: cast i32->fp64 (got=123.000000 expected=123.000000) : PASS
+TEST[378]: cast :: cast u32->fp32 (got=123.000000 expected=123.000000) : PASS
+TEST[379]: cast :: cast u32->fp64 (got=123.000000 expected=123.000000) : PASS
+TEST[380]: cast :: cast fp32->i8 (got=42.000000 expected=42.000000) : PASS
+TEST[381]: cast :: cast fp32->i16 (got=42.000000 expected=42.000000) : PASS
+TEST[382]: cast :: cast fp32->i32 (got=42.000000 expected=42.000000) : PASS
+TEST[383]: cast :: cast fp32->i64 (got=42.000000 expected=42.000000) : PASS
+TEST[384]: cast :: cast fp32->u8 (got=42.000000 expected=42.000000) : PASS
+TEST[385]: cast :: cast fp32->u16 (got=42.000000 expected=42.000000) : PASS
+TEST[386]: cast :: cast fp32->u32 (got=42.000000 expected=42.000000) : PASS
+TEST[387]: cast :: cast fp32->u64 (got=42.000000 expected=42.000000) : PASS
+TEST[388]: cast :: cast fp64->i8 (got=55.000000 expected=55.000000) : PASS
+TEST[389]: cast :: cast fp64->i16 (got=55.000000 expected=55.000000) : PASS
+TEST[390]: cast :: cast fp64->i32 (got=55.000000 expected=55.000000) : PASS
+TEST[391]: cast :: cast fp64->i64 (got=55.000000 expected=55.000000) : PASS
+TEST[392]: cast :: cast fp64->u8 (got=55.000000 expected=55.000000) : PASS
+TEST[393]: cast :: cast fp64->u16 (got=55.000000 expected=55.000000) : PASS
+TEST[394]: cast :: cast fp64->u32 (got=55.000000 expected=55.000000) : PASS
+TEST[395]: cast :: cast fp64->u64 (got=55.000000 expected=55.000000) : PASS
+INFO: all encrypted type tests passed.
