@@ -45,7 +45,7 @@ set_intersect(int64e_t *setA, size_t seta_size, int64e_t *setB, size_t setb_size
   {
     int64e_t match = /* false */0;
     for (unsigned j=0; j < setb_size; j++)
-      match = cmov(setA[i] == setB[j], /* true */1, match);
+      match = cmov(setA[i] == setB[j], /* true */1l, match);
     setA_match[i] = match;
   }
 }
