@@ -93,6 +93,28 @@ static void check_cast_result(const char *suite, const char *operation, G got, E
     check_fp_result((LABEL), #EXPR, (double)_d, (double)_ed); \
   } while (0)
 
+#define CHECK_INT_NAMED(LABEL, OPNAME, EXPR, EXPECTED) \
+  do { \
+    auto _v = (EXPR); \
+    auto _d = _v.decrypt(); \
+    auto _e = (EXPECTED); \
+    using _v_t = decltype(_v); \
+    using _plain_t = typename _v_t::value_type; \
+    auto _ed = _v_t((_plain_t)_e).decrypt(); \
+    check_int_result((LABEL), (OPNAME), (int64_t)_d, (int64_t)_ed); \
+  } while (0)
+
+#define CHECK_FP_NAMED(LABEL, OPNAME, EXPR, EXPECTED) \
+  do { \
+    auto _v = (EXPR); \
+    auto _d = _v.decrypt(); \
+    auto _e = (EXPECTED); \
+    using _v_t = decltype(_v); \
+    using _plain_t = typename _v_t::value_type; \
+    auto _ed = _v_t((_plain_t)_e).decrypt(); \
+    check_fp_result((LABEL), (OPNAME), (double)_d, (double)_ed); \
+  } while (0)
+
 template <typename T>
 static void run_unsigned_ops(const char *name, typename T::value_type a_in, typename T::value_type b_in)
 {
@@ -140,50 +162,50 @@ static void run_unsigned_ops(const char *name, typename T::value_type a_in, type
 
   T x = a;
   x = b;
-  CHECK_INT(name, x, b_in);
+  CHECK_INT_NAMED(name, "assign x=b", x, b_in);
   x = a;
   x += b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in + b_in));
+  CHECK_INT_NAMED(name, "x+=b", x, (typename T::value_type)(a_in + b_in));
   x = a;
   x -= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in - b_in));
+  CHECK_INT_NAMED(name, "x-=b", x, (typename T::value_type)(a_in - b_in));
   x = a;
   x *= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in * b_in));
+  CHECK_INT_NAMED(name, "x*=b", x, (typename T::value_type)(a_in * b_in));
   x = a;
   x /= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in / b_in));
+  CHECK_INT_NAMED(name, "x/=b", x, (typename T::value_type)(a_in / b_in));
   x = a;
   x %= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in % b_in));
+  CHECK_INT_NAMED(name, "x%=b", x, (typename T::value_type)(a_in % b_in));
   x = a;
   x &= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in & b_in));
+  CHECK_INT_NAMED(name, "x&=b", x, (typename T::value_type)(a_in & b_in));
   x = a;
   x |= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in | b_in));
+  CHECK_INT_NAMED(name, "x|=b", x, (typename T::value_type)(a_in | b_in));
   x = a;
   x ^= b;
-  CHECK_INT(name, x, (typename T::value_type)(a_in ^ b_in));
+  CHECK_INT_NAMED(name, "x^=b", x, (typename T::value_type)(a_in ^ b_in));
   x = a;
   x <<= 1;
-  CHECK_INT(name, x, (typename T::value_type)(a_in << 1));
+  CHECK_INT_NAMED(name, "x<<=1", x, (typename T::value_type)(a_in << 1));
   x = a;
   x >>= 1;
-  CHECK_INT(name, x, (typename T::value_type)(a_in >> 1));
+  CHECK_INT_NAMED(name, "x>>=1", x, (typename T::value_type)(a_in >> 1));
 
   x = a;
   ++x;
-  CHECK_INT(name, x, (typename T::value_type)(a_in + 1));
+  CHECK_INT_NAMED(name, "++x", x, (typename T::value_type)(a_in + 1));
   x = a;
   x++;
-  CHECK_INT(name, x, (typename T::value_type)(a_in + 1));
+  CHECK_INT_NAMED(name, "x++", x, (typename T::value_type)(a_in + 1));
   x = a;
   --x;
-  CHECK_INT(name, x, (typename T::value_type)(a_in - 1));
+  CHECK_INT_NAMED(name, "--x", x, (typename T::value_type)(a_in - 1));
   x = a;
   x--;
-  CHECK_INT(name, x, (typename T::value_type)(a_in - 1));
+  CHECK_INT_NAMED(name, "x--", x, (typename T::value_type)(a_in - 1));
 
   CHECK_INT(name, cmov(pred, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
   CHECK_INT(name, cmov(pred, (typename T::value_type)(a_in), b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
@@ -221,13 +243,13 @@ static void run_signed_ops(const char *name, typename T::value_type a_in, typena
 
   T x = a;
   x = b;
-  CHECK_INT(name, x, b_in);
-  x = a; x += b; CHECK_INT(name, x, (typename T::value_type)(a_in + b_in));
-  x = a; x -= b; CHECK_INT(name, x, (typename T::value_type)(a_in - b_in));
-  x = a; x *= b; CHECK_INT(name, x, (typename T::value_type)(a_in * b_in));
-  x = a; x /= b; CHECK_INT(name, x, (typename T::value_type)(a_in / b_in));
-  x = a; x %= b; CHECK_INT(name, x, (typename T::value_type)(a_in % b_in));
-  x = a; x >>= 1; CHECK_INT(name, x, (typename T::value_type)(a_in >> 1));
+  CHECK_INT_NAMED(name, "assign x=b", x, b_in);
+  x = a; x += b; CHECK_INT_NAMED(name, "x+=b", x, (typename T::value_type)(a_in + b_in));
+  x = a; x -= b; CHECK_INT_NAMED(name, "x-=b", x, (typename T::value_type)(a_in - b_in));
+  x = a; x *= b; CHECK_INT_NAMED(name, "x*=b", x, (typename T::value_type)(a_in * b_in));
+  x = a; x /= b; CHECK_INT_NAMED(name, "x/=b", x, (typename T::value_type)(a_in / b_in));
+  x = a; x %= b; CHECK_INT_NAMED(name, "x%=b", x, (typename T::value_type)(a_in % b_in));
+  x = a; x >>= 1; CHECK_INT_NAMED(name, "x>>=1", x, (typename T::value_type)(a_in >> 1));
 
   CHECK_INT(name, cmov(pred, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
 }
@@ -259,11 +281,11 @@ static void run_fp_ops(const char *name, typename T::value_type a_in, typename T
 
   T x = a;
   x = b;
-  CHECK_FP(name, x, b_in);
-  x = a; x += b; CHECK_FP(name, x, (typename T::value_type)(a_in + b_in));
-  x = a; x -= b; CHECK_FP(name, x, (typename T::value_type)(a_in - b_in));
-  x = a; x *= b; CHECK_FP(name, x, (typename T::value_type)(a_in * b_in));
-  x = a; x /= b; CHECK_FP(name, x, (typename T::value_type)(a_in / b_in));
+  CHECK_FP_NAMED(name, "assign x=b", x, b_in);
+  x = a; x += b; CHECK_FP_NAMED(name, "x+=b", x, (typename T::value_type)(a_in + b_in));
+  x = a; x -= b; CHECK_FP_NAMED(name, "x-=b", x, (typename T::value_type)(a_in - b_in));
+  x = a; x *= b; CHECK_FP_NAMED(name, "x*=b", x, (typename T::value_type)(a_in * b_in));
+  x = a; x /= b; CHECK_FP_NAMED(name, "x/=b", x, (typename T::value_type)(a_in / b_in));
 
   CHECK_FP(name, cmov(pred, a, b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
   CHECK_FP(name, cmov(pred, (typename T::value_type)(a_in), b), (typename T::value_type)(a_in < b_in ? a_in : b_in));
