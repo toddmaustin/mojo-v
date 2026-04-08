@@ -270,7 +270,7 @@ static void run_fp_ops(const char *name, typename T::value_type a_in, typename T
   CHECK_FP(name, cmov(pred, a, (typename T::value_type)(b_in)), (typename T::value_type)(a_in < b_in ? a_in : b_in));
 }
 
-#define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; set_fp_inputs((double)(V), 0.0); auto _g = d.decrypt(); auto _e = (typename DST::value_type)(V); check_cast_result("cast", LABEL, _g, _e); } while (0)
+#define TEST_CAST(SRC, DST, V, LABEL) do { SRC s = (V); DST d = s; set_fp_inputs((double)(V), 0.0); auto _g = d.decrypt(); auto _e = DST((typename DST::value_type)(V)).decrypt(); check_cast_result("cast", LABEL, _g, _e); } while (0)
 
 int main(void)
 {
