@@ -1,0 +1,448 @@
+%PDF-1.4
+%
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2605 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 54 738 Tm
+14 TL
+(MOJO-V EXO LIBRARY: PURPOSE, DESIGN, WORKFLOW, AND LLVM PORT TRADE-OFFS) Tj
+T*
+() Tj
+T*
+(1\) WHAT THE EXO LIBRARY IS) Tj
+T*
+() Tj
+T*
+(The **Mojo-V EXO library** is a C/C++ header-based compatibility layer that exposes encrypted) Tj
+T*
+(integer and floating-point programming abstractions to software today, on top of existing) Tj
+T*
+(compilers, while targeting the Mojo-V execution model.) Tj
+T*
+() Tj
+T*
+(At a code level, EXO is centered on:) Tj
+T*
+() Tj
+T*
+(- `exo/mojov-exo.h`: C++ encrypted scalar wrappers \(`inte_t<Bits, Signed>`, `fpe_t<Bits>`\) and) Tj
+T*
+(overloads for arithmetic, bitwise, relational, conversion, and `cmov` operations.) Tj
+T*
+(- `exo/mojov-intrinsics.h`: low-level inline-assembly intrinsics \(`_add`, `_mul`, `_fadd`,) Tj
+T*
+(`_slt`, `_cmov`, etc.\) that map EXO operations onto Mojo-V instruction semantics.) Tj
+T*
+(- Storage-type indirection \(`EXO_UINT64E_STORAGE_TYPE`, `EXO_FP64E_STORAGE_TYPE`\) allowing a) Tj
+T*
+(build to choose fast, strong, or proof-carrying encrypted memory payload types.) Tj
+T*
+() Tj
+T*
+(This design gives developers an encrypted-type programming model before a complete LLVM) Tj
+T*
+(language+backend integration exists.) Tj
+T*
+() Tj
+T*
+(2\) WHAT EXO IS USED FOR) Tj
+T*
+() Tj
+T*
+(EXO is used to:) Tj
+T*
+() Tj
+T*
+(1. **Write encrypted algorithms in ordinary C++ syntax**) Tj
+T*
+(   - Example benchmarks include bubble sort, GEMM, knapsack, PSI, NTT kernel, etc., each) Tj
+T*
+(including `mojov-exo.h` and instantiating EXO encrypted types.) Tj
+T*
+() Tj
+T*
+(2. **Exercise Mojo-V semantics in bring-up and evaluation**) Tj
+T*
+(   - The Mojo-V type tests \(`bringup-bench/mojov-typetests`\) validate arithmetic, comparisons,) Tj
+T*
+(assignment variants, casts, and conditional moves over EXO types.) Tj
+T*
+() Tj
+T*
+(3. **Support multiple protection formats from the same source code**) Tj
+T*
+(   - By defining storage macros before including EXO, benchmark builds can target fast or) Tj
+T*
+(strong memory-encryption layouts without rewriting algorithm code.) Tj
+T*
+() Tj
+T*
+(4. **Enable debug-time plaintext checks in simulation**) Tj
+T*
+(   - EXO provides `debug_context\(...\)` and `.decrypt\(\)` support \(for test/debug\) that decrypt) Tj
+T*
+(values using SIMON key expansion and a contract signature.) Tj
+T*
+() Tj
+T*
+(3\) HOW EXO WORKS \(MECHANICS\)) Tj
+T*
+() Tj
+T*
+(A. TYPE LAYER AND OPERATOR OVERLOADING) Tj
+T*
+() Tj
+T*
+(EXO introduces encrypted scalar classes:) Tj
+T*
+() Tj
+T*
+(- `inte_t<Bits, IsSigned>` for encrypted integers) Tj
+T*
+(- `fpe_t<Bits>` for encrypted floating point \(32/64 aliases\)) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 1975 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 54 738 Tm
+14 TL
+() Tj
+T*
+(These classes:) Tj
+T*
+() Tj
+T*
+(- Store encrypted payloads \(not plaintext\) using selected storage structs.) Tj
+T*
+(- Overload arithmetic/logic/comparison operators to preserve C++ ergonomics.) Tj
+T*
+(- Return encrypted predicates \(rather than plaintext bools\), keeping control decisions) Tj
+T*
+(expressible via data-oblivious mechanisms.) Tj
+T*
+() Tj
+T*
+(B. INTRINSIC MAPPING THROUGH INLINE ASSEMBLY) Tj
+T*
+() Tj
+T*
+(Each EXO operator funnels into intrinsics from `mojov-intrinsics.h`.) Tj
+T*
+() Tj
+T*
+(Examples:) Tj
+T*
+() Tj
+T*
+(- `a + b` -> `_add\(...\)`) Tj
+T*
+(- `a < b` \(unsigned\) -> `_sltu\(...\)`) Tj
+T*
+(- `fp_a + fp_b` -> `_fadd\(...\)`) Tj
+T*
+(- `cmov\(pred, t, f\)` -> `_cmov\(...\)` / `_fcmov\(...\)`) Tj
+T*
+() Tj
+T*
+(The intrinsics load encrypted operands, execute arithmetic/relational instructions, and store) Tj
+T*
+(encrypted results. Logical operators are explicitly implemented without short-circuit behavior) Tj
+T*
+(to maintain data-oblivious semantics.) Tj
+T*
+() Tj
+T*
+(C. EXPLICIT DATA-OBLIVIOUS SELECTION MODEL) Tj
+T*
+() Tj
+T*
+(Instead of relying on plaintext branches over secret data, EXO provides `cmov\(...\)` overloads) Tj
+T*
+(for integer and floating-point cases, enabling branchless secret-dependent selection patterns) Tj
+T*
+(compatible with Mojo-V expectations.) Tj
+T*
+() Tj
+T*
+(D. CONFIGURABLE ENCRYPTED MEMORY ABI) Tj
+T*
+() Tj
+T*
+(By setting:) Tj
+T*
+() Tj
+T*
+(- `EXO_UINT64E_STORAGE_TYPE`) Tj
+T*
+(- `EXO_FP64E_STORAGE_TYPE`) Tj
+T*
+() Tj
+T*
+(before including `mojov-exo.h`, the same C++ source can bind to:) Tj
+T*
+() Tj
+T*
+(- `mojov_mem_fast_*`) Tj
+T*
+(- `mojov_mem_strong_*`) Tj
+T*
+(- `mojov_mem_proofcarrying_*`) Tj
+T*
+() Tj
+T*
+(This decouples algorithm code from encryption-format representation details.) Tj
+T*
+() Tj
+T*
+(E. DEBUG DECRYPTION PATH FOR VERIFICATION \(NON-PRODUCTION SEMANTIC AID\)) Tj
+T*
+() Tj
+T*
+(For validation runs, EXO can decrypt wrapped values with:) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 2317 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 54 738 Tm
+14 TL
+(- `debug_context\(simon_key, contract_sig\)` initialization) Tj
+T*
+(- `.decrypt\(\)` on encrypted wrappers) Tj
+T*
+() Tj
+T*
+(This is used by test suites to compare encrypted execution outcomes against expected plaintext) Tj
+T*
+(behavior.) Tj
+T*
+() Tj
+T*
+(4\) WHY EXO ENABLES PARALLEL LLVM AND LIBRARY/BENCHMARK DEVELOPMENT) Tj
+T*
+() Tj
+T*
+(EXO is a **staging layer** that removes the immediate dependency on a full LLVM Mojo-V) Tj
+T*
+(language+codegen port.) Tj
+T*
+() Tj
+T*
+(PARALLELIZATION EFFECT) Tj
+T*
+() Tj
+T*
+(- **Compiler/backend team** can work on true first-class LLVM support \(IR typing, ABI, codegen,) Tj
+T*
+(optimization legality, debugging/profiling integration\).) Tj
+T*
+(- **Library + benchmark teams** can simultaneously develop encrypted algorithms, APIs, and test) Tj
+T*
+(suites now using EXO wrappers and intrinsics.) Tj
+T*
+(- **System team** can validate Mojo-V ISA behavior in Spike and across encryption modes while) Tj
+T*
+(compiler work is still in progress.) Tj
+T*
+() Tj
+T*
+(Because EXO is header-first and macro-configurable, most application-facing experimentation can) Tj
+T*
+(proceed independently from heavyweight compiler milestones.) Tj
+T*
+() Tj
+T*
+(5\) TRADE-OFFS: EXO LIBRARY VS. FULL LLVM PORT) Tj
+T*
+() Tj
+T*
+(A. BENEFITS OF EXO \(SHORT/MEDIUM TERM\)) Tj
+T*
+() Tj
+T*
+(1. **Fast time-to-productivity**) Tj
+T*
+(   - Usable immediately with existing C/C++ toolchains and simulator workflows.) Tj
+T*
+() Tj
+T*
+(2. **Low integration risk early on**) Tj
+T*
+(   - Avoids front-loading complex compiler architecture changes before ISA and runtime behavior) Tj
+T*
+(stabilize.) Tj
+T*
+() Tj
+T*
+(3. **Great for bring-up and semantic validation**) Tj
+T*
+(   - Easy to build focused tests that verify operators, type conversions, and encrypted control) Tj
+T*
+(primitives.) Tj
+T*
+() Tj
+T*
+(4. **Flexible encryption-format experimentation**) Tj
+T*
+(   - Storage-type macros let teams compare fast/strong/proof-carrying choices from mostly) Tj
+T*
+(shared code.) Tj
+T*
+() Tj
+T*
+(B. COSTS/LIMITS OF EXO \(COMPARED TO FULL LLVM SUPPORT\)) Tj
+T*
+() Tj
+T*
+(1. **Not a first-class language type system integration**) Tj
+T*
+(   - Encrypted semantics live in library wrappers, not native compiler IR types and analyses.) Tj
+T*
+() Tj
+T*
+(2. **Optimization ceiling**) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 1992 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 54 738 Tm
+14 TL
+(   - Compiler cannot reason globally about encrypted semantics as deeply as with dedicated LLVM) Tj
+T*
+(IR and passes.) Tj
+T*
+() Tj
+T*
+(3. **Tooling ergonomics gap**) Tj
+T*
+(   - Diagnostics, debugging, and profiling are less seamless than true compiler-native) Tj
+T*
+(features.) Tj
+T*
+() Tj
+T*
+(4. **Potential abstraction/ABI friction**) Tj
+T*
+(   - Wrapper indirection and explicit intrinsics can create edge-case interoperability concerns) Tj
+T*
+(with generic libraries and mixed-language boundaries.) Tj
+T*
+() Tj
+T*
+(5. **Long-term maintenance duplication risk**) Tj
+T*
+(   - Some EXO patterns may later be superseded by compiler-native implementations, requiring) Tj
+T*
+(migration.) Tj
+T*
+() Tj
+T*
+(C. BENEFITS OF FULL LLVM PORT \(LONG TERM\)) Tj
+T*
+() Tj
+T*
+(A complete LLVM port would enable:) Tj
+T*
+() Tj
+T*
+(- Native encrypted types and operations in the compiler pipeline) Tj
+T*
+(- Better legality-aware optimization and scheduling) Tj
+T*
+(- Cleaner source-level language integration beyond wrapper idioms) Tj
+T*
+(- More robust ecosystem/toolchain support at scale) Tj
+T*
+() Tj
+T*
+(D. PRACTICAL CONCLUSION) Tj
+T*
+() Tj
+T*
+(A realistic engineering strategy is:) Tj
+T*
+() Tj
+T*
+(1. Use EXO now for rapid bring-up, validation, and benchmark acceleration.) Tj
+T*
+(2. Continue full LLVM integration in parallel.) Tj
+T*
+(3. Gradually transition performance-critical and production-facing paths to compiler-native) Tj
+T*
+(support as it matures.) Tj
+T*
+() Tj
+T*
+(In short: **EXO optimizes for velocity and parallel progress; a full LLVM port optimizes for) Tj
+T*
+(long-term compiler quality, portability, and scale.**) Tj
+T*
+() Tj
+T*
+(6\) BOTTOM LINE) Tj
+T*
+() Tj
+T*
+(The Mojo-V EXO library is a deliberate bridge between ISA innovation and production compiler) Tj
+T*
+(maturity. It gives teams a usable encrypted programming model today, proves semantics with real) Tj
+T*
+(benchmarks, and de-risks the path to eventual first-class LLVM support.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Pages /Kids [ 7 0 R 8 0 R 9 0 R 10 0 R ] /Count 4 >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 3 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+10 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 5 0 R >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000002741 00000 n 
+0000004767 00000 n 
+0000007135 00000 n 
+0000009178 00000 n 
+0000009256 00000 n 
+0000009382 00000 n 
+0000009508 00000 n 
+0000009634 00000 n 
+0000009761 00000 n 
+trailer
+<< /Size 12 /Root 11 0 R >>
+startxref
+9811
+%%EOF
