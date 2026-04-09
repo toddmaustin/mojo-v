@@ -1,0 +1,22 @@
+CC  = gcc
+CXX = g++
+LD  = g++
+
+OPT_CFLAGS = -O3 -g -std=c++11 -Wno-comment -maes
+
+NA_CFLAGS =
+NA_LIBS =
+NA_SIM =
+NA_DIFF = diff
+
+DO_CFLAGS =
+DO_LIBS =
+DO_SIM =
+DO_DIFF = diff
+
+ENC_CFLAGS = 
+ENC_LIBS = ../lib/vip-functional-library/vip-functional-library.cpp ../lib/vip-functional-library/interface/interface.cpp ../lib/vip-functional-library/datatypes/enc_impl.cpp ../lib/vip-functional-library/interface/parameters.cpp ../lib/vip-functional-library/rng/rng_interface.cpp ../lib/vip-functional-library/rng/mersenne-twister-1/mersenne-twister.cpp ../lib/vip-functional-library/ciphers/aes/aes_interface.cpp ../lib/vip-functional-library/ciphers/xor/xor_interface.cpp
+
+ENC_SIM =
+ENC_DIFF = diff
+

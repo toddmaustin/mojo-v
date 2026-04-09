@@ -1,0 +1,6 @@
+Parsing data file: ratings-small.csv
+Split training/testing datasets
+====== Matrix factorization ======
+K = 2, eta = 0.001, lambda = 0.01, iterations = 0
+Training MAE = 0.706557
+Testing MAE = 0.994594

@@ -1,0 +1,79 @@
+INFO: Generating homesales.db...
+INFO: data set size: 16282
+INFO: Closing and re-opening database in read-only mode...
+STAT: average price for zipcode 95864: $364400.00
+STAT: stddev price for zipcode 95864: $220567.18
+STAT: average price/sqft for zipcode 95864: $239.67
+STAT: stddev price/sqft for zipcode 95864: $117.16
+STAT: price of most expensive home price: $884790.00
+STAT: price of most expensive home price/sqft: $619.67
+STAT: average price of small homes: $155384.35
+STAT: average price of large homes: $244189.32
+STAT: Zipcode 95603: average price/sqft $229.54, stddev price/sqft $53.13
+STAT: Zipcode 95608: average price/sqft $187.56, stddev price/sqft $43.14
+STAT: Zipcode 95610: average price/sqft $148.45, stddev price/sqft $41.58
+STAT: Zipcode 95614: average price/sqft $205.90, stddev price/sqft $0.00
+STAT: Zipcode 95619: average price/sqft $166.18, stddev price/sqft $0.00
+STAT: Zipcode 95621: average price/sqft $142.04, stddev price/sqft $37.07
+STAT: Zipcode 95623: average price/sqft $187.54, stddev price/sqft $11.06
+STAT: Zipcode 95624: average price/sqft $135.56, stddev price/sqft $27.01
+STAT: Zipcode 95626: average price/sqft $108.36, stddev price/sqft $13.44
+STAT: Zipcode 95628: average price/sqft $178.18, stddev price/sqft $32.26
+STAT: Zipcode 95630: average price/sqft $193.24, stddev price/sqft $45.05
+STAT: Zipcode 95631: average price/sqft $0.00, stddev price/sqft $0.00
+STAT: Zipcode 95632: average price/sqft $142.52, stddev price/sqft $30.60
+STAT: Zipcode 95633: average price/sqft $0.00, stddev price/sqft $0.00
+STAT: Zipcode 95635: average price/sqft $138.79, stddev price/sqft $0.00
+STAT: Zipcode 95648: average price/sqft $167.56, stddev price/sqft $31.64
+STAT: Zipcode 95650: average price/sqft $369.38, stddev price/sqft $170.02
+STAT: Zipcode 95655: average price/sqft $113.62, stddev price/sqft $0.00
+STAT: Zipcode 95660: average price/sqft $119.48, stddev price/sqft $33.65
+STAT: Zipcode 95661: average price/sqft $183.26, stddev price/sqft $28.63
+STAT: Zipcode 95662: average price/sqft $172.38, stddev price/sqft $31.58
+STAT: Zipcode 95663: average price/sqft $383.85, stddev price/sqft $0.00
+STAT: Zipcode 95667: average price/sqft $237.42, stddev price/sqft $61.72
+STAT: Zipcode 95670: average price/sqft $146.57, stddev price/sqft $35.91
+STAT: Zipcode 95673: average price/sqft $153.98, stddev price/sqft $51.58
+STAT: Zipcode 95677: average price/sqft $173.06, stddev price/sqft $18.10
+STAT: Zipcode 95678: average price/sqft $159.83, stddev price/sqft $33.26
+STAT: Zipcode 95682: average price/sqft $197.92, stddev price/sqft $0.00
+STAT: Zipcode 95683: average price/sqft $89.67, stddev price/sqft $69.20
+STAT: Zipcode 95690: average price/sqft $220.03, stddev price/sqft $0.00
+STAT: Zipcode 95691: average price/sqft $166.29, stddev price/sqft $0.00
+STAT: Zipcode 95693: average price/sqft $178.70, stddev price/sqft $17.68
+STAT: Zipcode 95722: average price/sqft $189.14, stddev price/sqft $0.00
+STAT: Zipcode 95726: average price/sqft $181.13, stddev price/sqft $39.46
+STAT: Zipcode 95742: average price/sqft $107.13, stddev price/sqft $13.70
+STAT: Zipcode 95746: average price/sqft $231.75, stddev price/sqft $21.32
+STAT: Zipcode 95747: average price/sqft $167.16, stddev price/sqft $19.64
+STAT: Zipcode 95757: average price/sqft $144.89, stddev price/sqft $38.58
+STAT: Zipcode 95758: average price/sqft $145.01, stddev price/sqft $34.25
+STAT: Zipcode 95762: average price/sqft $166.72, stddev price/sqft $17.14
+STAT: Zipcode 95765: average price/sqft $189.42, stddev price/sqft $44.33
+STAT: Zipcode 95811: average price/sqft $283.77, stddev price/sqft $84.40
+STAT: Zipcode 95814: average price/sqft $209.18, stddev price/sqft $47.30
+STAT: Zipcode 95815: average price/sqft $108.00, stddev price/sqft $57.84
+STAT: Zipcode 95816: average price/sqft $254.40, stddev price/sqft $162.89
+STAT: Zipcode 95817: average price/sqft $128.56, stddev price/sqft $59.10
+STAT: Zipcode 95818: average price/sqft $237.61, stddev price/sqft $44.59
+STAT: Zipcode 95819: average price/sqft $276.93, stddev price/sqft $27.37
+STAT: Zipcode 95820: average price/sqft $155.27, stddev price/sqft $116.00
+STAT: Zipcode 95821: average price/sqft $154.32, stddev price/sqft $47.60
+STAT: Zipcode 95822: average price/sqft $135.30, stddev price/sqft $56.02
+STAT: Zipcode 95823: average price/sqft $121.23, stddev price/sqft $31.67
+STAT: Zipcode 95824: average price/sqft $110.35, stddev price/sqft $21.86
+STAT: Zipcode 95825: average price/sqft $150.14, stddev price/sqft $31.94
+STAT: Zipcode 95826: average price/sqft $140.54, stddev price/sqft $27.95
+STAT: Zipcode 95827: average price/sqft $116.88, stddev price/sqft $18.66
+STAT: Zipcode 95828: average price/sqft $129.00, stddev price/sqft $51.89
+STAT: Zipcode 95829: average price/sqft $125.90, stddev price/sqft $21.49
+STAT: Zipcode 95831: average price/sqft $178.70, stddev price/sqft $27.74
+STAT: Zipcode 95832: average price/sqft $109.05, stddev price/sqft $13.40
+STAT: Zipcode 95833: average price/sqft $132.07, stddev price/sqft $31.99
+STAT: Zipcode 95834: average price/sqft $134.09, stddev price/sqft $33.42
+STAT: Zipcode 95835: average price/sqft $143.86, stddev price/sqft $28.73
+STAT: Zipcode 95838: average price/sqft $111.20, stddev price/sqft $35.66
+STAT: Zipcode 95841: average price/sqft $157.04, stddev price/sqft $78.14
+STAT: Zipcode 95842: average price/sqft $119.16, stddev price/sqft $37.21
+STAT: Zipcode 95843: average price/sqft $140.58, stddev price/sqft $35.56
+STAT: Zipcode 95864: average price/sqft $239.67, stddev price/sqft $117.16
