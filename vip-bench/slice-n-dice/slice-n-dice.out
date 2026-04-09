@@ -1,0 +1,3 @@
+INFO: writing `200000' samples to file `FOO.log'
+INFO: Running the too-many-0s test...
+INFO: slice-n-dice ciphertext sampling is complete.

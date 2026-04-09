@@ -1,0 +1,140 @@
+#ifndef CONFIG_SE_H
+#define CONFIG_SE_H
+
+#include "common/utils.h"
+
+/*****************************************/
+#if defined(VIP_NA_MODE)
+
+#include <valarray>
+#include <vector>
+
+
+#define VIP_INIT
+#define VIP_ENCCHAR         char
+#define VIP_ENCINT          int
+#define VIP_ENCUINT         unsigned int
+#define VIP_ENCUINT64       uint64_t
+#define VIP_ENCLONG         long
+#define VIP_ENCULONG        unsigned long
+#define VIP_ENCBOOL         bool
+#define VIP_ENCFLOAT        float
+#define VIP_ENCDOUBLE       double
+#define VIP_VEC_ENCDOUBLE   std::valarray<VIP_ENCDOUBLE>
+#define VIP_VEC_ENCINT      std::valarray<VIP_ENCINT>
+#define VIP_DEC(X)          (X)
+#define VIP_DEC_VEC(X)      (X) 
+#define VIP_EMITCT(F,X,C,S,D) ({ (void)(X); if (((C) = (C) + 1) >= (S)) goto D; })
+
+extern inline void vip_init_vector(VIP_VEC_ENCINT* dest, std::vector<int>* source) {
+    std::copy(source->begin(), source->end(), std::begin(*dest));
+}
+inline VIP_VEC_ENCINT   operator<<   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(rhs); }
+inline VIP_VEC_ENCINT   operator>>   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(-rhs); }
+
+
+/*****************************************/
+#elif defined(VIP_DO_MODE)
+
+#include <valarray>
+#include <vector>
+
+
+#define VIP_INIT
+#define VIP_ENCCHAR         char
+#define VIP_ENCINT          int
+#define VIP_ENCUINT         unsigned int
+#define VIP_ENCUINT64       uint64_t
+#define VIP_ENCLONG         long
+#define VIP_ENCULONG        unsigned long
+#define VIP_ENCBOOL         bool
+#define VIP_ENCFLOAT        float
+#define VIP_ENCDOUBLE       double
+#define VIP_VEC_ENCDOUBLE   std::valarray<VIP_ENCDOUBLE>
+#define VIP_VEC_ENCINT      std::valarray<VIP_ENCINT>
+#define VIP_DEC(X)          (X)
+#define VIP_DEC_VEC(X)      (X) 
+#define VIP_CMOV(P,A,B)     ((P) ? (A) : (B))
+#define VIP_EMITCT(F,X,C,S,D) ({ (void)(X); if (((C) = (C) + 1) >= (S)) goto D; })
+
+extern inline void vip_init_vector(VIP_VEC_ENCINT* dest, std::vector<int>* source) {
+    std::copy(source->begin(), source->end(), std::begin(*dest));
+}
+inline VIP_VEC_ENCINT   operator<<   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(rhs); }
+inline VIP_VEC_ENCINT   operator>>   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(-rhs); }
+
+
+/*****************************************/
+#elif defined(VIP_ENC_MODE)
+
+#include "lib/vip-functional-library/vip-functional-library.h"
+#include <valarray>
+#include <vector>
+using namespace enc_lib;
+
+#define VIP_INIT        VIPInit()
+
+#define VIP_ENCCHAR         enc_char
+#define VIP_ENCINT          enc_int
+#define VIP_ENCUINT         enc_uint32
+#define VIP_ENCUINT64       enc_uint64
+#define VIP_ENCLONG         enc_long
+#define VIP_ENCULONG        enc_ulong
+#define VIP_ENCBOOL         enc_bool
+#define VIP_ENCFLOAT        enc_float
+#define VIP_ENCDOUBLE       enc_double
+#define VIP_VEC_ENCDOUBLE   std::valarray<VIP_ENCDOUBLE>
+#define VIP_VEC_ENCINT      std::valarray<VIP_ENCINT>
+#define VIP_DEC(X)          ((X).GET_DECRYPTED_VALUE())
+#define VIP_DEC_VEC(X)      (vip_dec_vector(X)) 
+#define VIP_CMOV(P,A,B)     CMOV((P), (A), (B))
+#define VIP_EMITCT(F,X,C,S,D) ({ if (((C) = vip_emitct((F),(X).ciphertext,(C),(S))) >= (S)) goto D; })
+
+extern inline uint64_t
+vip_emitct(FILE *outfile, bit128_t ciphertext, uint64_t count, uint64_t samples)
+{
+  if (count < samples)
+  {
+    fprintf(outfile, "%10u\n", uint32_t((ciphertext.getLowerValue_64b()) & 0xffffffff));
+    count++;
+  }
+  if (count < samples)
+  {
+    fprintf(outfile, "%10u\n", uint32_t((ciphertext.getLowerValue_64b() >> 32) & 0xffffffff));
+    count++;
+  }
+  if (count < samples)
+  {
+    fprintf(outfile, "%10u\n", uint32_t((ciphertext.getUpperValue_64b()) & 0xffffffff));
+    count++;
+  }
+  if (count < samples)
+  {
+    fprintf(outfile, "%10u\n", uint32_t((ciphertext.getUpperValue_64b() >> 32) & 0xffffffff));
+    count++;
+  }
+
+  return count;
+}
+ 
+extern inline void vip_init_vector(VIP_VEC_ENCINT* dest, std::vector<int>* source) {
+    dest->resize(source->size());
+    for (unsigned int i=0; i<source->size(); i++) {
+        (*dest)[i] = (*source)[i];
+    }
+}
+extern inline std::valarray<int> vip_dec_vector(VIP_VEC_ENCINT x){
+    std::valarray<int> p(x.size());
+    for(unsigned int i=0; i<x.size(); i++){
+        p[i] = VIP_DEC(x[i]);
+    }
+    return p;
+}
+inline VIP_VEC_ENCINT   operator<<   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(rhs); }
+inline VIP_VEC_ENCINT   operator>>   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(-rhs); }
+
+#undef  VIP_DO_MODE
+#define VIP_DO_MODE
+
+#endif
+#endif

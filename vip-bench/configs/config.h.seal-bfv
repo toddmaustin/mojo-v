@@ -1,0 +1,98 @@
+#ifndef CONFIG_SEAL_H
+#define CONFIG_SEAL_H
+
+#include "common/utils.h"
+
+/*****************************************/
+#if defined(VIP_NA_MODE)
+
+#include <valarray>
+#include <vector>
+
+#define VIP_INIT
+#define VIP_ENCCHAR         char
+#define VIP_ENCINT          int
+#define VIP_ENCUINT         unsigned int
+#define VIP_ENCUINT64       uint64_t
+#define VIP_ENCLONG         long
+#define VIP_ENCULONG        unsigned long
+#define VIP_ENCBOOL         bool
+#define VIP_ENCFLOAT        float
+#define VIP_ENCDOUBLE       double
+#define VIP_VEC_ENCDOUBLE   std::valarray<VIP_ENCDOUBLE>
+#define VIP_VEC_ENCINT      std::valarray<VIP_ENCINT>
+#define VIP_DEC(X)          (X)
+#define VIP_DEC_VEC(X)      (X) 
+
+void vip_init_vector(VIP_VEC_ENCINT* dest, std::vector<int>* source) {
+    std::copy(source->begin(), source->end(), std::begin(*dest));
+}
+inline VIP_VEC_ENCINT   operator<<   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(rhs); }
+inline VIP_VEC_ENCINT   operator>>   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(-rhs); }
+
+
+/*****************************************/
+#elif defined(VIP_DO_MODE)
+
+#include <valarray>
+#include <vector>
+
+
+#define VIP_INIT   
+#define VIP_ENCCHAR         char
+#define VIP_ENCINT          int
+#define VIP_ENCUINT         unsigned int
+#define VIP_ENCUINT64       uint64_t
+#define VIP_ENCLONG         long
+#define VIP_ENCULONG        unsigned long
+#define VIP_ENCBOOL         bool
+#define VIP_ENCFLOAT        float
+#define VIP_ENCDOUBLE       double
+#define VIP_VEC_ENCDOUBLE   std::valarray<VIP_ENCDOUBLE>
+#define VIP_VEC_ENCINT      std::valarray<VIP_ENCINT>
+#define VIP_DEC(X)          (X)
+#define VIP_DEC_VEC(X)      (X) 
+#define VIP_CMOV(P,A,B)     ((P) ? (A) : (B))
+
+void vip_init_vector(VIP_VEC_ENCINT* dest, std::vector<int>* source) {
+    std::copy(source->begin(), source->end(), std::begin(*dest));
+}
+inline VIP_VEC_ENCINT   operator<<   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(rhs); }
+inline VIP_VEC_ENCINT   operator>>   (VIP_VEC_ENCINT lhs, int rhs)   { return lhs.cshift(-rhs); }
+
+
+/*****************************************/
+#elif defined(VIP_ENC_MODE)
+
+#include "lib/SEAL-3.4/seal-3.4.h"
+#include "lib/SEAL-3.4/wrapper/SEALWrapper.h"
+#include <valarray>
+
+using namespace he_lib;
+
+#define VIP_INIT            SEAL_BFV_Init()
+
+#define VIP_ENCCHAR         #error
+#define VIP_ENCINT          SEALCipherText
+#define VIP_ENCUINT         SEALCipherText
+#define VIP_ENCUINT64       #error
+#define VIP_ENCLONG         #error
+#define VIP_ENCULONG        #error
+#define VIP_ENCBOOL         #error
+#define VIP_ENCFLOAT        #error
+#define VIP_ENCDOUBLE       #error
+#define VIP_VEC_ENCDOUBLE   #error
+#define VIP_VEC_ENCINT      SEALCipherText
+#define VIP_DEC(X)          (X.decrypt_bfv()) 
+#define VIP_DEC_VEC(X)      (X.decrypt_bfv()) 
+//#define VIP_CMOV(P,A,B)   (#error)
+
+void vip_init_vector(VIP_VEC_ENCINT* dest, std::vector<int>* source) {
+    dest->initFromVector(*source);
+}
+
+#undef  VIP_DO_MODE
+#define VIP_DO_MODE
+
+#endif
+#endif

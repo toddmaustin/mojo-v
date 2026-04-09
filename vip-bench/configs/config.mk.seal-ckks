@@ -1,0 +1,21 @@
+CC  = gcc
+CXX = g++
+LD  = g++
+
+OPT_CFLAGS = -O2 -std=c++17
+
+NA_CFLAGS =
+NA_LIBS =
+NA_SIM =
+NA_DIFF = diff
+
+DO_CFLAGS =
+DO_LIBS =
+DO_SIM =
+DO_DIFF = diff
+
+ENC_CFLAGS =   -I../lib/SEAL/include/SEAL-3.4/
+ENC_LIBS = #-L../lib/SEAL/include/lib/ -L../lib/SEAL/wrapper -lheWrapper -lseal-3.4 -lpthread -lz #wrappers/HEAANWrapper.cpp wrappers/HElibWrapper.cpp 
+ENC_SIM =
+ENC_DIFF = diff
+

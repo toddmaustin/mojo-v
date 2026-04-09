@@ -1,0 +1,15 @@
+Attic/
+config.h
+config.mk
+*.o
+*.na
+*.do
+*.enc
+*.swp
+FOO
+FOO1
+*.enc
+*.na
+mem.out
+*.log
+*/bin/*
