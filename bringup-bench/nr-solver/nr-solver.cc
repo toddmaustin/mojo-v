@@ -25,7 +25,8 @@ static const double testdata[] = {
 };
 #define NTESTDATA (sizeof(testdata) / sizeof(testdata[0]))
 
-// Run the fixed-iteration secret Newton-Raphson solver and return the encrypted root.
+// Run the fixed-iteration secret Newton-Raphson
+// solver and return the encrypted root.
 static fp64e_t
 nr_solver(uint64e_t *converged)
 {
