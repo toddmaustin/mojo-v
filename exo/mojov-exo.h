@@ -1,5 +1,5 @@
-#ifndef EXO_H
-#define EXO_H
+#ifndef MOJOV_EXO_H
+#define MOJOV_EXO_H
 
 #if !defined(__cplusplus)
 #include "mojov-intrinsics.h"
@@ -540,4 +540,4 @@ using exo::uint64_generic_t;
 
 #endif  // __cplusplus
 
-#endif  // EXO_H
+#endif  // MOJOV_EXO_H

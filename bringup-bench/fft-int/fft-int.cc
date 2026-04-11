@@ -1,67 +1,27 @@
-/*      fix_fft.c - Fixed-point Fast Fourier Transform  */
-/*
-        fix_fft()       perform FFT or inverse FFT
-        window()        applies a Hanning window to the (time) input
-        fix_loud()      calculates the loudness of the signal, for
-                        each freq point. Result is an integer array,
-                        units are dB (values will be negative).
-        iscale()        scale an integer value by (numer/denom).
-        fix_mpy()       perform fixed-point multiplication.
-        Sinewave[1024]  sinewave normalized to 32767 (= 1.0).
-        Loudampl[100]   Amplitudes for lopudnesses from 0 to -99 dB.
-        Low_pass        Low-pass filter, cutoff at sample_freq / 4.
+#include "libmin.h"
+#include "simon.h"
+#include "mojov-utils.h"
 
+#include "dc-fast.h"
 
-        All data are fixed-point short integers, in which
-        -32768 to +32768 represent -1.0 to +1.0. Integer arithmetic
-        is used for speed, instead of the more natural floating-point.
-
-        For the forward FFT (time -> freq), fixed scaling is
-        performed to prevent arithmetic overflow, and to map a 0dB
-        sine/cosine wave (i.e. amplitude = 32767) to two -6dB freq
-        coefficients; the one in the lower half is reported as 0dB
-        by fix_loud(). The return value is always 0.
-
-        For the inverse FFT (freq -> time), fixed scaling cannot be
-        done, as two 0dB coefficients would sum to a peak amplitude of
-        64K, overflowing the 32k range of the fixed-point integers.
-        Thus, the fix_fft() routine performs variable scaling, and
-        returns a value which is the number of bits LEFT by which
-        the output must be shifted to get the actual amplitude
-        (i.e. if fix_fft() returns 3, each value of fr[] and fi[]
-        must be multiplied by 8 (2**3) for proper scaling.
-        Clearly, this cannot be done within the fixed-point short
-        integers. In practice, if the result is to be used as a
-        filter, the scale_shift can usually be ignored, as the
-        result will be approximately correctly normalized as is.
-
-
-        Written by:  Tom Roberts  11/8/89
-        Made portable:  Malcolm Slaney 12/15/94 malcolm@interval.com
-
-*/
-
-#include <stdio.h>
-
-#include "../config.h"
-#include "mathlib.h"
-
+#define EXO_UINT64E_STORAGE_TYPE mojov_mem_fast_u64_t
+#define EXO_FP64E_STORAGE_TYPE mojov_mem_fast_fp64_t
+#include "mojov-exo.h"
 
 /* FIX_MPY() - fixed-point multiplication macro.
    This macro is a statement, not an expression (uses asm).
    BEWARE: make sure _DX is not clobbered by evaluating (A) or DEST.
    args are all of type fixed.
    Scaling ensures that 32767*32767 = 32767. */
-#define FIX_MPY(DEST,A,B)       DEST = (((VIP_ENCINT)(A) * (VIP_ENCINT)(B))>>15)
+#define FIX_MPY(DEST,A,B)       DEST = (((int64e_t)(A) * (int64e_t)(B))>>15)
 
 #define N_WAVE          1024    /* dimension of Sinewave[] */
 #define LOG2_N_WAVE     10      /* log2(N_WAVE) */
 #define N_LOUD          100     /* dimension of Loudampl[] */
 
-extern int Sinewave[N_WAVE]; /* placed at end of this file for clarity */
-extern int Loudampl[N_LOUD];
-int db_from_ampl(VIP_ENCINT re, VIP_ENCINT im);
-VIP_ENCINT fix_mpy(VIP_ENCINT a, VIP_ENCINT b);
+extern int64_t Sinewave[N_WAVE]; /* placed at end of this file for clarity */
+extern int64_t Loudampl[N_LOUD];
+int64e_t fix_mpy(int64e_t a, int64e_t b);
 
 /* fix_fft() - perform fast Fourier transform.
 
@@ -70,15 +30,15 @@ VIP_ENCINT fix_mpy(VIP_ENCINT a, VIP_ENCINT b);
    size of data = 2**m
    set inverse to 0=dft, 1=idft
 */
-VIP_ENCINT
-fix_fft(VIP_ENCINT fr[], VIP_ENCINT fi[], int m, int inverse)
+int64e_t
+fix_fft(int64e_t fr[], int64e_t fi[], int m, int inverse)
 {
   // non-private variables
   int n,nn,mr,i,j,l,k,istep;
 
-  VIP_ENCINT altm,altj,scale;
-  VIP_ENCINT qr,qi,tr,ti,wr,wi;
-  VIP_ENCBOOL shift;
+  int64e_t altm,altj,scale;
+  int64e_t qr,qi,tr,ti,wr,wi;
+  int64e_t shift;
 
   n = 1<<m;
 
@@ -119,45 +79,22 @@ fix_fft(VIP_ENCINT fr[], VIP_ENCINT fi[], int m, int inverse)
       for (i=0; i<n; ++i)
       {
         altj = fr[i];
-#ifdef VIP_DO_MODE
-        altj = VIP_CMOV(altj < 0, -altj, altj);
-#else /* !VIP_DO_MODE */
-        if (altj < 0)
-          altj = -altj;
-#endif
+        altj = cmov(altj < 0, -altj, altj);
         altm = fi[i];
-#ifdef VIP_DO_MODE
-        altm = VIP_CMOV(altm < 0, -altm, altm);
-#else /* !VIP_DO_MODE */
-        if (altm < 0)
-          altm = -altm;
-#endif
+        altm = cmov(altm < 0, -altm, altm);
 
-#ifdef VIP_DO_MODE
-        VIP_ENCBOOL _pred = ((altj > 16383) || (altm > 16383));
+        int64e_t _pred = ((altj > 16383) || (altm > 16383));
         shift = shift || _pred;
-#else /* !VIP_DO_MODE */
-        if (altj > 16383 || altm > 16383)
-        {
-          shift = true;
-          break;
-        }
-#endif
       }
 
-#ifdef VIP_DO_MODE
-      scale = VIP_CMOV(shift, scale + 1, scale);
-#else /* !VIP_DO_MODE */
-      if (shift)
-        ++scale;
-#endif
+      scale = cmov(shift, scale + 1, scale);
     }
     else
     {
       /* fixed scaling, for proper normalization -
-	       there will be log2(n) passes, so this
-	       results in an overall factor of 1/n,
-	       distributed to maximize arithmetic accuracy. */
+         there will be log2(n) passes, so this
+         results in an overall factor of 1/n,
+         distributed to maximize arithmetic accuracy. */
       shift = true;
     }
     /* it may not be obvious, but the shift will be performed
@@ -171,16 +108,8 @@ fix_fft(VIP_ENCINT fr[], VIP_ENCINT fi[], int m, int inverse)
       wi = -Sinewave[j];
       if (inverse)
         wi = -wi;
-#ifdef VIP_DO_MODE
-      wr = VIP_CMOV(shift, wr >> 1, wr);
-      wi = VIP_CMOV(shift, wi >> 1, wi);
-#else /* !VIP_DO_MODE */
-      if (shift)
-      {
-        wr >>= 1;
-        wi >>= 1;
-      }
-#endif
+      wr = cmov(shift, wr >> 1, wr);
+      wi = cmov(shift, wi >> 1, wi);
       for (i=m; i<n; i+=istep)
       {
         j = i + l;
@@ -188,16 +117,9 @@ fix_fft(VIP_ENCINT fr[], VIP_ENCINT fi[], int m, int inverse)
         ti = fix_mpy(wr,fi[j]) + fix_mpy(wi,fr[j]);
         qr = fr[i];
         qi = fi[i];
-#ifdef VIP_DO_MODE
-        qr = VIP_CMOV(shift, qr >> 1, qr);
-        qi = VIP_CMOV(shift, qi >> 1, qi);
-#else /* !VIP_DO_MODE */
-        if (shift)
-        {
-          qr >>= 1;
-          qi >>= 1;
-        }
-#endif
+        qr = cmov(shift, qr >> 1, qr);
+        qi = cmov(shift, qi >> 1, qi);
+
         fr[j] = qr - tr;
         fi[j] = qi - ti;
         fr[i] = qr + tr;
@@ -212,93 +134,18 @@ fix_fft(VIP_ENCINT fr[], VIP_ENCINT fi[], int m, int inverse)
 }
 
 /* fix_mpy() - fixed-point multiplication */
-VIP_ENCINT
-fix_mpy(VIP_ENCINT a, VIP_ENCINT b)
+int64e_t
+fix_mpy(int64e_t a, int64e_t b)
 {
   FIX_MPY(a,a,b);
   return a;
 }
 
-#ifdef notdef
-/* window() - apply a Hanning window       */
-void
-window(VIP_ENCINT fr[], int n)
-{
-  int i,j,k;
-
-  j = N_WAVE/n;
-  n >>= 1;
-  for(i=0,k=N_WAVE/4; i<n; ++i,k+=j)
-    FIX_MPY(fr[i],fr[i],16384-(Sinewave[k]>>1));
-  n <<= 1;
-  for(k-=j; i<n; ++i,k-=j)
-    FIX_MPY(fr[i],fr[i],16384-(Sinewave[k]>>1));
-}
-
-/* fix_loud() - compute loudness of freq-spectrum components.
-   n should be ntot/2, where ntot was passed to fix_fft();
-   6 dB is added to account for the omitted alias components.
-   scale_shift should be the result of fix_fft(), if the time-series
-   was obtained from an inverse FFT, 0 otherwise.
-   loud[] is the loudness, in dB wrt 32767; will be +10 to -N_LOUD.
-*/
-void
-fix_loud(VIP_ENCINT loud[], VIP_ENCINT fr[], VIP_ENCINT fi[], int n, int scale_shift)
-{
-  int i, max;
-
-  max = 0;
-  if(scale_shift > 0)
-    max = 10;
-  scale_shift = (scale_shift+1) * 6;
-
-  for(i=0; i<n; ++i) {
-    loud[i] = db_from_ampl(fr[i],fi[i]) + scale_shift;
-    if(loud[i] > max)
-      loud[i] = max;
-  }
-}
-
-/* db_from_ampl() - find loudness (in dB) from
-   the complex amplitude.
-*/
-int db_from_ampl(VIP_ENCINT re, VIP_ENCINT im)
-{
-  static int loud2[N_LOUD] = {0};
-  int v;
-  int i;
-
-  if(loud2[0] == 0) {
-    loud2[0] = (int)Loudampl[0] * (int)Loudampl[0];
-    for(i=1; i<N_LOUD; ++i) {
-      v = (int)Loudampl[i] * (int)Loudampl[i];
-      loud2[i] = v;
-      loud2[i-1] = (loud2[i-1]+v) / 2;
-    }
-  }
-
-  v = (int)re * (int)re + (int)im * (int)im;
-
-  for(i=0; i<N_LOUD; ++i)
-    if(loud2[i] <= v)
-      break;
-
-  return (-i);
-}
-
-/* iscale() - scale an integer value by (numer/denom) */
-int
-iscale(int value, int numer, int denom)
-{
-  return (int) value * (int)numer/(int)denom;
-}
-#endif /* notdef */
-
 #if N_WAVE != 1024
         ERROR: N_WAVE != 1024
 #endif
 
-int Sinewave[1024] = {
+int64_t Sinewave[1024] = {
       0,    201,    402,    603,    804,   1005,   1206,   1406,
    1607,   1808,   2009,   2209,   2410,   2610,   2811,   3011,
    3211,   3411,   3611,   3811,   4011,   4210,   4409,   4608,
@@ -434,7 +281,7 @@ int Sinewave[1024] = {
         ERROR: N_LOUD != 100
 #endif
 
-int Loudampl[100] = {
+int64_t Loudampl[100] = {
   32767,  29203,  26027,  23197,  20674,  18426,  16422,  14636,
   13044,  11626,  10361,   9234,   8230,   7335,   6537,   5826,
    5193,   4628,   4125,   3676,   3276,   2920,   2602,   2319,
@@ -456,31 +303,46 @@ int Loudampl[100] = {
 int
 main(void)
 {
-  VIP_INIT;
-  
-  VIP_ENCINT real[N], imag[N];
+  if (mojov_configure_kmsm_from_dc_fast() != 0)
+    return -1;
+
+  // enable private register semantics (bit 0 = 1)
+  if (mojov_enable_and_verify() != 0)
+    return -1;
+
+  // enable encrypted variable debugging
+  if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
+    return -1;
+
+  // initialize the pseudo-RNG
+  libmin_srand(42);
+
+  int64e_t real[N], imag[N];
   int     i;
 
   for (i=0; i<N; i++){
-    real[i] = (VIP_ENCINT)(mycos(i*2*3.1415926535/N)*1000.0);
+    real[i] = libmin_cos(i*2*3.1415926535/N)*1000.0;
     imag[i] = 0;
   }
 
   {
-    Stopwatch s("VIP_Bench Runtime");
+    // Stopwatch s("VIP_Bench Runtime");
     fix_fft(real, imag, M, 0);
   }
 
+  libmin_printf("INFO: Integer FFT output:\n");
   for (i=0; i<N; i++)
-    printf("%d: %d, %d\n", i, VIP_DEC(real[i]), VIP_DEC(imag[i]));
+    libmin_printf("%d: %ld, %ld\n", i, real[i].decrypt(), imag[i].decrypt());
 
   {
-    Stopwatch s("VIP_Bench Runtime");
+    // Stopwatch s("VIP_Bench Runtime");
     fix_fft(real, imag, M, 1);
   }
 
+  libmin_printf("INFO: Inverse integer FFT output:\n");
   for (i=0; i<N; i++)
-    printf("%d: %d, %d\n", i, VIP_DEC(real[i]), VIP_DEC(imag[i]));
+    libmin_printf("%d: %ld, %ld\n", i, real[i].decrypt(), imag[i].decrypt());
 
+  libmin_success();
   return 0;
 }
