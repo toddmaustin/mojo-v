@@ -1,0 +1,50 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+Simulating 100 trials ...
+18 wins, 6 losses, 88 draws
+Average trial length = 926.120000
+Site occupancy: 0 mod 3: 34.425344%, 1 mod 3: 32.161059%, 2 mod 3: 33.413597%
+Simulating 100 trials ...
+22 wins, 5 losses, 83 draws
+Average trial length = 904.970000
+Site occupancy: 0 mod 3: 69.557002%, 1 mod 3: 64.818723%, 2 mod 3: 67.961369%
+Simulating 100 trials ...
+23 wins, 4 losses, 81 draws
+Average trial length = 920.330000
+Site occupancy: 0 mod 3: 102.950029%, 1 mod 3: 95.637434%, 2 mod 3: 100.372692%
+Simulating 100 trials ...
+21 wins, 1 losses, 80 draws
+Average trial length = 936.500000
+Site occupancy: 0 mod 3: 135.628404%, 1 mod 3: 125.764015%, 2 mod 3: 132.405766%
+Simulating 100 trials ...
+14 wins, 3 losses, 89 draws
+Average trial length = 962.850000
+Site occupancy: 0 mod 3: 166.490107%, 1 mod 3: 153.746690%, 2 mod 3: 162.784442%
+Simulating 100 trials ...
+18 wins, 5 losses, 87 draws
+Average trial length = 946.210000
+Site occupancy: 0 mod 3: 203.858551%, 1 mod 3: 188.737173%, 2 mod 3: 198.919902%
+Simulating 100 trials ...
+20 wins, 6 losses, 86 draws
+Average trial length = 924.500000
+Site occupancy: 0 mod 3: 243.088156%, 1 mod 3: 225.074094%, 2 mod 3: 237.243916%
+Simulating 100 trials ...
+13 wins, 8 losses, 95 draws
+Average trial length = 931.950000
+Site occupancy: 0 mod 3: 275.546971%, 1 mod 3: 256.124256%, 2 mod 3: 268.095928%
+Simulating 100 trials ...
+19 wins, 3 losses, 84 draws
+Average trial length = 946.860000
+Site occupancy: 0 mod 3: 305.684050%, 1 mod 3: 283.957502%, 2 mod 3: 297.531842%
+Simulating 100 trials ...
+18 wins, 0 losses, 82 draws
+Average trial length = 934.580000
+Site occupancy: 0 mod 3: 344.027264%, 1 mod 3: 319.571358%, 2 mod 3: 335.231869%

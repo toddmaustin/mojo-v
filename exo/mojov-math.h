@@ -120,65 +120,65 @@ mysqrt(VIP_ENCDOUBLE num)
 }
 #endif
 
-void
-sincos(VIP_ENCDOUBLE *psin, VIP_ENCDOUBLE *pcos, VIP_ENCDOUBLE x)
+static void
+sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
 {
-  VIP_ENCDOUBLE sin = *psin, cos = *pcos;
+  fp64e_t sin = *psin, cos = *pcos;
 
   //always wrap input angle to -PI..PI
-  VIP_ENCBOOL _pred1 = (x < -3.14159265);
-  VIP_ENCBOOL _pred2 = (x >  3.14159265);
-  x = VIP_CMOV(_pred1, x + 6.28318531, x);
-  x = VIP_CMOV(!_pred1 && _pred2, x - 6.28318531, x);
+  uint64e_t _pred1 = (x < -3.14159265);
+  uint64e_t _pred2 = (x >  3.14159265);
+  x = cmov(_pred1, x + 6.28318531, x);
+  x = cmov(!_pred1 && _pred2, x - 6.28318531, x);
 
   //compute sine
-  VIP_ENCBOOL _pred3 = (x < 0);
+  uint64e_t _pred3 = (x < 0);
 
-  sin = VIP_CMOV(_pred3, (VIP_ENCDOUBLE)1.27323954 * x + (VIP_ENCDOUBLE).405284735 * x * x, x);
-  VIP_ENCBOOL _pred4 = (sin < 0);
-  sin = VIP_CMOV(_pred3 && _pred4, (VIP_ENCDOUBLE)0.225 * (sin *-sin - sin) + sin, sin);
-  sin = VIP_CMOV(_pred3 && !_pred4, (VIP_ENCDOUBLE)0.225 * (sin * sin - sin) + sin, sin);
+  sin = cmov(_pred3, (fp64e_t)1.27323954 * x + (fp64e_t).405284735 * x * x, x);
+  uint64e_t _pred4 = (sin < 0);
+  sin = cmov(_pred3 && _pred4, (fp64e_t)0.225 * (sin *-sin - sin) + sin, sin);
+  sin = cmov(_pred3 && !_pred4, (fp64e_t)0.225 * (sin * sin - sin) + sin, sin);
 
-  sin = VIP_CMOV(!_pred3, (VIP_ENCDOUBLE)1.27323954 * x - (VIP_ENCDOUBLE)0.405284735 * x * x, sin);
-  VIP_ENCBOOL _pred5 = (sin < 0);
-  sin = VIP_CMOV(!_pred3 && _pred5, (VIP_ENCDOUBLE)0.225 * (sin *-sin - sin) + sin, sin);
-  sin = VIP_CMOV(!_pred3 && !_pred5, (VIP_ENCDOUBLE)0.225 * (sin * sin - sin) + sin, sin);
+  sin = cmov(!_pred3, (fp64e_t)1.27323954 * x - (fp64e_t)0.405284735 * x * x, sin);
+  uint64e_t _pred5 = (sin < 0);
+  sin = cmov(!_pred3 && _pred5, (fp64e_t)0.225 * (sin *-sin - sin) + sin, sin);
+  sin = cmov(!_pred3 && !_pred5, (fp64e_t)0.225 * (sin * sin - sin) + sin, sin);
 
   //compute cosine: sin(x + PI/2) = cos(x)
   x += 1.57079632;
 
-  VIP_ENCBOOL _pred6 = (x >  3.14159265);
-  x = VIP_CMOV(_pred6, x - 6.28318531, x);
+  uint64e_t _pred6 = (x >  3.14159265);
+  x = cmov(_pred6, x - 6.28318531, x);
 
-  VIP_ENCBOOL _pred7 = (x < 0);
+  uint64e_t _pred7 = (x < 0);
 
-  cos = VIP_CMOV(_pred7, (VIP_ENCDOUBLE)1.27323954 * x + (VIP_ENCDOUBLE)0.405284735 * x * x, cos);
-  VIP_ENCBOOL _pred8 = (cos < 0);
-  cos = VIP_CMOV(_pred7 && _pred8, (VIP_ENCDOUBLE)0.225 * (cos *-cos - cos) + cos, cos);
-  cos = VIP_CMOV(_pred7 && !_pred8, (VIP_ENCDOUBLE)0.225 * (cos * cos - cos) + cos, cos);
+  cos = cmov(_pred7, (fp64e_t)1.27323954 * x + (fp64e_t)0.405284735 * x * x, cos);
+  uint64e_t _pred8 = (cos < 0);
+  cos = cmov(_pred7 && _pred8, (fp64e_t)0.225 * (cos *-cos - cos) + cos, cos);
+  cos = cmov(_pred7 && !_pred8, (fp64e_t)0.225 * (cos * cos - cos) + cos, cos);
 
-  cos = VIP_CMOV(!_pred7, (VIP_ENCDOUBLE)1.27323954 * x - (VIP_ENCDOUBLE)0.405284735 * x * x, cos);
-  VIP_ENCBOOL _pred9 = (cos < 0);
-  cos = VIP_CMOV(!_pred7 && _pred9, (VIP_ENCDOUBLE)0.225 * (cos *-cos - cos) + cos, cos);
-  cos = VIP_CMOV(!_pred7 && !_pred9, (VIP_ENCDOUBLE)0.225 * (cos * cos - cos) + cos, cos);
+  cos = cmov(!_pred7, (fp64e_t)1.27323954 * x - (fp64e_t)0.405284735 * x * x, cos);
+  uint64e_t _pred9 = (cos < 0);
+  cos = cmov(!_pred7 && _pred9, (fp64e_t)0.225 * (cos *-cos - cos) + cos, cos);
+  cos = cmov(!_pred7 && !_pred9, (fp64e_t)0.225 * (cos * cos - cos) + cos, cos);
 
   *psin = sin;
   *pcos = cos;
 }
 
-VIP_ENCDOUBLE
-mysin(VIP_ENCDOUBLE x)
+static fp64e_t
+mojov_sin(fp64e_t x)
 {
-  VIP_ENCDOUBLE sin, cos;
+  fp64e_t sin, cos;
 
   sincos(&sin, &cos, x);
   return sin;
 }
 
-VIP_ENCDOUBLE
-mycos(VIP_ENCDOUBLE x)
+static fp64e_t
+mojov_cos(fp64e_t x)
 {
-  VIP_ENCDOUBLE sin, cos;
+  fp64e_t sin, cos;
 
   sincos(&sin, &cos, x);
   return cos;
