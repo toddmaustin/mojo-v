@@ -1,0 +1,20 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+pagerank iterations: 34
+pagerank sum: 1.000000000
+node 0 rank 0.202920582
+node 1 rank 0.104991441
+node 2 rank 0.149613006
+node 3 rank 0.105762079
+node 4 rank 0.106089436
+node 5 rank 0.108786822
+node 6 rank 0.110072067
+node 7 rank 0.111764566
