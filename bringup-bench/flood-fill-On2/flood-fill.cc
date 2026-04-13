@@ -39,10 +39,10 @@ uint8_t _mat[M][N] =
 #endif
 };
 
-inline int8e_t
+inline uint64e_t
 haveIntersection(uint64e_t bin1[BITMAPS], uint64e_t bin2[BITMAPS])
 {
-  int8e_t intersect = 0;
+  uint64e_t intersect = 0;
   for (int i = 0; i < BITMAPS; i++)
   {
     intersect = intersect || ((bin1[i] & bin2[i]) != 0);
@@ -64,11 +64,11 @@ floodfill(int8e_t _mat[M][N], int64e_t x, int64e_t y, int8e_t replacement)
   int col[] = { -1, 0, 1, -1, 1, -1, 0, 1, 0 };
   node struct_mat[M][N];
   uint64e_t currId = 1;
-  int64e_t bitMapIdx = 0;
+  uint64e_t bitMapIdx = 0;
 
 #define SAFELOC(X, Y) ((X) >= 0 && (X) < M && (Y) >= 0 && (Y) < N)
 
-  int8e_t matchFound = 0;
+  uint64e_t matchFound = 0;
 
   // initialize groups (encrypted globals cannot be initialized statically)
   for (int i = 0; i < M; i++)
@@ -102,7 +102,7 @@ floodfill(int8e_t _mat[M][N], int64e_t x, int64e_t y, int8e_t replacement)
         {
           node* adjCell = &(struct_mat[i + row[k]][j + col[k]]);
 
-          int8e_t match = (_mat[i][j] == _mat[i + row[k]][j + col[k]]);
+          uint64e_t match = (_mat[i][j] == _mat[i + row[k]][j + col[k]]);
 
           matchFound = match || matchFound;
 
@@ -134,7 +134,7 @@ floodfill(int8e_t _mat[M][N], int64e_t x, int64e_t y, int8e_t replacement)
         }
       }
 
-      int8e_t updateCurrentId = !matchFound && (currId == 0) && (bitMapIdx + 1 < BITMAPS);
+      uint64e_t updateCurrentId = !matchFound && (currId == 0) && (bitMapIdx + 1 < BITMAPS);
 
       currId = cmov(updateCurrentId, (uint64e_t)1, currId);
       bitMapIdx += (int64e_t)cmov(updateCurrentId, (int64e_t)1, (int64e_t)0);
