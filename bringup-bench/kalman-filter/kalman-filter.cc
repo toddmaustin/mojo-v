@@ -8,6 +8,12 @@
 #define EXO_FP64E_STORAGE_TYPE mojov_mem_fast_fp64_t
 #include "mojov-exo.h"
 
+typedef int8e_t VIP_ENCCHAR;
+typedef uint64e_t VIP_ENCBOOL;
+typedef uint64e_t VIP_ENCUINT64;
+typedef fp32e_t VIP_ENCFLOAT;
+typedef fp64e_t VIP_ENCDOUBLE;
+
 // supported sizes: 256 (default), 512, 1024, 2048
 #define DATASET_SIZE 256
 
@@ -428,37 +434,37 @@ float kf_rawdata[2048+1][4] =
 // 2D Vector
 class Vec2 {
 public:
-    fp32e_t x;
-    fp32e_t y;
+    VIP_ENCFLOAT x;
+    VIP_ENCFLOAT y;
 
     Vec2();
-    Vec2(fp32e_t x, fp32e_t y);
+    Vec2(VIP_ENCFLOAT x, VIP_ENCFLOAT y);
 
-    Vec2 operator * (const fp32e_t & scalar) const;
+    Vec2 operator * (const VIP_ENCFLOAT & scalar) const;
     Vec2 operator * (const Vec2 & other) const;
     Vec2 operator + (const Vec2 & other) const;
-    fp32e_t & operator [](int index);
+    VIP_ENCFLOAT & operator [](int index);
 };
 
 // 2x2 Matrix
 class Mat2x2 {
 public:
-    fp32e_t m00;
-    fp32e_t m01;
-    fp32e_t m10;
-    fp32e_t m11;
+    VIP_ENCFLOAT m00;
+    VIP_ENCFLOAT m01;
+    VIP_ENCFLOAT m10;
+    VIP_ENCFLOAT m11;
 
     Mat2x2();
-    Mat2x2(fp32e_t m00, fp32e_t m01, fp32e_t m10, fp32e_t m11);
+    Mat2x2(VIP_ENCFLOAT m00, VIP_ENCFLOAT m01, VIP_ENCFLOAT m10, VIP_ENCFLOAT m11);
 
     Mat2x2 transposed();
     Mat2x2 inversed();
 
     Mat2x2 operator * (const Mat2x2 & other) const;
     Vec2   operator * (const Vec2 & other) const;
-    Mat2x2 operator * (const fp32e_t & scalar) const;
+    Mat2x2 operator * (const VIP_ENCFLOAT & scalar) const;
     Mat2x2 operator + (const Vec2 & other) const;
-    Mat2x2 operator + (const fp32e_t & scalar) const;
+    Mat2x2 operator + (const VIP_ENCFLOAT & scalar) const;
     Mat2x2 operator - (const Mat2x2 & other) const;
 };
 
@@ -467,8 +473,8 @@ class KalmanModel {
 public:
     KalmanModel();
 
-    void predict(fp32e_t dt, fp32e_t u, Vec2 Q);
-    void correct(fp32e_t z, fp32e_t R);
+    void predict(VIP_ENCFLOAT dt, VIP_ENCFLOAT u, Vec2 Q);
+    void correct(VIP_ENCFLOAT z, VIP_ENCFLOAT R);
 
     void reset();
 
@@ -484,30 +490,32 @@ class KalmanFilter {
 public:
     KalmanFilter();
     KalmanFilter(unsigned int nmodels);
-    ~KalmanFilter();
 
-    void init(unsigned int nmodels = 1) { this->nmodels = nmodels; pmodels = (KalmanModel *)libmin_malloc(nmodels * sizeof(KalmanModel)); }
+    void init(unsigned int nmodels = 1) {
+        this->nmodels = (nmodels <= MAX_MODELS) ? nmodels : MAX_MODELS;
+        reset(this->nmodels);
+    }
 
     void setProcessNoise(float Qpos, float Qvel) {Q.x = Qpos;Q.y = Qvel;}
     void setMeasurementNoise(float R) {this->R = R;}
 
     // Predict state from current error covariance (single state).
-    void predict(fp32e_t dt);
+    void predict(VIP_ENCFLOAT dt);
     // Predict multiple states from current error covariance.
-    void predict(fp32e_t dt, fp32e_t * pu, unsigned int nu, unsigned int start = 0);
+    void predict(VIP_ENCFLOAT dt, VIP_ENCFLOAT * pu, unsigned int nu, unsigned int start = 0);
 
     // Correct prediction with observation (single state).
-    void correct(fp32e_t z, unsigned int istate = 0);
+    void correct(VIP_ENCFLOAT z, unsigned int istate = 0);
     // Correct multiple predictions with observations.
-    void correct(fp32e_t * pz, unsigned int nz, unsigned int start = 0);
+    void correct(VIP_ENCFLOAT * pz, unsigned int nz, unsigned int start = 0);
 
     // Get current states
-    fp32e_t get(unsigned int istate = 0);
-    void get(fp32e_t * px, unsigned int nx, unsigned int start = 0);
+    VIP_ENCFLOAT get(unsigned int istate = 0);
+    void get(VIP_ENCFLOAT * px, unsigned int nx, unsigned int start = 0);
 
     // Set current state
-    void set(fp32e_t z, unsigned int istate = 0);
-    void set(fp32e_t * px, unsigned int nx, unsigned int start = 0);
+    void set(VIP_ENCFLOAT z, unsigned int istate = 0);
+    void set(VIP_ENCFLOAT * px, unsigned int nx, unsigned int start = 0);
 
     // Reset state
     void reset();
@@ -520,7 +528,8 @@ private:
     // Measurement noise
     float R;
 
-    KalmanModel * pmodels;
+    enum { MAX_MODELS = 3 };
+    KalmanModel pmodels[MAX_MODELS];
     unsigned int nmodels;
 };
 
@@ -528,7 +537,7 @@ KalmanModel::KalmanModel() {
     reset();
 }
 
-void KalmanModel::predict(fp32e_t dt, fp32e_t u, Vec2 Q) {
+void KalmanModel::predict(VIP_ENCFLOAT dt, VIP_ENCFLOAT u, Vec2 Q) {
 
     // State transition model (Sometimes called A)
     Mat2x2 F = Mat2x2(
@@ -551,7 +560,7 @@ void KalmanModel::predict(fp32e_t dt, fp32e_t u, Vec2 Q) {
     P = F * P * Ft + Q * dt;
 }
 
-void KalmanModel::correct(fp32e_t z, fp32e_t R) {
+void KalmanModel::correct(VIP_ENCFLOAT z, VIP_ENCFLOAT R) {
 
     // Observation model
     Mat2x2 H = Mat2x2(
@@ -564,14 +573,14 @@ void KalmanModel::correct(fp32e_t z, fp32e_t R) {
 
     // Innovation covariance
     Mat2x2 Sm = H * P * Ht + R;
-    fp32e_t S = Sm.m00;
+    VIP_ENCFLOAT S = Sm.m00;
 
     // Kalman gain
     Mat2x2 Km = P * Ht * (1/S);
     Vec2 K(Km.m00, Km.m10);
 
     // Update the state
-    fp32e_t y = z - x[0];
+    VIP_ENCFLOAT y = z - x[0];
     x = x + K * y;
 
     // Identity matrix
@@ -593,7 +602,6 @@ void KalmanModel::reset() {
 }
 
 KalmanFilter::KalmanFilter() {
-    pmodels = 0;
     nmodels = 0;
     Q.x = 0.01;
     Q.y = 0.01;
@@ -604,48 +612,41 @@ KalmanFilter::KalmanFilter(unsigned int nmodels) : KalmanFilter() {
     init(nmodels);
 }
 
-KalmanFilter::~KalmanFilter() {
-    if (pmodels) {
-        libmin_free(pmodels);
-        pmodels = nullptr;
-    }
-}
-
-void KalmanFilter::predict(fp32e_t dt, fp32e_t * pu, unsigned int nu, unsigned int start) {
+void KalmanFilter::predict(VIP_ENCFLOAT dt, VIP_ENCFLOAT * pu, unsigned int nu, unsigned int start) {
     for (unsigned int i=0; i<nu; i++) {
     if (i < nmodels)
         pmodels[start+i].predict(dt, pu ? pu[i] : 0, Q);
     }
 }
 
-void KalmanFilter::predict(fp32e_t dt) {
+void KalmanFilter::predict(VIP_ENCFLOAT dt) {
     predict(dt, 0, nmodels);
 }
 
-void KalmanFilter::correct(fp32e_t *pz, unsigned int nz, unsigned int start) {
+void KalmanFilter::correct(VIP_ENCFLOAT *pz, unsigned int nz, unsigned int start) {
     for (unsigned int i=0; i<nz; i++) {
         if (i < nmodels)
             pmodels[start+i].correct(pz[i], R);
     }
 }
 
-void KalmanFilter::correct(fp32e_t z, unsigned int istate) {
+void KalmanFilter::correct(VIP_ENCFLOAT z, unsigned int istate) {
     if (istate < nmodels)
         pmodels[istate].correct(z, R);
 }
 
-void KalmanFilter::get(fp32e_t *px, unsigned int nx, unsigned int start) {
+void KalmanFilter::get(VIP_ENCFLOAT *px, unsigned int nx, unsigned int start) {
     for (unsigned int i=0; i<nx; i++) {
         if (i < nmodels)
             px[i] = pmodels[start+i].x[0];
     }
 }
 
-fp32e_t KalmanFilter::get(unsigned int istate) {
+VIP_ENCFLOAT KalmanFilter::get(unsigned int istate) {
     return pmodels[istate].x[0];
 }
 
-void KalmanFilter::set(fp32e_t *px, unsigned int nx, unsigned int start) {
+void KalmanFilter::set(VIP_ENCFLOAT *px, unsigned int nx, unsigned int start) {
     for (unsigned int i=0; i<nx; i++) {
         if (i < nmodels)
             pmodels[start+i].x[0] = px[i];
@@ -663,7 +664,7 @@ void KalmanFilter::reset(unsigned int n, unsigned int start) {
         pmodels[i].reset();
 }
 
-void KalmanFilter::set(fp32e_t x, unsigned int istate) {
+void KalmanFilter::set(VIP_ENCFLOAT x, unsigned int istate) {
     pmodels[istate].x[0] = x;
 }
 
@@ -672,12 +673,12 @@ Vec2::Vec2() {
     this->y = 0;
 }
 
-Vec2::Vec2(fp32e_t x, fp32e_t y) {
+Vec2::Vec2(VIP_ENCFLOAT x, VIP_ENCFLOAT y) {
     this->x = x;
     this->y = y;
 }
 
-Vec2 Vec2::operator*(const fp32e_t &scalar) const {
+Vec2 Vec2::operator*(const VIP_ENCFLOAT &scalar) const {
     return Vec2(x * scalar, y * scalar);
 }
 
@@ -689,7 +690,7 @@ Vec2 Vec2::operator+(const Vec2 &other) const {
     return Vec2(x + other.x, y + other.y);
 }
 
-fp32e_t & Vec2::operator[](int index) {
+VIP_ENCFLOAT & Vec2::operator[](int index) {
     return index == 0 ? x : y;
 }
 
@@ -700,7 +701,7 @@ Mat2x2::Mat2x2() {
     this->m11 = 0;
 }
 
-Mat2x2::Mat2x2(fp32e_t m00, fp32e_t m01, fp32e_t m10, fp32e_t m11) {
+Mat2x2::Mat2x2(VIP_ENCFLOAT m00, VIP_ENCFLOAT m01, VIP_ENCFLOAT m10, VIP_ENCFLOAT m11) {
     this->m00 = m00;
     this->m01 = m01;
     this->m10 = m10;
@@ -712,7 +713,7 @@ Mat2x2 Mat2x2::transposed() {
 }
 
 Mat2x2 Mat2x2::inversed() {
-    fp32e_t det = 1 / (m00 * m11 - m01 * m10);
+    VIP_ENCFLOAT det = 1 / (m00 * m11 - m01 * m10);
     return Mat2x2(m11, -m01, -m10, m00) * det;
 }
 
@@ -732,7 +733,7 @@ Vec2 Mat2x2::operator*(const Vec2 &other) const {
     return v;
 }
 
-Mat2x2 Mat2x2::operator * (const fp32e_t & scalar) const {
+Mat2x2 Mat2x2::operator * (const VIP_ENCFLOAT & scalar) const {
     Mat2x2 m;
     m.m00 = this->m00 * scalar;
     m.m01 = this->m01 * scalar;
@@ -750,7 +751,7 @@ Mat2x2 Mat2x2::operator+(const Vec2 &other) const {
     return m;
 }
 
-Mat2x2 Mat2x2::operator+(const fp32e_t &scalar) const {
+Mat2x2 Mat2x2::operator+(const VIP_ENCFLOAT &scalar) const {
     Mat2x2 m;
     m.m00 = this->m00 + scalar;
     m.m01 = this->m01 + scalar;
@@ -767,9 +768,6 @@ Mat2x2 Mat2x2::operator-(const Mat2x2 &other) const {
     m.m11 = this->m11 - other.m11;
     return m;
 }
-
-KalmanFilter kf;
-fp32e_t kf_predictions[DATASET_SIZE][3];
 
 int
 main(void)
@@ -789,6 +787,8 @@ main(void)
   libmin_srand(42);
 
   unsigned step = 0;
+  KalmanFilter kf;
+  VIP_ENCFLOAT kf_predictions[DATASET_SIZE][3];
 
   // set up Kalman filter
   kf.init(3);
@@ -799,15 +799,15 @@ main(void)
     // Stopwatch s("VIP_Bench Runtime");
 
     // set initial state
-    fp32e_t tuple[3] = { kf_rawdata[0][1], kf_rawdata[0][2], kf_rawdata[0][3] };
+    VIP_ENCFLOAT tuple[3] = { kf_rawdata[0][1], kf_rawdata[0][2], kf_rawdata[0][3] };
     kf.set(tuple, 3);
 
     for (; step < DATASET_SIZE; step++)
     {
       // Kalman filter step
-      kf.predict((fp32e_t)kf_rawdata[step][0]/1000.0);
+      kf.predict((VIP_ENCFLOAT)kf_rawdata[step][0]/1000.0);
       kf.get(&kf_predictions[step][0], 3);
-      fp32e_t tuple[3] = { kf_rawdata[step+1][1], kf_rawdata[step+1][2], kf_rawdata[step+1][3] };
+      VIP_ENCFLOAT tuple[3] = { kf_rawdata[step+1][1], kf_rawdata[step+1][2], kf_rawdata[step+1][3] };
       kf.correct(tuple, 3);
     }
   }
