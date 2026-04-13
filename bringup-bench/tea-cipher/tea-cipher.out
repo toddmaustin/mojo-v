@@ -1,0 +1,5 @@
+TEA Cipher results:
+  plaintext:  0x2da2fb5e 0x00d96f0d
+  ciphertext: 0x9fe2c864 0xd7da4da4
+  newplain:   0x2da2fb5e 0x00d96f0d
+SUCCESS
