@@ -3,7 +3,97 @@
 
 #ifndef MOJOV_EXO_H
 #error Include `mojov-math.h' after `mojov-exo.h'.
-#endif
+#endif /* !MOJOV_EXO_H */
+
+static void
+sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
+{
+  fp64e_t sin = *psin, cos = *pcos;
+
+  //always wrap input angle to -PI..PI
+  uint64e_t _pred1 = (x < -3.14159265);
+  uint64e_t _pred2 = (x >  3.14159265);
+  x = cmov(_pred1, x + 6.28318531, x);
+  x = cmov(!_pred1 && _pred2, x - 6.28318531, x);
+
+  //compute sine
+  uint64e_t _pred3 = (x < 0);
+
+  sin = cmov(_pred3, (fp64e_t)1.27323954 * x + (fp64e_t).405284735 * x * x, x);
+  uint64e_t _pred4 = (sin < 0);
+  sin = cmov(_pred3 && _pred4, (fp64e_t)0.225 * (sin *-sin - sin) + sin, sin);
+  sin = cmov(_pred3 && !_pred4, (fp64e_t)0.225 * (sin * sin - sin) + sin, sin);
+
+  sin = cmov(!_pred3, (fp64e_t)1.27323954 * x - (fp64e_t)0.405284735 * x * x, sin);
+  uint64e_t _pred5 = (sin < 0);
+  sin = cmov(!_pred3 && _pred5, (fp64e_t)0.225 * (sin *-sin - sin) + sin, sin);
+  sin = cmov(!_pred3 && !_pred5, (fp64e_t)0.225 * (sin * sin - sin) + sin, sin);
+
+  //compute cosine: sin(x + PI/2) = cos(x)
+  x += 1.57079632;
+
+  uint64e_t _pred6 = (x >  3.14159265);
+  x = cmov(_pred6, x - 6.28318531, x);
+
+  uint64e_t _pred7 = (x < 0);
+
+  cos = cmov(_pred7, (fp64e_t)1.27323954 * x + (fp64e_t)0.405284735 * x * x, cos);
+  uint64e_t _pred8 = (cos < 0);
+  cos = cmov(_pred7 && _pred8, (fp64e_t)0.225 * (cos *-cos - cos) + cos, cos);
+  cos = cmov(_pred7 && !_pred8, (fp64e_t)0.225 * (cos * cos - cos) + cos, cos);
+
+  cos = cmov(!_pred7, (fp64e_t)1.27323954 * x - (fp64e_t)0.405284735 * x * x, cos);
+  uint64e_t _pred9 = (cos < 0);
+  cos = cmov(!_pred7 && _pred9, (fp64e_t)0.225 * (cos *-cos - cos) + cos, cos);
+  cos = cmov(!_pred7 && !_pred9, (fp64e_t)0.225 * (cos * cos - cos) + cos, cos);
+
+  *psin = sin;
+  *pcos = cos;
+}
+
+static fp64e_t
+mojov_sin(fp64e_t x)
+{
+  fp64e_t sin, cos;
+
+  sincos(&sin, &cos, x);
+  return sin;
+}
+
+static fp64e_t
+mojov_cos(fp64e_t x)
+{
+  fp64e_t sin, cos;
+
+  sincos(&sin, &cos, x);
+  return cos;
+}
+
+static fp64e_t
+myfloor(fp64e_t x)
+{
+  int64e_t i = (int64e_t)x;
+  return cmov((fp64e_t)i > x, (fp64e_t)(i - 1), (fp64e_t)i);
+}
+
+static fp64e_t
+myfabs(fp64e_t x)
+{
+  return cmov(x < (fp64e_t)0.0, -x, x);
+}
+
+static fp64e_t
+mypow(fp64e_t x, unsigned exp)
+{
+  if (exp == 0)
+    return (fp64e_t)1.0;
+
+  fp64e_t retval = x;
+  for (unsigned i = 1; i < exp; i++)
+    retval = retval * x;
+
+  return retval;
+}
 
 #if 0
 VIP_ENCDOUBLE
@@ -118,99 +208,7 @@ mysqrt(VIP_ENCDOUBLE num)
 {
   return (VIP_ENCDOUBLE)1.0 / invsqrt(num);
 }
-#endif
 
-static void
-sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
-{
-  fp64e_t sin = *psin, cos = *pcos;
-
-  //always wrap input angle to -PI..PI
-  uint64e_t _pred1 = (x < -3.14159265);
-  uint64e_t _pred2 = (x >  3.14159265);
-  x = cmov(_pred1, x + 6.28318531, x);
-  x = cmov(!_pred1 && _pred2, x - 6.28318531, x);
-
-  //compute sine
-  uint64e_t _pred3 = (x < 0);
-
-  sin = cmov(_pred3, (fp64e_t)1.27323954 * x + (fp64e_t).405284735 * x * x, x);
-  uint64e_t _pred4 = (sin < 0);
-  sin = cmov(_pred3 && _pred4, (fp64e_t)0.225 * (sin *-sin - sin) + sin, sin);
-  sin = cmov(_pred3 && !_pred4, (fp64e_t)0.225 * (sin * sin - sin) + sin, sin);
-
-  sin = cmov(!_pred3, (fp64e_t)1.27323954 * x - (fp64e_t)0.405284735 * x * x, sin);
-  uint64e_t _pred5 = (sin < 0);
-  sin = cmov(!_pred3 && _pred5, (fp64e_t)0.225 * (sin *-sin - sin) + sin, sin);
-  sin = cmov(!_pred3 && !_pred5, (fp64e_t)0.225 * (sin * sin - sin) + sin, sin);
-
-  //compute cosine: sin(x + PI/2) = cos(x)
-  x += 1.57079632;
-
-  uint64e_t _pred6 = (x >  3.14159265);
-  x = cmov(_pred6, x - 6.28318531, x);
-
-  uint64e_t _pred7 = (x < 0);
-
-  cos = cmov(_pred7, (fp64e_t)1.27323954 * x + (fp64e_t)0.405284735 * x * x, cos);
-  uint64e_t _pred8 = (cos < 0);
-  cos = cmov(_pred7 && _pred8, (fp64e_t)0.225 * (cos *-cos - cos) + cos, cos);
-  cos = cmov(_pred7 && !_pred8, (fp64e_t)0.225 * (cos * cos - cos) + cos, cos);
-
-  cos = cmov(!_pred7, (fp64e_t)1.27323954 * x - (fp64e_t)0.405284735 * x * x, cos);
-  uint64e_t _pred9 = (cos < 0);
-  cos = cmov(!_pred7 && _pred9, (fp64e_t)0.225 * (cos *-cos - cos) + cos, cos);
-  cos = cmov(!_pred7 && !_pred9, (fp64e_t)0.225 * (cos * cos - cos) + cos, cos);
-
-  *psin = sin;
-  *pcos = cos;
-}
-
-static fp64e_t
-mojov_sin(fp64e_t x)
-{
-  fp64e_t sin, cos;
-
-  sincos(&sin, &cos, x);
-  return sin;
-}
-
-static fp64e_t
-mojov_cos(fp64e_t x)
-{
-  fp64e_t sin, cos;
-
-  sincos(&sin, &cos, x);
-  return cos;
-}
-
-static fp64e_t
-myfloor(fp64e_t x)
-{
-  int64e_t i = (int64e_t)x;
-  return cmov(i > x, (fp64e_t)(i - 1), (fp64e_t)i);
-}
-
-static fp64e_t
-myfabs(fp64e_t x)
-{
-  return cmov(x < (fp64e_t)0.0, -x, x);
-}
-
-static fp64e_t
-mypow(fp64e_t x, unsigned exp)
-{
-  if (exp == 0)
-    return (fp64e_t)1.0;
-
-  fp64e_t retval = x;
-  for (unsigned i = 1; i < exp; i++)
-    retval = retval * x;
-
-  return retval;
-}
-
-#if 0
 static const double
 one = 1.0,
 halF[2] = {0.5,-0.5,},
@@ -640,4 +638,7 @@ main(void)
 }
 #endif /* TEST */
 
-#endif
+#endif /* 0 */
+
+#endif /* MOJOV_MATH_H */
+

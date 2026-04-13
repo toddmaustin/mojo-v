@@ -133,14 +133,14 @@ static int newmain(int argc, const char **argv)
   method_fn method;
 
   while (argv[i][0] == '-') {
-    if (strcmp(argv[i], "-a") == 0) {
-      derror = atof(argv[i + 1]);
+    if (libmin_strcmp(argv[i], "-a") == 0) {
+      derror = libmin_atof(argv[i + 1]);
       i += 2;
       continue;
     }
 
-    if (strcmp(argv[i], "-m") == 0) {
-      m = atoi(argv[i + 1]);
+    if (libmin_strcmp(argv[i], "-m") == 0) {
+      m = libmin_atoi(argv[i + 1]);
       if ((m <= 0) || (m > (int)NMETHODS)) {
         libmin_printf("Bad method number %d\n", m);
         return 1;
@@ -158,8 +158,8 @@ static int newmain(int argc, const char **argv)
     return 1;
   }
 
-  M = atof(argv[i++]);
-  e = _e = atof(argv[i]);
+  M = libmin_atof(argv[i++]);
+  e = _e = libmin_atof(argv[i]);
   method = methods[m - 1];
 
   if ((m == 4) && (_e > LAPLACE_LIMIT)) {

@@ -1,7 +1,7 @@
 
 LOCAL_CFLAGS=
 LOCAL_LIBS=
-LOCAL_OBJS=kalman-filter.o ../common/simon.o ../target/mojov-utils.o
+LOCAL_OBJS=kepler-calc.o ../common/simon.o ../target/mojov-utils.o
 
 PROG=kepler-calc
 
