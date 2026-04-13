@@ -184,6 +184,32 @@ mojov_cos(fp64e_t x)
   return cos;
 }
 
+static fp64e_t
+myfloor(fp64e_t x)
+{
+  int64e_t i = (int64e_t)x;
+  return cmov(i > x, (fp64e_t)(i - 1), (fp64e_t)i);
+}
+
+static fp64e_t
+myfabs(fp64e_t x)
+{
+  return cmov(x < (fp64e_t)0.0, -x, x);
+}
+
+static fp64e_t
+mypow(fp64e_t x, unsigned exp)
+{
+  if (exp == 0)
+    return (fp64e_t)1.0;
+
+  fp64e_t retval = x;
+  for (unsigned i = 1; i < exp; i++)
+    retval = retval * x;
+
+  return retval;
+}
+
 #if 0
 static const double
 one = 1.0,
