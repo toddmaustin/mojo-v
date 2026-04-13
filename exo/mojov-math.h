@@ -5,8 +5,8 @@
 #error Include `mojov-math.h' after `mojov-exo.h'.
 #endif /* !MOJOV_EXO_H */
 
-static void
-sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
+static inline void
+_sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
 {
   fp64e_t sin = *psin, cos = *pcos;
 
@@ -51,38 +51,38 @@ sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
   *pcos = cos;
 }
 
-static fp64e_t
+static inline fp64e_t
 mojov_sin(fp64e_t x)
 {
   fp64e_t sin, cos;
 
-  sincos(&sin, &cos, x);
+  _sincos(&sin, &cos, x);
   return sin;
 }
 
-static fp64e_t
+static inline fp64e_t
 mojov_cos(fp64e_t x)
 {
   fp64e_t sin, cos;
 
-  sincos(&sin, &cos, x);
+  _sincos(&sin, &cos, x);
   return cos;
 }
 
-static fp64e_t
+static inline fp64e_t
 myfloor(fp64e_t x)
 {
   int64e_t i = (int64e_t)x;
   return cmov((fp64e_t)i > x, (fp64e_t)(i - 1), (fp64e_t)i);
 }
 
-static fp64e_t
+static inline fp64e_t
 myfabs(fp64e_t x)
 {
   return cmov(x < (fp64e_t)0.0, -x, x);
 }
 
-static fp64e_t
+static inline fp64e_t
 mypow(fp64e_t x, unsigned exp)
 {
   if (exp == 0)
@@ -95,7 +95,7 @@ mypow(fp64e_t x, unsigned exp)
   return retval;
 }
 
-static fp64e_t
+static inline fp64e_t
 mysqrt(fp64e_t x)
 {
   fp64e_t safe_x = cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
