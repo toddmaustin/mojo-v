@@ -1,0 +1,34 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+
+BEFORE flooding `C' @ (3,9):
+ Y  Y  Y  G  G  G  G  G  G  G 
+ Y  Y  Y  Y  Y  Y  G  X  X  X 
+ G  X  G  G  G  G  G  X  X  X 
+ W  X  X  W  W  G  G  G  G  X 
+ W  R  R  R  R  R  G  X  X  X 
+ W  W  W  R  R  G  G  X  X  X 
+ W  B  W  R  R  R  R  R  R  X 
+ W  B  B  B  B  R  R  X  X  X 
+ W  B  B  X  B  B  B  B  X  X 
+ W  B  B  X  X  X  X  X  X  X 
+
+AFTER:
+ Y  Y  Y  G  G  G  G  G  G  G 
+ Y  Y  Y  Y  Y  Y  G  C  C  C 
+ G  X  G  G  G  G  G  C  C  C 
+ W  X  X  W  W  G  G  G  G  C 
+ W  R  R  R  R  R  G  C  C  C 
+ W  W  W  R  R  G  G  C  C  C 
+ W  B  W  R  R  R  R  R  R  C 
+ W  B  B  B  B  R  R  C  C  C 
+ W  B  B  C  B  B  B  B  C  C 
+ W  B  B  C  C  C  C  C  C  C 
