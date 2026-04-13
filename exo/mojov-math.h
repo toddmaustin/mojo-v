@@ -95,6 +95,18 @@ mypow(fp64e_t x, unsigned exp)
   return retval;
 }
 
+static fp64e_t
+mysqrt(fp64e_t x)
+{
+  fp64e_t safe_x = cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
+  fp64e_t guess = cmov(safe_x > (fp64e_t)1.0, safe_x, (fp64e_t)1.0);
+
+  for (unsigned i = 0; i < 8; i++)
+    guess = (guess + safe_x / guess) * (fp64e_t)0.5;
+
+  return cmov(x > (fp64e_t)0.0, guess, (fp64e_t)0.0);
+}
+
 #if 0
 VIP_ENCDOUBLE
 myfloor(VIP_ENCDOUBLE x)
@@ -641,4 +653,3 @@ main(void)
 #endif /* 0 */
 
 #endif /* MOJOV_MATH_H */
-
