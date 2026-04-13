@@ -14,13 +14,6 @@
 #define DAMPING 0.85
 #define THRESHOLD 1.0e-6
 
-// VIP type mapping for Mojo-V bringup.
-typedef int8e_t VIP_ENCCHAR;
-typedef uint64e_t VIP_ENCBOOL;
-typedef uint64e_t VIP_ENCUINT64;
-typedef fp32e_t VIP_ENCFLOAT;
-typedef fp64e_t VIP_ENCDOUBLE;
-
 static const uint8_t plain_adj[NUM_NODES][NUM_NODES] = {
   {0, 1, 1, 0, 0, 0, 0, 0},
   {0, 0, 1, 1, 0, 0, 0, 0},
@@ -32,35 +25,35 @@ static const uint8_t plain_adj[NUM_NODES][NUM_NODES] = {
   {1, 0, 0, 0, 0, 0, 0, 0}
 };
 
-static VIP_ENCCHAR adj[NUM_NODES][NUM_NODES];
-static VIP_ENCUINT64 out_degree[NUM_NODES];
-static VIP_ENCDOUBLE ranks[NUM_NODES];
-static VIP_ENCDOUBLE next_ranks[NUM_NODES];
+static int8e_t adj[NUM_NODES][NUM_NODES];
+static uint64e_t out_degree[NUM_NODES];
+static fp64e_t ranks[NUM_NODES];
+static fp64e_t next_ranks[NUM_NODES];
 
 static void
 initialize_encrypted_state(void)
 {
-  VIP_ENCDOUBLE inv_n = (VIP_ENCDOUBLE)1.0 / (VIP_ENCDOUBLE)NUM_NODES;
+  fp64e_t inv_n = (fp64e_t)1.0 / (fp64e_t)NUM_NODES;
 
   for (unsigned i = 0; i < NUM_NODES; ++i)
   {
-    VIP_ENCUINT64 deg = 0;
+    uint64e_t deg = 0;
     for (unsigned j = 0; j < NUM_NODES; ++j)
     {
-      adj[i][j] = (VIP_ENCCHAR)plain_adj[i][j];
-      deg = deg + (VIP_ENCUINT64)plain_adj[i][j];
+      adj[i][j] = (int8e_t)plain_adj[i][j];
+      deg = deg + (uint64e_t)plain_adj[i][j];
     }
 
     out_degree[i] = deg;
     ranks[i] = inv_n;
-    next_ranks[i] = (VIP_ENCDOUBLE)0.0;
+    next_ranks[i] = (fp64e_t)0.0;
   }
 }
 
 static void
 pagerank_pull_iteration(void)
 {
-  VIP_ENCDOUBLE base = ((VIP_ENCDOUBLE)1.0 - (VIP_ENCDOUBLE)DAMPING) / (VIP_ENCDOUBLE)NUM_NODES;
+  fp64e_t base = ((fp64e_t)1.0 - (fp64e_t)DAMPING) / (fp64e_t)NUM_NODES;
 
   for (unsigned i = 0; i < NUM_NODES; ++i)
     next_ranks[i] = base;
@@ -69,30 +62,30 @@ pagerank_pull_iteration(void)
   {
     if (out_degree[src].decrypt() == 0)
     {
-      VIP_ENCDOUBLE spread = ((VIP_ENCDOUBLE)DAMPING * ranks[src]) / (VIP_ENCDOUBLE)NUM_NODES;
+      fp64e_t spread = ((fp64e_t)DAMPING * ranks[src]) / (fp64e_t)NUM_NODES;
       for (unsigned dst = 0; dst < NUM_NODES; ++dst)
         next_ranks[dst] = next_ranks[dst] + spread;
       continue;
     }
 
-    VIP_ENCDOUBLE push = ((VIP_ENCDOUBLE)DAMPING * ranks[src]) / (VIP_ENCDOUBLE)out_degree[src];
+    fp64e_t push = ((fp64e_t)DAMPING * ranks[src]) / (fp64e_t)out_degree[src];
     for (unsigned dst = 0; dst < NUM_NODES; ++dst)
     {
-      VIP_ENCBOOL has_edge = ((VIP_ENCUINT64)adj[src][dst]) == (VIP_ENCUINT64)1;
-      next_ranks[dst] = next_ranks[dst] + cmov(has_edge, push, (VIP_ENCDOUBLE)0.0);
+      uint64e_t has_edge = ((uint64e_t)adj[src][dst]) == (uint64e_t)1;
+      next_ranks[dst] = next_ranks[dst] + cmov(has_edge, push, (fp64e_t)0.0);
     }
   }
 }
 
-static VIP_ENCBOOL
+static uint64e_t
 commit_and_check_convergence(void)
 {
-  VIP_ENCBOOL changed = 0;
+  uint64e_t changed = 0;
 
   for (unsigned i = 0; i < NUM_NODES; ++i)
   {
-    VIP_ENCDOUBLE diff = myfabs(next_ranks[i] - ranks[i]);
-    changed = changed || (diff > (VIP_ENCDOUBLE)THRESHOLD);
+    fp64e_t diff = myfabs(next_ranks[i] - ranks[i]);
+    changed = changed || (diff > (fp64e_t)THRESHOLD);
     ranks[i] = next_ranks[i];
   }
 
@@ -119,13 +112,13 @@ main(void)
   while (iter < MAX_ITERS)
   {
     pagerank_pull_iteration();
-    VIP_ENCBOOL changed = commit_and_check_convergence();
+    uint64e_t changed = commit_and_check_convergence();
     ++iter;
     if (!changed.decrypt())
       break;
   }
 
-  VIP_ENCDOUBLE sum = 0.0;
+  fp64e_t sum = 0.0;
   for (unsigned i = 0; i < NUM_NODES; ++i)
     sum = sum + ranks[i];
 
@@ -133,7 +126,7 @@ main(void)
   libmin_printf("pagerank sum: %.9f\n", sum.decrypt());
   for (unsigned i = 0; i < NUM_NODES; ++i)
   {
-    VIP_ENCDOUBLE norm = ranks[i] / sum;
+    fp64e_t norm = ranks[i] / sum;
     libmin_printf("node %u rank %.9f\n", i, norm.decrypt());
   }
 
