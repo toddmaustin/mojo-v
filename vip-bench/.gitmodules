@@ -1,3 +1,0 @@
-[submodule "lib/SEAL/SEAL"]
-	path = lib/SEAL-3.4/SEAL
-	url = https://github.com/microsoft/SEAL.git
