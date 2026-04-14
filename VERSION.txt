@@ -1,3 +1,11 @@
+** Mojo-V Reference Platform - Release 1.1
+
+  - Added EXO library support for program-level development of Mojo-V applications, including new and refined guidance for legal data-oblivious coding patterns.
+  - Added 40 Bringup-Bench benchmark ports to broaden workload coverage for Mojo-V software bring-up and evaluation.
+  - Improved benchmark naming consistency and repository organization with follow-up cleanup and maintenance integration updates.
+
+--
+
 ** Mojo-V Reference Platform - Release 1.00
 
   - This release fully implements (in the Spike RISC-V simulator) a reference Mojo-V target with an V64GC ISA, ML-KEM-512 key encapsulation for data contract loading, and Simon-128 symmetric key encryption for secret computation encryption.
