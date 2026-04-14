@@ -16,11 +16,13 @@ The current Mojo-V ISA Extension Specification (release 1.00):
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
-# 🧩 Mojo-V Reference Platform — Release 1.00
+# 🧩 Mojo-V Reference Platform — Release 1.1
 
 ## 🚧 Project Status
 
-The Mojo-V reference platform release 1.00 is a full reference implementation (in the Spike RISC-V simulator) of the Mojo-V semantics for an RV64GC CPU with ML-KEM-512 key encapsulation for data contract loading, and SIMON-128 symmetric key encryption for secret computation protection. Mojo-V supports three encryption modes: fast, strong, and proof-carrying. As of this release, 64-bit secret computation is fully secretized and this early reference platform can be used for software development and security analysis. Additional capabilities will be rolled out in future releases, including LLVM compiler support, Mojo-V library support, 32-bit RISC-V support, VIP-Bench benchmarks support, etc.
+The Mojo-V reference platform release 1.1 builds on the 1.00 full reference implementation in the Spike RISC-V simulator for an RV64GC CPU with ML-KEM-512 key encapsulation and SIMON-128 secret computation protection. Mojo-V continues to support fast, strong, and proof-carrying encryption modes, and this release expands Bringup-Bench workload coverage and EXO developer documentation.
+
+As of release 1.1, 64-bit secret computation remains fully secretized for software development and security analysis, with continuing roadmap items including LLVM compiler support and broader ecosystem integration.
 
 **Specification Version:** 1.00  (March 2026)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
@@ -119,7 +121,7 @@ make clean build test
 
 
 
-## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
+## 🧪 Mojo-V Bringup-Bench Tests Overview
 
 | Program | Description |
 |:---------|:-------------|
@@ -129,10 +131,58 @@ make clean build test
 | `mojov-test3` | Hand-coded data-oblivious floating-point bubble-sort benchmark with Mojo-V fast encryption (fp,fast) |
 | `mojov-test4` | Hand-coded data-oblivious integer bubble-sort benchmark with Mojo-V strong encryption (int,strong) |
 | `mojov-test5` | Hand-coded data-oblivious floating-point bubble-sort benchmark with Mojo-V strong encryption (fp,strong) |
+| `mojov-typetests` | Type-system validation tests for Mojo-V encrypted types and EXO-library usage |
 | `mojov-pctests` | Hand-coded integrity checking test suite for RV64GC+Mojo-V that includes positive and negative tests for Mojo-V's proof-carrying encryption format (proofcarrying) |
 | `mojov-sectests` | Hand-coded security test suite for RV64GC+Mojo-V that includes 130 pos + 245 neg tests == 375 total (int,fp,fast,strong) |
 
-All test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics. The other Bringup-Bench benchmarks have not yet been ported to Mojo-V.
+All test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics.
+
+## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
+
+The current bring-up benchmark set includes 40 Mojo-V benchmark applications:
+
+| Program | Description |
+|:---------|:-------------|
+| `bitonic-sort` | Data-oblivious bitonic sorting benchmark |
+| `bubble-sort` | Integer bubble-sort benchmark |
+| `bubble-sort-strong` | Integer bubble-sort benchmark configured for strong encryption |
+| `distinctness` | Distinctness analysis benchmark |
+| `distinctness-Onlog2n` | Distinctness benchmark variant with O(n log² n) strategy |
+| `edit-distance` | Edit-distance (string distance) benchmark |
+| `eulers-approx` | Euler constant/series approximation benchmark |
+| `fft-int` | Integer FFT benchmark |
+| `flood-fill` | Flood-fill benchmark |
+| `flood-fill-On2` | Flood-fill benchmark variant with O(n²) behavior |
+| `gcd-list` | Greatest-common-divisor over list benchmark |
+| `gemm` | General matrix multiplication benchmark |
+| `gemm-strong` | GEMM benchmark configured for strong encryption |
+| `grad-descent` | Gradient-descent optimization benchmark |
+| `kadane` | Maximum-subarray benchmark (Kadane’s algorithm) |
+| `kalman-filter` | Kalman filtering benchmark |
+| `kcore-decomp` | Graph k-core decomposition benchmark |
+| `kepler-calc` | Kepler equation/numerical calculation benchmark |
+| `knapsack` | Knapsack optimization benchmark |
+| `lda` | Latent Dirichlet allocation benchmark |
+| `mersenne` | Mersenne-number computation benchmark |
+| `minspan` | Minimum spanning structure benchmark |
+| `nonlinear-nn` | Non-linear neural-network benchmark |
+| `nr-solver` | Newton-Raphson solver benchmark |
+| `ntt-kernel` | Number-theoretic transform kernel benchmark |
+| `pagerank` | PageRank graph benchmark |
+| `parrondo` | Parrondo process/strategy benchmark |
+| `primal-test` | Primality testing benchmark |
+| `private-join` | Privacy-preserving join benchmark |
+| `psi` | Private-set-intersection benchmark |
+| `rabinkarp-search` | Rabin-Karp pattern-search benchmark |
+| `rad-to-deg` | Radian-to-degree conversion benchmark |
+| `randshell-sort` | Randomized Shell-sort benchmark |
+| `risk-score` | Risk-scoring analytics benchmark |
+| `shortest-path` | Shortest-path graph benchmark |
+| `skeleton` | Skeleton/template benchmark used as a bring-up baseline |
+| `soundex` | Soundex phonetic encoding benchmark |
+| `string-search` | String-search benchmark |
+| `tea-cipher` | TEA cipher benchmark |
+| `triangle-count` | Triangle counting graph benchmark |
 
 
 
@@ -175,6 +225,23 @@ The following options have been added to Spike, the standard RISC-V ISA simulato
   --mojov-sk=<pem_file> Load Mojo-V CPU secret key from <pem_file>
 ```
 
+## 🧠 Mojo-V Programming Overview
+
+Mojo-V software development currently uses the EXO compatibility library and follows secure data-oblivious coding practices:
+
+1. **Program with the EXO library headers**
+   - Include `exo/mojov-exo.h` to access the Mojo-V programming framework and encrypted-type abstractions.
+   - Include `exo/mojov-math.h` to access encrypted math support and helper operations.
+
+2. **Use data-oblivious computation for encrypted variables**
+   - Encrypted values must be manipulated with data-oblivious control flow and memory-access patterns to preserve Mojo-V’s silent execution and side-channel resistance goals.
+
+3. **Follow the EXO programming tutorial**
+   - See the EXO programming guide: [exo/EXO-library-programming.md](./exo/EXO-library-programming.md)
+
+4. **See compiler-structure and architecture details in EXO documentation**
+   - Internal structure and design context for the current Mojo-V compiler/library approach are documented in: [exo/EXO-library-overview.md](./exo/EXO-library-overview.md)
+
 ---
 ## Code Licensing
 All of the Mojo-V related code in this repo is released under the license of the tool it modified (e.g., Spike, LLVM, Bringup-Bench). Please see the tools' respective directories for licensing details.
@@ -186,4 +253,3 @@ We welcome contributions, bug reports, and suggestions!
 
 📧 **Email:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)  
 🌐 **Project Home:** [https://github.com/toddmaustin/mojo-v](https://github.com/toddmaustin/mojo-v)
-
