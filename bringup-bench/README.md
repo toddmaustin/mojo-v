@@ -149,6 +149,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **matmult** - Performs a variety of matrix multiplications, checking its results.
 
+- **mojov-mathtests** - Validates all functions in `exo/mojov-math.h` (`_sincos`, `mojov_sin`, `mojov_cos`, `mojov_fabs`, `mojov_floor`, `mojov_pow`, `mojov_round`, `mojov_sqrt`) with encrypted-value checks and tolerance-aware comparisons.
+
 - **max-subseq** - Computes the longest subsequence common (LSC) to all sequences in a set of sequences using the dynamic programming method.
 
 - **mersenne** - Generate a sequence of pseudo-random numbers using the Mersenne Twister algorithm.
@@ -355,4 +357,3 @@ The portions of the benchmark suite that was built by the benchmark team are (C)
 the [Apache License, version 2.0](https://www.apache.org/licenses/LICENSE-2.0) 
 
 And, thanks to the respective authors of the benchmarks that were adapted for the Bringup-Bench Benchmark Suite from other efforts.
-

@@ -18,7 +18,7 @@ static void check_bool(const char *label, int ok)
   if (!ok)
   {
     g_failures++;
-    libmin_printf("FAIL[%u]: %s\n", g_checks, label);
+    libmin_printf("MATH-TEST: FAIL[%u] %s\n", g_checks, label);
   }
 }
 
@@ -28,7 +28,7 @@ static void check_close(const char *label, fp64e_t got, double expected, double 
   const double err = libmin_fabs(got_d - expected);
   check_bool(label, err <= tol);
   if (err > tol)
-    libmin_printf("    got=%f expected=%f err=%f tol=%f\n", got_d, expected, err, tol);
+    libmin_printf("MATH-TEST: DETAIL got=%f expected=%f err=%f tol=%f\n", got_d, expected, err, tol);
 }
 
 static void check_identity_close(const char *label, fp64e_t a, fp64e_t b, double expected, double tol)
@@ -37,7 +37,7 @@ static void check_identity_close(const char *label, fp64e_t a, fp64e_t b, double
   const double err = libmin_fabs(got - expected);
   check_bool(label, err <= tol);
   if (err > tol)
-    libmin_printf("    got=%f expected=%f err=%f tol=%f\n", got, expected, err, tol);
+    libmin_printf("MATH-TEST: DETAIL got=%f expected=%f err=%f tol=%f\n", got, expected, err, tol);
 }
 
 int main(void)
@@ -46,7 +46,7 @@ int main(void)
   if (mojov_enable_and_verify() != 0) return -1;
   if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0) return -1;
 
-  libmin_printf("INFO: Running mojov-math tests.\n");
+  libmin_printf("MATH-TEST: START mojov-mathtests\n");
 
   // mojov_fabs
   check_close("mojov_fabs(+3.25)", mojov_fabs(fp64e_t(3.25)), 3.25, 1e-9);
@@ -100,11 +100,11 @@ int main(void)
 
   if (g_failures != 0)
   {
-    libmin_printf("ERROR: %d/%u mojov-math checks failed.\n", g_failures, g_checks);
+    libmin_printf("MATH-TEST: FAILURES %d/%u\n", g_failures, g_checks);
     return -1;
   }
 
-  libmin_printf("INFO: all %u mojov-math checks passed.\n", g_checks);
+  libmin_printf("MATH-TEST: PASS %u checks\n", g_checks);
   libmin_success();
   return 0;
 }
