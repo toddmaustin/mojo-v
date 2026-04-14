@@ -8,6 +8,5 @@ include ../Makefile
 
 test: $(TARGET_EXE)
 	-$(TARGET_SIM) --mojov-verbose ./$(TARGET_EXE) > FOO
-	grep '^MATH-TEST:' FOO > BAR
-	$(TARGET_DIFF) BAR mojov-mathtests.$(TARGET_REFEXT)
-	rm -f FOO BAR
+	$(TARGET_DIFF) FOO mojov-mathtests.$(TARGET_REFEXT)
+	rm -f FOO
