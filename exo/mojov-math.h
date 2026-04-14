@@ -70,16 +70,16 @@ mojov_cos(fp64e_t x)
 }
 
 static inline fp64e_t
+mojov_fabs(fp64e_t x)
+{
+  return cmov(x < (fp64e_t)0.0, -x, x);
+}
+
+static inline fp64e_t
 mojov_floor(fp64e_t x)
 {
   int64e_t i = (int64e_t)x;
   return cmov((fp64e_t)i > x, (fp64e_t)(i - 1), (fp64e_t)i);
-}
-
-static inline fp64e_t
-mojov_fabs(fp64e_t x)
-{
-  return cmov(x < (fp64e_t)0.0, -x, x);
 }
 
 static inline fp64e_t
@@ -95,6 +95,24 @@ mojov_pow(fp64e_t x, unsigned exp)
   return retval;
 }
 
+fp64e_t
+mojov_round(fp64e_t x)
+{
+  fp64e_t t = 0.0;
+
+  uint64e_t _pred = (x >= 0);
+  t = cmov(_pred, mojov_floor(x), t);
+  uint64e_t _pred1 = ((t - x) <= -0.5);
+  t = cmov(_pred && _pred1, t + 1, t);
+
+  t = cmov(!_pred, mojov_floor(-x), t);
+  uint64e_t _pred2 = ((t + x) <= -0.5);
+  t = cmov(!_pred && _pred2, t + 1, t);
+  t = cmov(!_pred, -t, t);
+
+  return t;
+}
+
 static inline fp64e_t
 mojov_sqrt(fp64e_t x)
 {
@@ -108,97 +126,6 @@ mojov_sqrt(fp64e_t x)
 }
 
 #if 0
-VIP_ENCDOUBLE
-myfloor(VIP_ENCDOUBLE x)
-{
-  VIP_ENCLONG i = (VIP_ENCLONG)x;
-#ifdef VIP_DO_MODE
-  VIP_ENCDOUBLE _retval = 0.0;
-  VIP_ENCBOOL _pred = (i > x);
-  _retval = VIP_CMOV(_pred, (VIP_ENCDOUBLE)(i-1), (VIP_ENCDOUBLE)i);
- 
-  return _retval;
-#else /* !VIP_DO_MODE */
-  return i - (i > x);
-#endif /* VIP_DO_MODE */
-}
-
-VIP_ENCDOUBLE
-myround(VIP_ENCDOUBLE x)
-{
-  VIP_ENCDOUBLE t = 0.0;
-
-#ifdef VIP_DO_MODE
-  VIP_ENCBOOL _pred = (x >= 0);
-  t = VIP_CMOV(_pred, myfloor(x), t);
-  VIP_ENCBOOL _pred1 = ((t - x) <= -0.5);
-  t = VIP_CMOV(_pred && _pred1, t + 1, t);
-
-  t = VIP_CMOV(!_pred, myfloor(-x), t);
-  VIP_ENCBOOL _pred2 = ((t + x) <= -0.5);
-  t = VIP_CMOV(!_pred && _pred2, t + 1, t);
-  t = VIP_CMOV(!_pred, -t, t);
-#else /* !VIP_DO_MODE */
-  if (x >= 0)
-  {
-    t = myfloor(x);
-    if ((t - x) <= -0.5)
-      t += 1;
-  }
-  else /* x < 0 */
-  {
-    t = myfloor(-x);
-    if ((t + x) <= -0.5)
-      t += 1;
-    t = -t;
-  }
-#endif /* !VIP_DO_MODE */
-
-  return t;
-}
-
-VIP_ENCDOUBLE
-myfabs(VIP_ENCDOUBLE x)
-{
-#ifdef VIP_DO_MODE
-  VIP_ENCDOUBLE _retval = 0.0;
-  VIP_ENCBOOL _pred = (x < 0.0);
-  _retval = VIP_CMOV(_pred, -x, x);
-
-  return _retval;
-#else /* !VIP_DO_MODE */
-  if (x < 0.0)
-    return -x;
-  else
-    return x;
-#endif /* VIP_DO_MODE */
-}
-
-VIP_ENCDOUBLE
-mypow(VIP_ENCDOUBLE x, unsigned exp)
-{
-#ifdef VIP_DO_MODE
-  VIP_ENCDOUBLE _retval = 0.0;
-
-  VIP_ENCBOOL _pred1 = (exp == 0);
-  _retval = VIP_CMOV(_pred1, (VIP_ENCDOUBLE)1.0L, _retval);
-
-  _retval = VIP_CMOV(!_pred1, x, _retval);
-  for (unsigned i=1; i < exp; i++)
-    _retval = VIP_CMOV(!_pred1, _retval * x, _retval);
-
-  return _retval;  
-#else /* !VIP_DO_MODE */
-  if (exp == 0)
-    return 1.0L;
-
-  double retval = x;
-  for (unsigned i=1; i < exp; i++)
-    retval *= x;
-  return retval;
-#endif /* VIP_DO_MODE */
-}
-
 
 VIP_ENCDOUBLE
 invsqrt(VIP_ENCDOUBLE num)
