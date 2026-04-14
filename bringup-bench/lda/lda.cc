@@ -193,7 +193,7 @@ eigenvalue2x2(VIP_ENCDOUBLE m[2][2], VIP_ENCDOUBLE out[2])
   VIP_ENCDOUBLE b = -(m[0][0] + m[1][1]);
   VIP_ENCDOUBLE c = m[0][0] * m[1][1] - m[0][1] * m[1][0];
   VIP_ENCDOUBLE disc = b * b - (VIP_ENCDOUBLE)4.0 * c;
-  VIP_ENCDOUBLE root = mysqrt(disc);
+  VIP_ENCDOUBLE root = mojov_sqrt(disc);
 
   out[0] = (-b + root) / (VIP_ENCDOUBLE)2.0;
   out[1] = (-b - root) / (VIP_ENCDOUBLE)2.0;
@@ -202,7 +202,7 @@ eigenvalue2x2(VIP_ENCDOUBLE m[2][2], VIP_ENCDOUBLE out[2])
 static void
 eigenvector2x2(VIP_ENCDOUBLE m[2][2], VIP_ENCDOUBLE eig, VIP_ENCDOUBLE out[2])
 {
-  VIP_ENCDOUBLE denom = mysqrt((m[0][0] - eig) * (m[0][0] - eig) + m[0][1] * m[0][1]);
+  VIP_ENCDOUBLE denom = mojov_sqrt((m[0][0] - eig) * (m[0][0] - eig) + m[0][1] * m[0][1]);
   out[0] = m[0][1] / denom;
   out[1] = -(m[0][0] - eig) / denom;
 }
@@ -227,7 +227,7 @@ normalizeCoeff(VIP_ENCDOUBLE *b0, VIP_ENCDOUBLE *b1)
   VIP_ENCDOUBLE pooled = (vars1 * (double)(sizec1 - 1) + vars2 * (double)(sizec2 - 1)) /
                          (double)(sizec1 + sizec2 - 2);
 
-  VIP_ENCDOUBLE norm = mysqrt(pooled);
+  VIP_ENCDOUBLE norm = mojov_sqrt(pooled);
   *b0 = *b0 / norm;
   *b1 = *b1 / norm;
 }

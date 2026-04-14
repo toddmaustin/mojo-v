@@ -84,7 +84,7 @@ commit_and_check_convergence(void)
 
   for (unsigned i = 0; i < NUM_NODES; ++i)
   {
-    fp64e_t diff = myfabs(next_ranks[i] - ranks[i]);
+    fp64e_t diff = mojov_fabs(next_ranks[i] - ranks[i]);
     changed = changed || (diff > (fp64e_t)THRESHOLD);
     ranks[i] = next_ranks[i];
   }

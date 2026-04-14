@@ -1,14 +1,14 @@
 
 LOCAL_CFLAGS=
 LOCAL_LIBS=
-LOCAL_OBJS=parrando.o ../common/simon.o ../target/mojov-utils.o
+LOCAL_OBJS=parrondo.o ../common/simon.o ../target/mojov-utils.o
 
-PROG=parrando
+PROG=parrondo
 
 include ../Makefile
 
 test: $(TARGET_EXE)
 	-$(TARGET_SIM) --mojov-verbose ./$(TARGET_EXE) > FOO 
-	$(TARGET_DIFF) FOO parrando.$(TARGET_REFEXT)
+	$(TARGET_DIFF) FOO parrondo.$(TARGET_REFEXT)
 	rm -f FOO
 

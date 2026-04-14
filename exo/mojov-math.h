@@ -70,20 +70,20 @@ mojov_cos(fp64e_t x)
 }
 
 static inline fp64e_t
-myfloor(fp64e_t x)
+mojov_floor(fp64e_t x)
 {
   int64e_t i = (int64e_t)x;
   return cmov((fp64e_t)i > x, (fp64e_t)(i - 1), (fp64e_t)i);
 }
 
 static inline fp64e_t
-myfabs(fp64e_t x)
+mojov_fabs(fp64e_t x)
 {
   return cmov(x < (fp64e_t)0.0, -x, x);
 }
 
 static inline fp64e_t
-mypow(fp64e_t x, unsigned exp)
+mojov_pow(fp64e_t x, unsigned exp)
 {
   if (exp == 0)
     return (fp64e_t)1.0;
@@ -96,7 +96,7 @@ mypow(fp64e_t x, unsigned exp)
 }
 
 static inline fp64e_t
-mysqrt(fp64e_t x)
+mojov_sqrt(fp64e_t x)
 {
   fp64e_t safe_x = cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
   fp64e_t guess = cmov(safe_x > (fp64e_t)1.0, safe_x, (fp64e_t)1.0);

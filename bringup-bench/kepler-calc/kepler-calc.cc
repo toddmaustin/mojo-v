@@ -83,7 +83,7 @@ static VIP_ENCDOUBLE e_series(VIP_ENCDOUBLE E, VIP_ENCDOUBLE e, VIP_ENCDOUBLE M,
   }
 
   n++;
-  return E + mypow(e, n - 1U) * a_n;
+  return E + mojov_pow(e, n - 1U) * a_n;
 }
 
 static VIP_ENCDOUBLE j_series(VIP_ENCDOUBLE E, VIP_ENCDOUBLE e, VIP_ENCDOUBLE M, int reset)
@@ -173,8 +173,8 @@ static int newmain(int argc, const char **argv)
   }
 
   sign = cmov(M > 0, (VIP_ENCDOUBLE)1.0, (VIP_ENCDOUBLE)-1.0);
-  M = myfabs(M) / ((VIP_ENCDOUBLE)2 * PI);
-  M = (M - myfloor(M)) * 2 * PI * sign;
+  M = mojov_fabs(M) / ((VIP_ENCDOUBLE)2 * PI);
+  M = (M - mojov_floor(M)) * 2 * PI * sign;
 
   sign = 1.0;
   {
