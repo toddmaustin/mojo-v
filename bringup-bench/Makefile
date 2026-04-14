@@ -32,7 +32,7 @@ error:
 #
 # END of user-modifiable variables
 #
-BMARKS = ackermann aes anagram audio-codec avl-tree banner bit-kernels blake2b bloom-filter boyer-moore-search bubble-sort c-interp ccmac checkers cipher congrad connect4-minimax convex-hull dhrystone distinctness donut fft-int flood-fill flood-fill-On2 frac-calc fuzzy-match fy-shuffle gcd-list grad-descent graph-tests hanoi heapsort heat-calc huff-encode idct-alg indirect-test k-means kadane kcore-decomp kepler knapsack knights-tour life longdiv lu-decomp lz-compress mandelbrot matmult max-subseq mersenne minspan monte-carlo murmur-hash n-queens natlog nbody-sim nr-solver packet-filter parrondo pascal pi-calc primal-test priority-queue quaternions qsort-demo qsort-test quine rabinkarp-search rand-test ransac regex-parser rho-factor risk-score rle-compress rsa-cipher sat-solver shortest-path sieve simple-grep skeleton soundex spelt2num spirograph strange sudoku-solver tetris-sim tiny-NN topo-sort totient transcend uniquify vectors-3d verlet weekday
+BMARKS = ackermann aes anagram audio-codec avl-tree banner bit-kernels blake2b bloom-filter boyer-moore-search bubble-sort c-interp ccmac checkers cipher congrad connect4-minimax convex-hull dhrystone distinctness donut fft-int flood-fill flood-fill-On2 frac-calc fuzzy-match fy-shuffle gcd-list grad-descent graph-tests hanoi heapsort heat-calc huff-encode idct-alg indirect-test k-means kadane kcore-decomp kepler knapsack knights-tour life longdiv lu-decomp lz-compress mandelbrot matmult max-subseq mersenne minspan monte-carlo murmur-hash n-queens natlog nbody-sim nr-solver packet-filter parrondo pascal pi-calc primal-test priority-queue quaternions qsort-demo qsort-test quine rabinkarp-search rand-test ransac regex-parser rho-factor risk-score rle-compress rsa-cipher sat-solver shortest-path sieve simple-grep skeleton soundex spelt2num spirograph strange sudoku-solver tetris-sim tiny-NN topo-sort totient transcend uniquify vectors-3d verlet weekday randshell-sort
 
 #OPT_CFLAGS = -O0 -g
 OPT_CFLAGS = -O3 -g
@@ -305,7 +305,7 @@ clean-all all-clean:
 spike-build:
 	$(MAKE) -C target clean build
 
-MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-typetests mojov-sectests mojov-pctests bubble-sort bubble-sort-strong edit-distance nr-solver primal-test bitonic-sort rabinkarp-search string-search knapsack gemm ntt-kernel mersenne gemm gemm-strong psi private-join risk-score kcore-decomp skeleton soundex tea-cipher distinctness distinctness-Onlog2n eulers-approx fft-int flood-fill flood-fill-On2 gcd-list grad-descent kadane minspan parrondo shortest-path triangle-count rad-to-deg kalman-filter kepler-calc lda pagerank
+MOJOV_BMARKS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-typetests mojov-sectests mojov-pctests bubble-sort bubble-sort-strong edit-distance nr-solver primal-test bitonic-sort rabinkarp-search string-search knapsack gemm ntt-kernel mersenne gemm gemm-strong psi private-join risk-score kcore-decomp skeleton soundex tea-cipher distinctness distinctness-Onlog2n eulers-approx fft-int flood-fill flood-fill-On2 gcd-list grad-descent kadane minspan parrondo shortest-path triangle-count rad-to-deg kalman-filter kepler-calc lda pagerank randshell-sort
 
 mojov-tests:
 	@for _BMARK in $(MOJOV_BMARKS) ; do \
