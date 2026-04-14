@@ -134,8 +134,9 @@ make clean build test
 | `mojov-typetests` | Type-system validation tests for Mojo-V encrypted types and EXO-library usage |
 | `mojov-pctests` | Hand-coded integrity checking test suite for RV64GC+Mojo-V that includes positive and negative tests for Mojo-V's proof-carrying encryption format (proofcarrying) |
 | `mojov-sectests` | Hand-coded security test suite for RV64GC+Mojo-V that includes 130 pos + 245 neg tests == 375 total (int,fp,fast,strong) |
+| `mojov-mathtests` | Encrypted EXO math-library validation tests for `_sincos`, `mojov_sin`, `mojov_cos`, `mojov_fabs`, `mojov_floor`, `mojov_pow`, `mojov_round`, and `mojov_sqrt` |
 
-All test benchmarks are hand-coded assembly programs demonstrating Mojo-V ISA rules and security semantics.
+These test benchmarks demonstrate Mojo-V ISA rules, EXO-library behavior, and security semantics.
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
