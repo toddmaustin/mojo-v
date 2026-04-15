@@ -114,8 +114,8 @@ int main(void)
   check_close("mojov_cube(-2)", mojov_cube(fp64e_t(-2.0)), -8.0, 1e-9);
 
   // 7) Classification / sanitization
-  const fp64e_t inf = fp64e_t(__builtin_inf());
-  const fp64e_t nan = fp64e_t(__builtin_nan(""));
+  const fp64e_t inf = fp64e_t(1.0) / fp64e_t(0.0);
+  const fp64e_t nan = fp64e_t(0.0) / fp64e_t(0.0);
   check_u64("mojov_iszero(0)", mojov_iszero(fp64e_t(0.0)), 1u);
   check_u64("mojov_iszero(2)", mojov_iszero(fp64e_t(2.0)), 0u);
   check_u64("mojov_isfinite(1)", mojov_isfinite(fp64e_t(1.0)), 1u);
