@@ -9,4 +9,4 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 0 (fast)
 MATH-TEST: START mojov-mathtests
-MATH-TEST: PASS 49 checks
+MATH-TEST: PASS 99 checks
