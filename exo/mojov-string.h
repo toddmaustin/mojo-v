@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <cstdlib>
 
 #include "mojov-exo.h"
 
@@ -30,11 +30,22 @@ class stringe_t {
 
   /** @brief Construct an empty encrypted string with public capacity length. */
   explicit stringe_t(size_type length = 0)
-      : length_(length), words_(word_count(length), uint64e_t(0)), size_(0), exception_(0) {}
+      : length_(length), words_(allocate_words(length)), size_(0), exception_(0) {}
 
-  stringe_t(const stringe_t&) = default;
-  stringe_t(stringe_t&&) = default;
-  ~stringe_t() = default;
+  stringe_t(const stringe_t& rhs)
+      : length_(rhs.length_), words_(allocate_words(rhs.length_)), size_(rhs.size_), exception_(rhs.exception_) {
+    copy_words(words_, rhs.words_, word_count(length_));
+  }
+
+  stringe_t(stringe_t&& rhs) noexcept
+      : length_(rhs.length_), words_(rhs.words_), size_(rhs.size_), exception_(rhs.exception_) {
+    rhs.length_ = 0;
+    rhs.words_ = nullptr;
+    rhs.size_ = uint64e_t(0);
+    rhs.exception_ = uint64e_t(0);
+  }
+
+  ~stringe_t() { release_words(); }
 
   /**
    * @brief Assignment with realloc-on-length-mismatch semantics.
@@ -47,10 +58,9 @@ class stringe_t {
       return *this;
     }
     if (length_ != rhs.length_) {
-      length_ = rhs.length_;
-      words_.assign(word_count(length_), uint64e_t(0));
+      replace_storage(rhs.length_);
     }
-    words_ = rhs.words_;
+    copy_words(words_, rhs.words_, word_count(length_));
     size_ = rhs.size_;
     exception_ = rhs.exception_;
     return *this;
@@ -60,12 +70,13 @@ class stringe_t {
     if (this == &rhs) {
       return *this;
     }
+    release_words();
     length_ = rhs.length_;
-    words_ = std::move(rhs.words_);
+    words_ = rhs.words_;
     size_ = rhs.size_;
     exception_ = rhs.exception_;
     rhs.length_ = 0;
-    rhs.words_.clear();
+    rhs.words_ = nullptr;
     rhs.size_ = uint64e_t(0);
     rhs.exception_ = uint64e_t(0);
     return *this;
@@ -364,6 +375,40 @@ class stringe_t {
     return (length + 7u) / 8u;
   }
 
+  static uint64e_t* allocate_words(size_type length) {
+    const size_type n = word_count(length);
+    if (n == 0) {
+      return nullptr;
+    }
+    uint64e_t* ptr = static_cast<uint64e_t*>(std::malloc(n * sizeof(uint64e_t)));
+    if (ptr == nullptr) {
+      __builtin_trap();
+    }
+    for (size_type i = 0; i < n; ++i) {
+      ptr[i] = uint64e_t(0);
+    }
+    return ptr;
+  }
+
+  static void copy_words(uint64e_t* dst, const uint64e_t* src, size_type n) {
+    for (size_type i = 0; i < n; ++i) {
+      dst[i] = src[i];
+    }
+  }
+
+  void release_words() {
+    if (words_ != nullptr) {
+      std::free(words_);
+      words_ = nullptr;
+    }
+  }
+
+  void replace_storage(size_type new_length) {
+    release_words();
+    length_ = new_length;
+    words_ = allocate_words(new_length);
+  }
+
   static uint64e_t lane_shift(size_type lane) {
     return uint64e_t(static_cast<uint64_t>((lane & 7u) * 8u));
   }
@@ -420,7 +465,7 @@ class stringe_t {
   }
 
   size_type length_;
-  std::vector<uint64e_t> words_;
+  uint64e_t* words_;
   uint64e_t size_;
   uint64e_t exception_;
 };
