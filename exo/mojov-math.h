@@ -5,6 +5,225 @@
 #error Include `mojov-math.h' after `mojov-exo.h'.
 #endif /* !MOJOV_EXO_H */
 
+// 1. Core scalar helpers
+static inline fp64e_t
+mojov_abs(fp64e_t x)
+{
+  return cmov(x < (fp64e_t)0.0, -x, x);
+}
+
+static inline fp64e_t
+mojov_fabs(fp64e_t x)
+{
+  return mojov_abs(x);
+}
+
+static inline fp64e_t
+mojov_min(fp64e_t a, fp64e_t b)
+{
+  return cmov(a < b, a, b);
+}
+
+static inline fp64e_t
+mojov_max(fp64e_t a, fp64e_t b)
+{
+  return cmov(a > b, a, b);
+}
+
+static inline fp64e_t
+mojov_clamp(fp64e_t x, fp64e_t lo, fp64e_t hi)
+{
+  return mojov_min(mojov_max(x, lo), hi);
+}
+
+static inline fp64e_t
+mojov_copysign(fp64e_t mag, fp64e_t sign)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_copysign(mojov_abs(mag).decrypt(), sign.decrypt()));
+#else
+  return cmov(sign < (fp64e_t)0.0, -mojov_abs(mag), mojov_abs(mag));
+#endif
+}
+
+static inline uint64e_t
+mojov_signbit(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return uint64e_t((uint64_t)(__builtin_signbit(x.decrypt()) ? 1 : 0));
+#else
+  return cmov(x < (fp64e_t)0.0, uint64e_t(1u), uint64e_t(0u));
+#endif
+}
+
+// 2. Rounding and conversion
+static inline fp64e_t
+mojov_floor(fp64e_t x)
+{
+  int64e_t i = (int64e_t)x;
+  return cmov((fp64e_t)i > x, (fp64e_t)(i - 1), (fp64e_t)i);
+}
+
+static inline fp64e_t
+mojov_ceil(fp64e_t x)
+{
+  int64e_t i = (int64e_t)x;
+  return cmov((fp64e_t)i < x, (fp64e_t)(i + 1), (fp64e_t)i);
+}
+
+static inline fp64e_t
+mojov_trunc(fp64e_t x)
+{
+  return (fp64e_t)(int64e_t)x;
+}
+
+static inline fp64e_t
+mojov_round(fp64e_t x)
+{
+  fp64e_t t = 0.0;
+
+  uint64e_t _pred = (x >= 0);
+  t = cmov(_pred, mojov_floor(x), t);
+  uint64e_t _pred1 = ((t - x) <= -0.5);
+  t = cmov(_pred && _pred1, t + 1, t);
+
+  t = cmov(!_pred, mojov_floor(-x), t);
+  uint64e_t _pred2 = ((t + x) <= -0.5);
+  t = cmov(!_pred && _pred2, t + 1, t);
+  t = cmov(!_pred, -t, t);
+
+  return t;
+}
+
+static inline int64e_t
+mojov_lrint(fp64e_t x)
+{
+  return int64e_t(mojov_round(x));
+}
+
+static inline fp64e_t
+mojov_from_int(int64e_t x)
+{
+  return fp64e_t(x);
+}
+
+// 3. Elementary numeric kernels
+static inline fp64e_t
+mojov_sqrt(fp64e_t x)
+{
+  fp64e_t safe_x = cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
+  fp64e_t guess = cmov(safe_x > (fp64e_t)1.0, safe_x, (fp64e_t)1.0);
+
+  for (unsigned i = 0; i < 8; i++)
+    guess = (guess + safe_x / guess) * (fp64e_t)0.5;
+
+  return cmov(x > (fp64e_t)0.0, guess, (fp64e_t)0.0);
+}
+
+static inline fp64e_t
+mojov_rsqrt(fp64e_t x)
+{
+  return cmov(x > (fp64e_t)0.0, (fp64e_t)1.0 / mojov_sqrt(x), (fp64e_t)0.0);
+}
+
+static inline fp64e_t
+mojov_recip(fp64e_t x)
+{
+  return (fp64e_t)1.0 / x;
+}
+
+static inline fp64e_t
+mojov_fma(fp64e_t a, fp64e_t b, fp64e_t c)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_fma(a.decrypt(), b.decrypt(), c.decrypt()));
+#else
+  return a * b + c;
+#endif
+}
+
+static inline fp64e_t
+mojov_hypot(fp64e_t x, fp64e_t y)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_hypot(x.decrypt(), y.decrypt()));
+#else
+  return mojov_sqrt(x * x + y * y);
+#endif
+}
+
+// 4. Exponential / logarithmic family
+static inline fp64e_t
+mojov_exp(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_exp(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_exp2(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_exp2(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_log(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_log(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_log2(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_log2(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_log10(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_log10(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_expm1(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_expm1(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_log1p(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_log1p(x.decrypt()));
+#else
+  return fp64e_t(0.0);
+#endif
+}
+
+// 5. Trigonometric family
 static inline void
 _sincos(fp64e_t *psin, fp64e_t *pcos, fp64e_t x)
 {
@@ -69,60 +288,123 @@ mojov_cos(fp64e_t x)
   return cos;
 }
 
+// 6. Power interfaces
 static inline fp64e_t
-mojov_fabs(fp64e_t x)
+mojov_powi(fp64e_t x, unsigned n)
 {
-  return cmov(x < (fp64e_t)0.0, -x, x);
-}
-
-static inline fp64e_t
-mojov_floor(fp64e_t x)
-{
-  int64e_t i = (int64e_t)x;
-  return cmov((fp64e_t)i > x, (fp64e_t)(i - 1), (fp64e_t)i);
-}
-
-static inline fp64e_t
-mojov_pow(fp64e_t x, unsigned exp)
-{
-  if (exp == 0)
+  if (n == 0)
     return (fp64e_t)1.0;
 
   fp64e_t retval = x;
-  for (unsigned i = 1; i < exp; i++)
+  for (unsigned i = 1; i < n; i++)
     retval = retval * x;
 
   return retval;
 }
 
-fp64e_t
-mojov_round(fp64e_t x)
+static inline fp64e_t
+mojov_pow(fp64e_t x, unsigned exp)
 {
-  fp64e_t t = 0.0;
-
-  uint64e_t _pred = (x >= 0);
-  t = cmov(_pred, mojov_floor(x), t);
-  uint64e_t _pred1 = ((t - x) <= -0.5);
-  t = cmov(_pred && _pred1, t + 1, t);
-
-  t = cmov(!_pred, mojov_floor(-x), t);
-  uint64e_t _pred2 = ((t + x) <= -0.5);
-  t = cmov(!_pred && _pred2, t + 1, t);
-  t = cmov(!_pred, -t, t);
-
-  return t;
+  return mojov_powi(x, exp);
 }
 
 static inline fp64e_t
-mojov_sqrt(fp64e_t x)
+mojov_square(fp64e_t x)
 {
-  fp64e_t safe_x = cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
-  fp64e_t guess = cmov(safe_x > (fp64e_t)1.0, safe_x, (fp64e_t)1.0);
+  return x * x;
+}
 
-  for (unsigned i = 0; i < 8; i++)
-    guess = (guess + safe_x / guess) * (fp64e_t)0.5;
+static inline fp64e_t
+mojov_cube(fp64e_t x)
+{
+  return x * x * x;
+}
 
-  return cmov(x > (fp64e_t)0.0, guess, (fp64e_t)0.0);
+// 7. Classification / sanitization
+static inline uint64e_t
+mojov_iszero(fp64e_t x)
+{
+  return x == (fp64e_t)0.0;
+}
+
+static inline uint64e_t
+mojov_isnan(fp64e_t x)
+{
+  return x != x;
+}
+
+static inline uint64e_t
+mojov_isfinite(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return uint64e_t((uint64_t)(__builtin_isfinite(x.decrypt()) ? 1 : 0));
+#else
+  return !(mojov_isnan(x));
+#endif
+}
+
+static inline uint64e_t
+mojov_isinf(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return uint64e_t((uint64_t)(__builtin_isinf(x.decrypt()) ? 1 : 0));
+#else
+  return uint64e_t(0u);
+#endif
+}
+
+static inline fp64e_t
+mojov_safe_div(fp64e_t num, fp64e_t den, fp64e_t fallback)
+{
+  return cmov(mojov_iszero(den), fallback, num / den);
+}
+
+static inline fp64e_t
+mojov_safe_log(fp64e_t x, fp64e_t fallback)
+{
+  return cmov(x > (fp64e_t)0.0, mojov_log(x), fallback);
+}
+
+static inline fp64e_t
+mojov_safe_sqrt(fp64e_t x, fp64e_t fallback)
+{
+  return cmov(x >= (fp64e_t)0.0, mojov_sqrt(x), fallback);
+}
+
+// 8. ML / privacy-analytics helpers
+static inline fp64e_t
+mojov_sigmoid(fp64e_t x)
+{
+  return (fp64e_t)1.0 / ((fp64e_t)1.0 + mojov_exp(-x));
+}
+
+static inline fp64e_t
+mojov_tanh(fp64e_t x)
+{
+#if defined(__cplusplus)
+  return fp64e_t(__builtin_tanh(x.decrypt()));
+#else
+  fp64e_t e2x = mojov_exp((fp64e_t)2.0 * x);
+  return (e2x - (fp64e_t)1.0) / (e2x + (fp64e_t)1.0);
+#endif
+}
+
+static inline fp64e_t
+mojov_relu(fp64e_t x)
+{
+  return cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
+}
+
+static inline fp64e_t
+mojov_leaky_relu(fp64e_t x, fp64e_t alpha)
+{
+  return cmov(x > (fp64e_t)0.0, x, alpha * x);
+}
+
+static inline fp64e_t
+mojov_softplus(fp64e_t x)
+{
+  return mojov_log1p(mojov_exp(x));
 }
 
 #if 0
