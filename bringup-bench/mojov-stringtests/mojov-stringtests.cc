@@ -82,7 +82,7 @@ int main(void)
   check_bool("operator+ size", u64(sum.size()) == 4);
   check_bool("operator+ content", u8(sum[3]) == (uint8_t)'d');
 
-  // compare / spaceship / relational
+  // compare / strcmp / relational
   stringe_t ca = make_string("alpha", 5, 8);
   stringe_t cb = make_string("alphabet", 8, 12);
   stringe_t cc = make_string("alpha", 5, 8);
@@ -91,7 +91,7 @@ int main(void)
   check_bool("operator<", u64(ca < cb) == 1);
   check_bool("operator==", u64(ca == cc) == 1);
   check_bool("operator>=", u64(cb >= ca) == 1);
-  check_bool("operator<=>", i64(ca <=> cb) < 0);
+  check_bool("strcmp()", i64(ca.strcmp(cb)) < 0);
 
   // find/rfind and variants
   stringe_t txt = make_string("bananaband", 9, 16);

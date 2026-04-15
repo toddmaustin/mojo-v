@@ -168,7 +168,8 @@ class stringe_t {
     return result;
   }
 
-  int64e_t operator<=>(const stringe_t& rhs) const { return compare(rhs); }
+  /** @brief C++17-friendly three-way compare alias (encrypted {-1,0,+1}). */
+  int64e_t strcmp(const stringe_t& rhs) const { return compare(rhs); }
   uint64e_t operator==(const stringe_t& rhs) const { return compare(rhs) == int64e_t(0); }
   uint64e_t operator!=(const stringe_t& rhs) const { return compare(rhs) != int64e_t(0); }
   uint64e_t operator<(const stringe_t& rhs) const { return compare(rhs) < int64e_t(0); }
