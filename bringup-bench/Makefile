@@ -174,7 +174,7 @@ TARGET_CC = /opt/riscv/bin/riscv64-unknown-elf-gcc
 TARGET_CXX = /opt/riscv/bin/riscv64-unknown-elf-g++
 TARGET_AR = riscv64-unknown-elf-ar
 TARGET_REGOUT = -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31 -ffixed-f24 -ffixed-f25 -ffixed-f26 -ffixed-f27 -ffixed-f28 -ffixed-f29 -ffixed-f30 -ffixed-f31
-TARGET_CFLAGS = -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -Wall -fvisibility=hidden -nostdlib -ffreestanding -mcmodel=medany $(TARGET_REGOUT)# -Wl,--no-relax -MMD -std=c23
+TARGET_CFLAGS = -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64 -Wall -fvisibility=hidden -nostdlib -ffreestanding -fno-exceptions -mcmodel=medany $(TARGET_REGOUT)# -Wl,--no-relax -MMD -std=c23
 TARGET_LFLAGS = -static -march=rv64gc_zicond -mabi=lp64 -fvisibility=hidden -nostdlib -ffreestanding -mcmodel=medany
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv64imac/lp64/libgcc.a
 TARGET_SIM = ../../riscv-isa-sim/build/spike --mojov-pk=../target/pk-file.pem --mojov-sk=../target/sk-file.pem --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000 $(LOCAL_SIMOPTS)

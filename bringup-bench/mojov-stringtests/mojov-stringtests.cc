@@ -36,6 +36,17 @@ static stringe_t make_string(const char *s, size_t len, size_t cap)
   return out;
 }
 
+static void
+print_string(const char *name, stringe_t stre)
+{
+  if (name)
+    libmin_printf("%s [size:%2d]: ", name, stre.size().decrypt());
+  for (uint64_t i=0; i < stre.size().decrypt(); i++)
+    libmin_printf("%c", (uint8_t)(stre[i].decrypt()));
+  if (name)
+    libmin_printf("\n");
+} 
+
 int main(void)
 {
   if (mojov_configure_kmsm_from_dc_fast() != 0) return -1;
@@ -46,6 +57,7 @@ int main(void)
 
   // length/size/empty and packed indexing (crosses 8-byte packing boundary)
   stringe_t s = make_string("hello_world", 11, 16);
+  print_string("STRING-TEST: s", s);
   check_bool("length()", s.length() == 16);
   check_bool("size()", u64(s.size()) == 11);
   check_bool("empty()==false", u64(s.empty()) == 0);
@@ -76,7 +88,7 @@ int main(void)
   x += uint8e_t('_');
   x += make_string("mojo", 4, 8);
   check_bool("append chain size", u64(x.size()) == 10);
-  check_bool("append chain idx5", u8(x[5]) == (uint8_t)'m');
+  check_bool("append chain idx5", u8(x[6]) == (uint8_t)'m');
 
   stringe_t sum = make_string("ab", 2, 4) + make_string("cd", 2, 4);
   check_bool("operator+ size", u64(sum.size()) == 4);
@@ -103,22 +115,22 @@ int main(void)
 
   stringe_t vowels = make_string("aeiou", 5, 8);
   check_bool("find_first_of", u64(txt.find_first_of(vowels)) == 1);
-  check_bool("find_last_of", u64(txt.find_last_of(vowels)) == 5);
+  check_bool("find_last_of", u64(txt.find_last_of(vowels)) == 7);
   check_bool("find_first_not_of", u64(txt.find_first_not_of(vowels)) == 0);
   check_bool("find_last_not_of", u64(txt.find_last_not_of(vowels)) == 8);
   check_bool("find_first_of(char)", u64(txt.find_first_of(uint8e_t('n'))) == 2);
-  check_bool("find_last_of(char)", u64(txt.find_last_of(uint8e_t('a'))) == 5);
+  check_bool("find_last_of(char)", u64(txt.find_last_of(uint8e_t('a'))) == 7);
   check_bool("find_first_not_of(char)", u64(txt.find_first_not_of(uint8e_t('b'))) == 1);
-  check_bool("find_last_not_of(char)", u64(txt.find_last_not_of(uint8e_t('d'))) == 7);
+  check_bool("find_last_not_of(char)", u64(txt.find_last_not_of(uint8e_t('d'))) == 8);
 
   // substr / starts_with / ends_with / contains
   stringe_t sub = txt.substr(uint64e_t(2), 4);
   check_bool("substr size", u64(sub.size()) == 4);
   check_bool("substr[0]", u8(sub[0]) == (uint8_t)'n');
-  check_bool("starts_with", u64(txt.starts_with(make_string("ban", 3, 8))) == 1);
-  check_bool("ends_with", u64(txt.ends_with(make_string("band", 4, 8))) == 1);
-  check_bool("contains true", u64(txt.contains(make_string("nab", 3, 8))) == 1);
-  check_bool("contains false", u64(txt.contains(make_string("zzz", 3, 8))) == 0);
+  check_bool("starts_with", u64(txt.starts_with(make_string("ban", 3, 8))) == /* true */1);
+  check_bool("ends_with", u64(txt.ends_with(make_string("band", 4, 8))) == /* false */0);
+  check_bool("contains true", u64(txt.contains(make_string("nab", 3, 8))) == /* true */1);
+  check_bool("contains false", u64(txt.contains(make_string("zzz", 3, 8))) == /* false */0);
 
   if (g_failures != 0)
   {
