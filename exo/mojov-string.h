@@ -107,7 +107,7 @@ class stringe_t {
     const uint64e_t fits = size_ < uint64e_t(length_);
     oblivious_write(size_, ch, fits);
     size_ = cmov(fits, size_ + uint64e_t(1), size_);
-    exception_ = exception_ | (uint64e_t(1) - fits);
+    exception_ = exception_ || !fits;
     return *this;
   }
 
@@ -116,13 +116,13 @@ class stringe_t {
     for (size_type i = 0; i < rhs.length_; ++i) {
       const uint64e_t in_rhs = uint64e_t(i) < rhs.size_;
       const uint64e_t fits = size_ < uint64e_t(length_);
-      const uint64e_t do_write = in_rhs & fits;
+      const uint64e_t do_write = in_rhs && fits;
       const uint8e_t ch = rhs.get_char_public(i);
       oblivious_write(size_, ch, do_write);
       size_ = cmov(do_write, size_ + uint64e_t(1), size_);
-      exception_ = exception_ | (in_rhs & (uint64e_t(1) - fits));
+      exception_ = exception_ || (in_rhs && !fits);
     }
-    exception_ = exception_ | rhs.exception_;
+    exception_ = exception_ || rhs.exception_;
     return *this;
   }
 
@@ -137,7 +137,7 @@ class stringe_t {
     stringe_t out(lhs.length_ + rhs.length_);
     out.append(lhs);
     out.append(rhs);
-    out.exception_ = out.exception_ | lhs.exception_ | rhs.exception_;
+    out.exception_ = out.exception_ || lhs.exception_ || rhs.exception_;
     return out;
   }
 
@@ -153,17 +153,17 @@ class stringe_t {
       const uint8e_t lc = (i < length_) ? get_char_public(i) : uint8e_t(0);
       const uint8e_t rc = (i < rhs.length_) ? rhs.get_char_public(i) : uint8e_t(0);
 
-      const uint64e_t l_only = in_l & (uint64e_t(1) - in_r);
-      const uint64e_t r_only = in_r & (uint64e_t(1) - in_l);
-      const uint64e_t both = in_l & in_r;
+      const uint64e_t l_only = in_l && !in_r;
+      const uint64e_t r_only = in_r && !in_l;
+      const uint64e_t both = in_l && in_r;
 
-      const uint64e_t lt = both & (lc < rc);
-      const uint64e_t gt = both & (lc > rc);
-      const uint64e_t choose = uint64e_t(1) - decided;
+      const uint64e_t lt = both && (lc < rc);
+      const uint64e_t gt = both && (lc > rc);
+      const uint64e_t choose = !decided;
 
-      result = cmov(choose & (lt | r_only), int64e_t(-1), result);
-      result = cmov(choose & (gt | l_only), int64e_t(1), result);
-      decided = decided | l_only | r_only | lt | gt;
+      result = cmov(choose && (lt || r_only), int64e_t(-1), result);
+      result = cmov(choose && (gt || l_only), int64e_t(1), result);
+      decided = decided || l_only || r_only || lt || gt;
     }
     return result;
   }
@@ -184,32 +184,32 @@ class stringe_t {
     for (size_type i = 0; i < length_; ++i) {
       const uint64e_t i_ok = uint64e_t(i) >= pos;
       const uint64e_t i_in = uint64e_t(i) < size_;
-      uint64e_t match = i_ok & i_in;
+      uint64e_t match = i_ok && i_in;
       for (size_type j = 0; j < needle.length_; ++j) {
         const uint64e_t n_in = uint64e_t(j) < needle.size_;
         const uint64e_t s_in = uint64e_t(i + j) < size_;
         const uint8e_t a = get_char_or_zero(i + j);
         const uint8e_t b = needle.get_char_public(j);
-        match = match & cmov(n_in, s_in & (a == b), uint64e_t(1));
+        match = match && cmov(n_in, s_in && (a == b), uint64e_t(1));
       }
-      match = match & (needle.size_ > uint64e_t(0));
-      const uint64e_t choose = match & (uint64e_t(1) - found);
+      match = match && (needle.size_ > uint64e_t(0));
+      const uint64e_t choose = match && !found;
       best = cmov(choose, uint64e_t(i), best);
-      found = found | match;
+      found = found || match;
     }
     const uint64e_t empty_needle = needle.size_ == uint64e_t(0);
     const uint64e_t size_ge_pos = size_ >= pos;
-    return cmov(empty_needle & size_ge_pos, pos, best);
+    return cmov(empty_needle && size_ge_pos, pos, best);
   }
 
   uint64e_t find(uint8e_t ch, uint64e_t pos = uint64e_t(0)) const {
     uint64e_t best(kNposPlain);
     uint64e_t found(0);
     for (size_type i = 0; i < length_; ++i) {
-      const uint64e_t match = (uint64e_t(i) >= pos) & (uint64e_t(i) < size_) & (get_char_public(i) == ch);
-      const uint64e_t choose = match & (uint64e_t(1) - found);
+      const uint64e_t match = (uint64e_t(i) >= pos) && (uint64e_t(i) < size_) && (get_char_public(i) == ch);
+      const uint64e_t choose = match && !found;
       best = cmov(choose, uint64e_t(i), best);
-      found = found | match;
+      found = found || match;
     }
     return best;
   }
@@ -217,7 +217,7 @@ class stringe_t {
   uint64e_t rfind(uint8e_t ch) const {
     uint64e_t best(kNposPlain);
     for (size_type i = 0; i < length_; ++i) {
-      const uint64e_t match = (uint64e_t(i) < size_) & (get_char_public(i) == ch);
+      const uint64e_t match = (uint64e_t(i) < size_) && (get_char_public(i) == ch);
       best = cmov(match, uint64e_t(i), best);
     }
     return best;
@@ -229,19 +229,19 @@ class stringe_t {
     for (size_type i = 0; i < length_; ++i) {
       const uint64e_t i_in = uint64e_t(i) < size_;
       const uint64e_t i_ok = cmov(pos == uint64e_t(kNposPlain), uint64e_t(1), uint64e_t(i) <= pos);
-      uint64e_t match = i_in & i_ok;
+      uint64e_t match = i_in && i_ok;
       for (size_type j = 0; j < needle.length_; ++j) {
         const uint64e_t n_in = uint64e_t(j) < needle.size_;
         const uint64e_t s_in = uint64e_t(i + j) < size_;
-        match = match & cmov(n_in, s_in & (get_char_or_zero(i + j) == needle.get_char_public(j)), uint64e_t(1));
+        match = match && cmov(n_in, s_in && (get_char_or_zero(i + j) == needle.get_char_public(j)), uint64e_t(1));
       }
-      match = match & (needle.size_ > uint64e_t(0));
+      match = match && (needle.size_ > uint64e_t(0));
       best = cmov(match, uint64e_t(i), best);
     }
     const uint64e_t empty_needle = needle.size_ == uint64e_t(0);
     const uint64e_t ret_pos = cmov(pos == uint64e_t(kNposPlain), size_, pos);
     const uint64e_t size_ge_pos = size_ >= ret_pos;
-    return cmov(empty_needle & size_ge_pos, ret_pos, best);
+    return cmov(empty_needle && size_ge_pos, ret_pos, best);
   }
 
   uint64e_t find_first_of(const stringe_t& chars, uint64e_t pos = uint64e_t(0)) const {
@@ -251,12 +251,12 @@ class stringe_t {
       uint64e_t any(0);
       for (size_type j = 0; j < chars.length_; ++j) {
         const uint64e_t c_in = uint64e_t(j) < chars.size_;
-        any = any | (c_in & (get_char_public(i) == chars.get_char_public(j)));
+        any = any || (c_in && (get_char_public(i) == chars.get_char_public(j)));
       }
-      const uint64e_t match = (uint64e_t(i) >= pos) & (uint64e_t(i) < size_) & any;
-      const uint64e_t choose = match & (uint64e_t(1) - found);
+      const uint64e_t match = (uint64e_t(i) >= pos) && (uint64e_t(i) < size_) && any;
+      const uint64e_t choose = match && !found;
       best = cmov(choose, uint64e_t(i), best);
-      found = found | match;
+      found = found || match;
     }
     return best;
   }
@@ -267,9 +267,9 @@ class stringe_t {
       uint64e_t any(0);
       for (size_type j = 0; j < chars.length_; ++j) {
         const uint64e_t c_in = uint64e_t(j) < chars.size_;
-        any = any | (c_in & (get_char_public(i) == chars.get_char_public(j)));
+        any = any || (c_in && (get_char_public(i) == chars.get_char_public(j)));
       }
-      const uint64e_t match = (uint64e_t(i) < size_) & any;
+      const uint64e_t match = (uint64e_t(i) < size_) && any;
       best = cmov(match, uint64e_t(i), best);
     }
     return best;
@@ -290,12 +290,12 @@ class stringe_t {
       uint64e_t any(0);
       for (size_type j = 0; j < chars.length_; ++j) {
         const uint64e_t c_in = uint64e_t(j) < chars.size_;
-        any = any | (c_in & (get_char_public(i) == chars.get_char_public(j)));
+        any = any || (c_in && (get_char_public(i) == chars.get_char_public(j)));
       }
-      const uint64e_t match = (uint64e_t(i) >= pos) & (uint64e_t(i) < size_) & (uint64e_t(1) - any);
-      const uint64e_t choose = match & (uint64e_t(1) - found);
+      const uint64e_t match = (uint64e_t(i) >= pos) && (uint64e_t(i) < size_) && !any;
+      const uint64e_t choose = match && !found;
       best = cmov(choose, uint64e_t(i), best);
-      found = found | match;
+      found = found || match;
     }
     return best;
   }
@@ -306,9 +306,9 @@ class stringe_t {
       uint64e_t any(0);
       for (size_type j = 0; j < chars.length_; ++j) {
         const uint64e_t c_in = uint64e_t(j) < chars.size_;
-        any = any | (c_in & (get_char_public(i) == chars.get_char_public(j)));
+        any = any || (c_in && (get_char_public(i) == chars.get_char_public(j)));
       }
-      const uint64e_t match = (uint64e_t(i) < size_) & (uint64e_t(1) - any);
+      const uint64e_t match = (uint64e_t(i) < size_) && !any;
       best = cmov(match, uint64e_t(i), best);
     }
     return best;
@@ -318,10 +318,10 @@ class stringe_t {
     uint64e_t best(kNposPlain);
     uint64e_t found(0);
     for (size_type i = 0; i < length_; ++i) {
-      const uint64e_t match = (uint64e_t(i) >= pos) & (uint64e_t(i) < size_) & (get_char_public(i) != ch);
-      const uint64e_t choose = match & (uint64e_t(1) - found);
+      const uint64e_t match = (uint64e_t(i) >= pos) && (uint64e_t(i) < size_) && (get_char_public(i) != ch);
+      const uint64e_t choose = match && !found;
       best = cmov(choose, uint64e_t(i), best);
-      found = found | match;
+      found = found || match;
     }
     return best;
   }
@@ -329,7 +329,7 @@ class stringe_t {
   uint64e_t find_last_not_of(uint8e_t ch) const {
     uint64e_t best(kNposPlain);
     for (size_type i = 0; i < length_; ++i) {
-      const uint64e_t match = (uint64e_t(i) < size_) & (get_char_public(i) != ch);
+      const uint64e_t match = (uint64e_t(i) < size_) && (get_char_public(i) != ch);
       best = cmov(match, uint64e_t(i), best);
     }
     return best;
@@ -352,7 +352,7 @@ class stringe_t {
     uint64e_t ok = size_ >= prefix.size_;
     for (size_type i = 0; i < prefix.length_; ++i) {
       const uint64e_t in = uint64e_t(i) < prefix.size_;
-      ok = ok & cmov(in, get_char_or_zero(i) == prefix.get_char_public(i), uint64e_t(1));
+      ok = ok && cmov(in, get_char_or_zero(i) == prefix.get_char_public(i), uint64e_t(1));
     }
     return ok;
   }
@@ -362,7 +362,7 @@ class stringe_t {
     const uint64e_t start = size_ - suffix.size_;
     for (size_type i = 0; i < suffix.length_; ++i) {
       const uint64e_t in = uint64e_t(i) < suffix.size_;
-      ok = ok & cmov(in, get_char_by_secret_index(start + uint64e_t(i)) == suffix.get_char_public(i), uint64e_t(1));
+      ok = ok && cmov(in, get_char_by_secret_index(start + uint64e_t(i)) == suffix.get_char_public(i), uint64e_t(1));
     }
     return ok;
   }
@@ -459,7 +459,7 @@ class stringe_t {
 
   void oblivious_write(uint64e_t idx, uint8e_t ch, uint64e_t enable) {
     for (size_type k = 0; k < length_; ++k) {
-      const uint64e_t take = enable & (idx == uint64e_t(k));
+      const uint64e_t take = enable && (idx == uint64e_t(k));
       const uint8e_t cur = get_char_public(k);
       set_char_public(k, cmov(take, ch, cur));
     }
