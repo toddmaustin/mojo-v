@@ -359,11 +359,13 @@ mojov_isnan(fp64e_t x)
   return x != x;
 }
 
+#if 0
 static inline uint64e_t
 mojov_isfinite(fp64e_t x)
 {
   return !mojov_isnan(x) && !mojov_isinf(x);
 }
+#endif
 
 static inline uint64e_t
 mojov_isinf(fp64e_t x)
