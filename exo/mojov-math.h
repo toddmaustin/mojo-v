@@ -71,7 +71,7 @@ mojov_ceil(fp64e_t x)
 static inline fp64e_t
 mojov_trunc(fp64e_t x)
 {
-  return (fp64e_t)(int64e_t)x;
+  return cmov(x < (fp64e_t)0.0, mojov_ceil(x), mojov_floor(x));
 }
 
 static inline fp64e_t
@@ -359,18 +359,16 @@ mojov_isnan(fp64e_t x)
   return x != x;
 }
 
-#if 0
-static inline uint64e_t
-mojov_isfinite(fp64e_t x)
-{
-  return !mojov_isnan(x) && !mojov_isinf(x);
-}
-#endif
-
 static inline uint64e_t
 mojov_isinf(fp64e_t x)
 {
   return !mojov_isnan(x) && mojov_isnan(x * (fp64e_t)0.0);
+}
+
+static inline uint64e_t
+mojov_isfinite(fp64e_t x)
+{
+  return !mojov_isnan(x) && !mojov_isinf(x);
 }
 
 static inline fp64e_t
