@@ -10,4 +10,4 @@ Decrypted data_contract_t fields:
   format_sel  = 0 (fast)
 STRING-TEST: START mojov-stringtests
 STRING-TEST: s [size:11]: hello_world
-STRING-TEST: PASS 38 checks
+STRING-TEST: PASS 83 checks
