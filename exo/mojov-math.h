@@ -104,10 +104,29 @@ mojov_from_int(int64e_t x)
   return fp64e_t(x);
 }
 
+static inline fp64e_t
+mojov_invsqrt(fp64e_t num)
+{
+  fp64e_t y = num;
+  fp64e_t x2 = y * 0.5;
+  int64e_t i;
+  libmin_memcpy(&i, &y, sizeof(i));
+
+  // The magic number is for doubles is from https://cs.uwaterloo.ca/~m32rober/rsqrt.pdf
+  i = (int64e_t)0x5fe6eb50c7b537a9 - (i >> 1);
+  libmin_memcpy(&y, &i, sizeof(y));
+  y = y * ((fp64e_t)1.5 - (x2 * y * y));   // 1st iteration
+  y  = y * ((fp64e_t)1.5 - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+  return y;
+}
+
 // 3. Elementary numeric kernels
 static inline fp64e_t
 mojov_sqrt(fp64e_t x)
 {
+  return (fp64e_t)1.0 / mojov_invsqrt(x);
+
+#if 0
   fp64e_t safe_x = cmov(x > (fp64e_t)0.0, x, (fp64e_t)0.0);
   fp64e_t guess = cmov(safe_x > (fp64e_t)1.0, safe_x, (fp64e_t)1.0);
 
@@ -115,6 +134,7 @@ mojov_sqrt(fp64e_t x)
     guess = (guess + safe_x / guess) * (fp64e_t)0.5;
 
   return cmov(x > (fp64e_t)0.0, guess, (fp64e_t)0.0);
+#endif
 }
 
 static inline fp64e_t
