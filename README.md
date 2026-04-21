@@ -158,6 +158,7 @@ The current bring-up benchmark set includes 40 Mojo-V benchmark applications:
 | `gemm` | General matrix multiplication benchmark |
 | `gemm-strong` | GEMM benchmark configured for strong encryption |
 | `grad-descent` | Gradient-descent optimization benchmark |
+| `highlife` | HighLife cellular-automata benchmark with encrypted board-state evolution |
 | `kadane` | Maximum-subarray benchmark (Kadane’s algorithm) |
 | `kalman-filter` | Kalman filtering benchmark |
 | `kcore-decomp` | Graph k-core decomposition benchmark |
