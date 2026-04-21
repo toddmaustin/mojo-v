@@ -1,0 +1,20 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+tiny-NN train epoch=0 mse=0.202053
+tiny-NN train epoch=20 mse=0.143668
+tiny-NN train epoch=40 mse=0.106432
+tiny-NN train epoch=60 mse=0.065526
+tiny-NN train epoch=79 mse=0.047892
+tiny-NN infer x=(0,0) y=0.378941 pred=0 expected=0
+tiny-NN infer x=(0,1) y=0.852465 pred=1 expected=1
+tiny-NN infer x=(1,0) y=0.859764 pred=1 expected=1
+tiny-NN infer x=(1,1) y=0.920260 pred=1 expected=1
+tiny-NN summary: 4/4 correct
