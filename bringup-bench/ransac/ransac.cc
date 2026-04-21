@@ -7,6 +7,7 @@
 #define EXO_UINT64E_STORAGE_TYPE mojov_mem_fast_u64_t
 #define EXO_FP64E_STORAGE_TYPE mojov_mem_fast_fp64_t
 #include "mojov-exo.h"
+#include "mojov-math.h"
 
 #define NUM_POINTS 100
 #define NUM_ITERATIONS 500
@@ -21,7 +22,7 @@ typedef struct
 static fp64e_t
 line_distance(Point p, fp64e_t m, fp64e_t b)
 {
-  return mojov_abs(m * p.x - p.y + b) / mojov_sqrt(m * m + fp64e_t(1.0));
+  return mojov_fabs(m * p.x - p.y + b) / mojov_sqrt(m * m + fp64e_t(1.0));
 }
 
 static void
@@ -41,7 +42,7 @@ ransac_line_fitting(Point points[], int numPoints,
     Point p1 = points[idx1];
     Point p2 = points[idx2];
 
-    if (mojov_abs(p2.x - p1.x).decrypt() < 1e-6)
+    if (mojov_fabs(p2.x - p1.x).decrypt() < 1e-6)
       continue;
 
     fp64e_t m = (p2.y - p1.y) / (p2.x - p1.x);
