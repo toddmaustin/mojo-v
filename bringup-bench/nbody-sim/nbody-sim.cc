@@ -7,6 +7,7 @@
 #define EXO_UINT64E_STORAGE_TYPE mojov_mem_fast_u64_t
 #define EXO_FP64E_STORAGE_TYPE mojov_mem_fast_fp64_t
 #include "mojov-exo.h"
+#include "mojov-math.h"
 
 #define BODIES 20u
 #define STEPS 80u
@@ -95,7 +96,7 @@ simulate_step(unsigned step)
       fp64e_t dz = pos_z[j] - pos_z[i];
 
       fp64e_t dist2 = dx * dx + dy * dy + dz * dz + SOFTENING;
-      fp64e_t inv_dist = 1.0 / libmin_sqrt(dist2);
+      fp64e_t inv_dist = 1.0 / mojov_sqrt(dist2);
       fp64e_t inv_dist3 = inv_dist * inv_dist * inv_dist;
       fp64e_t scale_i = GCONST * mass[j] * inv_dist3;
       fp64e_t scale_j = GCONST * mass[i] * inv_dist3;

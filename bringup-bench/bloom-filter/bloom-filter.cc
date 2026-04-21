@@ -9,8 +9,8 @@
 #include "mojov-exo.h"
 
 #define BLOOM_BITS 256u
-#define INSERT_COUNT 32u
-#define QUERY_COUNT 64u
+#define INSERT_COUNT 2*32u
+#define QUERY_COUNT 2*64u
 #define HASH_FUNCS 3u
 
 static uint64e_t bloom_filter[BLOOM_BITS];

@@ -9,7 +9,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 0 (fast)
 Bloom filter benchmark:
-  bits=256 inserts=32 hash_functions=3
-  true_positives=32/32
-  true_negatives=64/64
-  false_positives=0/64
+  bits=256 inserts=64 hash_functions=3
+  true_positives=64/64
+  true_negatives=109/128
+  false_positives=19/128
