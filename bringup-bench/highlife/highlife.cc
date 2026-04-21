@@ -16,7 +16,8 @@ constexpr unsigned kIterations = 1000;
 
 uint64e_t board_a[kRows][kCols];
 uint64e_t board_b[kRows][kCols];
-uint64_t final_board[kRows][kCols];
+
+using board_t = uint64e_t[kRows][kCols];
 
 inline unsigned wrap_row(int r) {
   return static_cast<unsigned>((r + static_cast<int>(kRows)) % static_cast<int>(kRows));
@@ -36,7 +37,7 @@ void init_board() {
   }
 }
 
-uint64e_t neighbor_count(uint64e_t board[kRows][kCols], unsigned r, unsigned c) {
+uint64e_t neighbor_count(board_t& board, unsigned r, unsigned c) {
   uint64e_t n = 0;
   for (int dr = -1; dr <= 1; ++dr) {
     for (int dc = -1; dc <= 1; ++dc) {
@@ -49,7 +50,7 @@ uint64e_t neighbor_count(uint64e_t board[kRows][kCols], unsigned r, unsigned c) 
   return n;
 }
 
-void step_highlife(uint64e_t cur[kRows][kCols], uint64e_t nxt[kRows][kCols]) {
+void step_highlife(board_t& cur, board_t& nxt) {
   for (unsigned r = 0; r < kRows; ++r) {
     for (unsigned c = 0; c < kCols; ++c) {
       const uint64e_t alive = cur[r][c];
@@ -61,33 +62,30 @@ void step_highlife(uint64e_t cur[kRows][kCols], uint64e_t nxt[kRows][kCols]) {
   }
 }
 
-void run_simulation() {
-  uint64e_t (*cur)[kCols] = board_a;
-  uint64e_t (*nxt)[kCols] = board_b;
+board_t& run_simulation() {
+  board_t* cur = &board_a;
+  board_t* nxt = &board_b;
 
   for (unsigned i = 0; i < kIterations; ++i) {
-    step_highlife(cur, nxt);
-    uint64e_t (*tmp)[kCols] = cur;
+    step_highlife(*cur, *nxt);
+    board_t* tmp = cur;
     cur = nxt;
     nxt = tmp;
   }
 
-  for (unsigned r = 0; r < kRows; ++r) {
-    for (unsigned c = 0; c < kCols; ++c) {
-      final_board[r][c] = cur[r][c].decrypt();
-    }
-  }
+  return *cur;
 }
 
-void print_final_board() {
+void print_board(board_t& board) {
   libmin_printf("HighLife %ux%u after %u iterations:\n", kRows, kCols, kIterations);
 
   unsigned alive_count = 0;
   for (unsigned r = 0; r < kRows; ++r) {
     for (unsigned c = 0; c < kCols; ++c) {
-      const char ch = final_board[r][c] ? '#' : '.';
+      const uint64_t cell = board[r][c].decrypt();
+      const char ch = cell ? '#' : '.';
       libmin_printf("%c", ch);
-      alive_count += static_cast<unsigned>(final_board[r][c]);
+      alive_count += static_cast<unsigned>(cell);
     }
     libmin_printf("\n");
   }
@@ -108,8 +106,8 @@ int main(void) {
     return -1;
 
   init_board();
-  run_simulation();
-  print_final_board();
+  board_t& final_board = run_simulation();
+  print_board(final_board);
 
   libmin_success();
   return 0;
