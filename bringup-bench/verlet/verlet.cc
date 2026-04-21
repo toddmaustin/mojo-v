@@ -71,11 +71,12 @@ vb_init(void)
   }
 }
 
+static VB_FP a_old[VB_N * VB_DIM];
+
 static void
 vb_step_avg(double dt)
 {
   const double half_dt2 = 0.5 * dt * dt;
-  static VB_FP a_old[VB_N * VB_DIM];
 
   for (int i = 0; i < VB_N * VB_DIM; ++i)
     a_old[i] = a[i];
@@ -141,7 +142,7 @@ main(void)
 
   uint64_t sum = vb_checksum();
 
-  libmin_printf("verlet2d: N=%d steps=%d dt=%g k=%g dim=%d fp=fp64e\n", VB_N, VB_STEPS, VB_DT, VB_K, VB_DIM);
+  libmin_printf("verlet2d: N=%d steps=%d dt=%f k=%f dim=%d fp=fp64e\n", VB_N, VB_STEPS, VB_DT, VB_K, VB_DIM);
   libmin_printf("checksum=0x%08x%08x\n", (uint32_t)(sum >> 32), (uint32_t)(sum & 0xFFFFFFFFu));
 
   libmin_success();

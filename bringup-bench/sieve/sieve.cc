@@ -23,9 +23,9 @@ typedef struct
 static sieve_result_t
 SIEVE(uint64e_t m, uint64e_t p)
 {
-  register long i, k;
-  register uint64e_t prime = 0;
-  register uint64e_t count = 0;
+  long i, k;
+  uint64e_t prime = 0;
+  uint64e_t count = 0;
   long size;
   sieve_result_t result;
 

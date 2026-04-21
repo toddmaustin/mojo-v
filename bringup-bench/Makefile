@@ -306,7 +306,7 @@ spike-build:
 	$(MAKE) -C target clean build
 
 MOJOV_TESTS = mojov-test mojov-test1 mojov-test2 mojov-test3 mojov-test4 mojov-test5 mojov-typetests mojov-sectests mojov-pctests mojov-mathtests mojov-stringtests
-MOJOV_APPS = bitonic-sort bubble-sort bubble-sort-strong distinctness distinctness-Onlog2n edit-distance eulers-approx fft-int flood-fill flood-fill-On2 gcd-list gemm gemm-strong grad-descent kadane kalman-filter kcore-decomp kepler-calc knapsack lda mersenne minspan nonlinear-nn nr-solver ntt-kernel pagerank parrondo primal-test private-join psi rabinkarp-search rad-to-deg randshell-sort risk-score shortest-path skeleton soundex string-search tea-cipher triangle-count highlife bloom-filter nbody-sim tiny-NN ransac packet-filter
+MOJOV_APPS = bitonic-sort bubble-sort bubble-sort-strong distinctness distinctness-Onlog2n edit-distance eulers-approx fft-int flood-fill flood-fill-On2 gcd-list gemm gemm-strong grad-descent kadane kalman-filter kcore-decomp kepler-calc knapsack lda mersenne minspan nonlinear-nn nr-solver ntt-kernel pagerank parrondo primal-test private-join psi rabinkarp-search rad-to-deg randshell-sort risk-score shortest-path skeleton soundex string-search tea-cipher triangle-count highlife bloom-filter nbody-sim tiny-NN ransac packet-filter heat-calc verlat sieve
 MOJOV_BMARKS = $(MOJOV_TESTS) $(MOJOV_APPS)
 
 mojov-tests:
