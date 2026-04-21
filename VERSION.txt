@@ -3,7 +3,7 @@
   - Added EXO library support for program-level development of Mojo-V applications, including new guidance for developing data-oblivious coding patterns.
     The EXO library allows programmers to specify Mojo-V programs using new encrypted data types added to C++.
   - Further extended the Mojo-V test suite, which now tests all instructions, proofcarrying data, EXO library, math library, and string library.
-  - Added 40+ Bringup-Bench benchmark ports to broaden workload coverage for Mojo-V software bring-up and evaluation.
+  - Added 50 Bringup-Bench benchmark ports to broaden workload coverage for Mojo-V software bring-up and evaluation.
   - Improved benchmark naming consistency and repository organization with follow-up cleanup and maintenance integration updates.
   - Fixed one bug in the Mojo-V reference Spike simulator where "mojov_en" was sometimes non-sticky, causing a Mojo-V program to leave secret computation
     and lose their secret data. Note, no security vulnerabilities were created with this bug, just silent loss of secret data.

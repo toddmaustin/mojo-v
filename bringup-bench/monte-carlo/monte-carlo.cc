@@ -36,8 +36,8 @@ main(void)
     y = (double)libmin_rand() / RAND_MAX;
 
     // Check if the point is inside the unit circle
-    if ((x * x + y * y).decrypt() <= 1.0)
-      count_inside_circle = count_inside_circle + 1;
+    uint64e_t pred = ((x * x + y * y) <= 1.0);
+    count_inside_circle = cmov(pred, count_inside_circle + 1, count_inside_circle);
   }
 
   // Estimate Pi
