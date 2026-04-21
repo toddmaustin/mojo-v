@@ -13,7 +13,6 @@
 #define NUM_STEPS 1000
 #define DT 0.01
 #define G 6.67430e-11
-#define EPS 1e-9
 
 typedef struct
 {
@@ -21,6 +20,19 @@ typedef struct
   fp64e_t pos[3];
   fp64e_t vel[3];
 } Particle;
+
+void
+print_bodies(Particle bodies[N_BODIES])
+{
+  for (int i = 0; i < N_BODIES; i++)
+  {
+    libmin_printf("Body %d:\n", i);
+    libmin_printf(" Position = (%lf, %lf, %lf) m\n", bodies[i].pos[0].decrypt(), bodies[i].pos[1].decrypt(),
+                  bodies[i].pos[2].decrypt());
+    libmin_printf(" Velocity = (%lf, %lf, %lf) m/s\n\n", bodies[i].vel[0].decrypt(), bodies[i].vel[1].decrypt(),
+                  bodies[i].vel[2].decrypt());
+  }
+}
 
 int
 main(void)
@@ -60,6 +72,9 @@ main(void)
 
   for (int step = 0; step < NUM_STEPS; step++)
   {
+    // libmin_printf("** Step %4u **\n", step);
+    // print_bodies(bodies);
+
     fp64e_t acc[N_BODIES][3];
     for (int i = 0; i < N_BODIES; i++)
       for (int k = 0; k < 3; k++)
@@ -78,11 +93,13 @@ main(void)
 
         fp64e_t r2 = dx * dx + dy * dy + dz * dz + EPS;
         fp64e_t r = mojov_sqrt(r2);
+        // libmin_printf("r2 = %lf, r = %lf\n", r2.decrypt(), r.decrypt());
 
         fp64e_t a = G * bodies[j].mass / r2;
         acc[i][0] = acc[i][0] + a * (dx / r);
         acc[i][1] = acc[i][1] + a * (dy / r);
         acc[i][2] = acc[i][2] + a * (dz / r);
+        // libmin_printf("acc[i][0] = %lf, acc[i][1] = %lf, acc[i][2] = %lf\n", acc[i][0].decrypt(), acc[i][1].decrypt(), acc[i][2].decrypt());
       }
     }
 
@@ -98,14 +115,7 @@ main(void)
   }
 
   libmin_printf("Final state after %d steps:\n", NUM_STEPS);
-  for (int i = 0; i < N_BODIES; i++)
-  {
-    libmin_printf("Body %d:\n", i);
-    libmin_printf(" Position = (%f, %f, %f) m\n", bodies[i].pos[0].decrypt(), bodies[i].pos[1].decrypt(),
-                  bodies[i].pos[2].decrypt());
-    libmin_printf(" Velocity = (%f, %f, %f) m/s\n\n", bodies[i].vel[0].decrypt(), bodies[i].vel[1].decrypt(),
-                  bodies[i].vel[2].decrypt());
-  }
+  print_bodies(bodies);
 
   libmin_success();
   return 0;
