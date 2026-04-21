@@ -42,23 +42,23 @@ ransac_line_fitting(Point points[], uint64e_t numPoints,
     Point p1 = points[idx1];
     Point p2 = points[idx2];
 
-    if (mojov_abs(p2.x - p1.x) < fp64e_t(1e-6))
-      continue;
-
-    fp64e_t m = (p2.y - p1.y) / (p2.x - p1.x);
+    fp64e_t dx = p2.x - p1.x;
+    uint64e_t valid_model = (mojov_abs(dx) >= fp64e_t(1e-6));
+    fp64e_t safe_dx = cmov(valid_model, dx, fp64e_t(1.0));
+    fp64e_t m = (p2.y - p1.y) / safe_dx;
     fp64e_t b = p1.y - m * p1.x;
 
     uint64e_t inlierCount = 0;
     for (int i = 0; i < numPointsPlain; i++)
-      if (line_distance(points[i], m, b) < fp64e_t(DIST_THRESHOLD))
-        inlierCount++;
-
-    if (inlierCount > *best_inlier_count)
     {
-      *best_inlier_count = inlierCount;
-      *best_m = m;
-      *best_b = b;
+      uint64e_t is_inlier = (line_distance(points[i], m, b) < fp64e_t(DIST_THRESHOLD));
+      inlierCount += (is_inlier & valid_model);
     }
+
+    uint64e_t is_better = (inlierCount > *best_inlier_count);
+    *best_inlier_count = cmov(is_better, inlierCount, *best_inlier_count);
+    *best_m = cmov(is_better, m, *best_m);
+    *best_b = cmov(is_better, b, *best_b);
   }
 }
 
