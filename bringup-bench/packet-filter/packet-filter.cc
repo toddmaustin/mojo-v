@@ -61,9 +61,9 @@ check_packet_filter(const Packet &pkt)
   uint32e_t first_octet = (pkt.dest_ip >> 24) & uint32e_t(0xFF);
   uint32e_t second_octet = (pkt.dest_ip >> 16) & uint32e_t(0xFF);
 
-  uint64e_t proto_ok = (pkt.protocol == uint16e_t(TCP_PROTOCOL));
-  uint64e_t first_ok = (first_octet == uint32e_t(FIXED_IP_FIRST));
-  uint64e_t second_ok = (second_octet == uint32e_t(FIXED_IP_SECOND));
+  uint64e_t proto_ok = (uint64e_t)(pkt.protocol == (uint16_t)TCP_PROTOCOL);
+  uint64e_t first_ok = (uint64e_t)(first_octet == FIXED_IP_FIRST);
+  uint64e_t second_ok = (second_octet == FIXED_IP_SECOND);
 
   return proto_ok & first_ok & second_ok;
 }
