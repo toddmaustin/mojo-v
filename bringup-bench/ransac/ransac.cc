@@ -25,18 +25,19 @@ line_distance(Point p, fp64e_t m, fp64e_t b)
 }
 
 static void
-ransac_line_fitting(Point points[], int numPoints,
+ransac_line_fitting(Point points[], uint64e_t numPoints,
                     fp64e_t *best_m, fp64e_t *best_b,
-                    int *best_inlier_count)
+                    uint64e_t *best_inlier_count)
 {
+  int numPointsPlain = (int)numPoints.decrypt();
   *best_inlier_count = 0;
 
   for (int iter = 0; iter < NUM_ITERATIONS; iter++)
   {
-    int idx1 = libmin_rand() % numPoints;
-    int idx2 = libmin_rand() % numPoints;
+    int idx1 = libmin_rand() % numPointsPlain;
+    int idx2 = libmin_rand() % numPointsPlain;
     while (idx2 == idx1)
-      idx2 = libmin_rand() % numPoints;
+      idx2 = libmin_rand() % numPointsPlain;
 
     Point p1 = points[idx1];
     Point p2 = points[idx2];
@@ -47,8 +48,8 @@ ransac_line_fitting(Point points[], int numPoints,
     fp64e_t m = (p2.y - p1.y) / (p2.x - p1.x);
     fp64e_t b = p1.y - m * p1.x;
 
-    int inlierCount = 0;
-    for (int i = 0; i < numPoints; i++)
+    uint64e_t inlierCount = 0;
+    for (int i = 0; i < numPointsPlain; i++)
       if (line_distance(points[i], m, b) < fp64e_t(DIST_THRESHOLD))
         inlierCount++;
 
@@ -95,12 +96,13 @@ main(void)
   }
 
   fp64e_t best_m = fp64e_t(0.0), best_b = fp64e_t(0.0);
-  int best_inlier_count = 0;
+  uint64e_t best_inlier_count = 0;
+  uint64e_t num_points = NUM_POINTS;
 
-  ransac_line_fitting(points, NUM_POINTS, &best_m, &best_b, &best_inlier_count);
+  ransac_line_fitting(points, num_points, &best_m, &best_b, &best_inlier_count);
 
   libmin_printf("RANSAC estimated line: y = %f * x + %f\n", best_m.decrypt(), best_b.decrypt());
-  libmin_printf("Number of inliers: %d / %d\n", best_inlier_count, NUM_POINTS);
+  libmin_printf("Number of inliers: %d / %d\n", (int)best_inlier_count.decrypt(), NUM_POINTS);
 
   libmin_success();
   return 0;
