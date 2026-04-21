@@ -19,3 +19,28 @@ Conifgure commands:
 
 Spike: 
   ../configure --prefix=$RISCV
+
+Safe disclosures:
+
+  Datagrant:
+
+// datagrant memory format
+union mojov_mem_datagrant_t {
+  struct {               // ciphertext
+    uint128_t ct_lo;       // ciphertext low 128-bits
+    uint128_t ct_hi;       // ciphertext high 128-bits
+  } ct;
+  struct { // 256-bits in size, 128-bit alignment
+    uint64_t dfhash; // datagrant dataflow hash value
+    uint64_t salt; // random salt
+    uint64_t auth_sig; // authentication signature (from contract) PLUS ONE
+    uint64_t metadata; // target-specific metadata (e.g., device hash, overflow flag)
+  } pt;
+};
+
+Disclosure Instruction:
+
+disc rd,rs,rt
+  rd - x1-s23  - disclosed 64-bit integer value
+  rs - x24-x31 - secret value to (attempt to) disclose
+  rt - ?? 
