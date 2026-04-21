@@ -34,16 +34,36 @@ main(void)
   if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
     return -1;
 
-  /* Entire simulated world is encrypted in fp64e_t-backed state. */
-  Particle bodies[N_BODIES] = {
-    {1e24, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}},
-    {1e24, {1e8, 0.0, 0.0}, {0.0, 1e3, 0.0}},
-    {1e24, {0.0, 1e8, 0.0}, {-1e3, 0.0, 0.0}},
+  const double init_mass[N_BODIES] = {1e24, 1e24, 1e24};
+  const double init_pos[N_BODIES][3] = {
+    {0.0, 0.0, 0.0},
+    {1e8, 0.0, 0.0},
+    {0.0, 1e8, 0.0},
   };
+  const double init_vel[N_BODIES][3] = {
+    {0.0, 0.0, 0.0},
+    {0.0, 1e3, 0.0},
+    {-1e3, 0.0, 0.0},
+  };
+
+  /* Entire simulated world is encrypted in fp64e_t-backed state. */
+  Particle bodies[N_BODIES];
+  for (int i = 0; i < N_BODIES; i++)
+  {
+    bodies[i].mass = init_mass[i];
+    for (int k = 0; k < 3; k++)
+    {
+      bodies[i].pos[k] = init_pos[i][k];
+      bodies[i].vel[k] = init_vel[i][k];
+    }
+  }
 
   for (int step = 0; step < NUM_STEPS; step++)
   {
-    fp64e_t acc[N_BODIES][3] = {{0.0}};
+    fp64e_t acc[N_BODIES][3];
+    for (int i = 0; i < N_BODIES; i++)
+      for (int k = 0; k < 3; k++)
+        acc[i][k] = 0.0;
 
     for (int i = 0; i < N_BODIES; i++)
     {
