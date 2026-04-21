@@ -9,53 +9,23 @@
 #include "mojov-exo.h"
 #include "mojov-math.h"
 
-#define BODIES 20u
-#define STEPS 80u
+#define N_BODIES 3
+#define NUM_STEPS 1000
 #define DT 0.01
-#define GCONST 1.0
-#define SOFTENING 0.0005
+#define G 6.67430e-11
 
-#define BLOOM_BITS 512u
-#define BLOOM_HASHES 3u
+#ifndef EPS
+#define EPS 1e-9
+#endif
 
-static fp64e_t pos_x[BODIES], pos_y[BODIES], pos_z[BODIES];
-static fp64e_t vel_x[BODIES], vel_y[BODIES], vel_z[BODIES];
-static fp64e_t mass[BODIES];
-
-// Bloom filter contents are encrypted in memory.
-static uint64e_t encounter_bloom[BLOOM_BITS];
-
-static inline uint64_t
-mix64(uint64_t x)
-{
-  x ^= x >> 33;
-  x *= 0xff51afd7ed558ccdULL;
-  x ^= x >> 33;
-  x *= 0xc4ceb9fe1a85ec53ULL;
-  x ^= x >> 33;
-  return x;
-}
-
-static inline uint64_t
-bloom_index(uint64_t pair_tag, unsigned which)
-{
-  return mix64(pair_tag + (uint64_t)(0x9e3779b97f4a7c15ULL * (which + 1))) % BLOOM_BITS;
-}
-
-static void
-bloom_record(uint64_t pair_tag)
-{
-  for (unsigned i = 0; i < BLOOM_HASHES; ++i)
-  {
-    uint64_t idx = bloom_index(pair_tag, i);
-    encounter_bloom[idx] = 1;
-  }
-}
+static fp64e_t pos_x[N_BODIES], pos_y[N_BODIES], pos_z[N_BODIES];
+static fp64e_t vel_x[N_BODIES], vel_y[N_BODIES], vel_z[N_BODIES];
+static fp64e_t mass[N_BODIES];
 
 static void
 init_system(void)
 {
-  for (unsigned i = 0; i < BODIES; ++i)
+  for (unsigned i = 0; i < N_BODIES; ++i)
   {
     double fi = (double)i;
     pos_x[i] = (fi - 10.0) * 0.07;
@@ -68,28 +38,25 @@ init_system(void)
 
     mass[i] = 0.8 + 0.03 * fi;
   }
-
-  for (unsigned i = 0; i < BLOOM_BITS; ++i)
-    encounter_bloom[i] = 0;
 }
 
 static void
 simulate_step(unsigned step)
 {
-  fp64e_t acc_x[BODIES];
-  fp64e_t acc_y[BODIES];
-  fp64e_t acc_z[BODIES];
+  fp64e_t acc_x[N_BODIES];
+  fp64e_t acc_y[N_BODIES];
+  fp64e_t acc_z[N_BODIES];
 
-  for (unsigned i = 0; i < BODIES; ++i)
+  for (unsigned i = 0; i < N_BODIES; ++i)
   {
     acc_x[i] = 0;
     acc_y[i] = 0;
     acc_z[i] = 0;
   }
 
-  for (unsigned i = 0; i < BODIES; ++i)
+  for (unsigned i = 0; i < N_BODIES; ++i)
   {
-    for (unsigned j = i + 1; j < BODIES; ++j)
+    for (unsigned j = i + 1; j < N_BODIES; ++j)
     {
       fp64e_t dx = pos_x[j] - pos_x[i];
       fp64e_t dy = pos_y[j] - pos_y[i];
@@ -108,16 +75,10 @@ simulate_step(unsigned step)
       acc_x[j] = acc_x[j] - dx * scale_j;
       acc_y[j] = acc_y[j] - dy * scale_j;
       acc_z[j] = acc_z[j] - dz * scale_j;
-
-      if (dist2.decrypt() < 0.02)
-      {
-        uint64_t tag = (((uint64_t)step) << 32) | (((uint64_t)i) << 16) | (uint64_t)j;
-        bloom_record(tag);
-      }
     }
   }
 
-  for (unsigned i = 0; i < BODIES; ++i)
+  for (unsigned i = 0; i < N_BODIES; ++i)
   {
     vel_x[i] = vel_x[i] + DT * acc_x[i];
     vel_y[i] = vel_y[i] + DT * acc_y[i];
@@ -141,35 +102,57 @@ main(void)
   if (debug_context(SIMON128_KEY, CONTRACT_SIG) != 0)
     return -1;
 
-  init_system();
+  Particle bodies[N_N_BODIES] = {
+    {1e24, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}},
+    {1e24, {1e8, 0.0, 0.0}, {0.0, 1e3, 0.0}},
+    {1e24, {0.0, 1e8, 0.0}, {-1e3, 0.0, 0.0}},
+  };
 
-  for (unsigned s = 0; s < STEPS; ++s)
-    simulate_step(s);
-
-  fp64e_t total_ke = 0;
-  fp64e_t momentum_x = 0;
-  fp64e_t momentum_y = 0;
-  fp64e_t momentum_z = 0;
-
-  for (unsigned i = 0; i < BODIES; ++i)
+  for (int step = 0; step < NUM_STEPS; step++)
   {
-    fp64e_t v2 = vel_x[i] * vel_x[i] + vel_y[i] * vel_y[i] + vel_z[i] * vel_z[i];
-    total_ke = total_ke + 0.5 * mass[i] * v2;
+    fp64e_t acc[N_N_BODIES][3] = {{0.0}};
 
-    momentum_x = momentum_x + mass[i] * vel_x[i];
-    momentum_y = momentum_y + mass[i] * vel_y[i];
-    momentum_z = momentum_z + mass[i] * vel_z[i];
+    for (int i = 0; i < N_BODIES; i++)
+    {
+      for (int j = 0; j < N_BODIES; j++)
+      {
+        if (i == j)
+          continue;
+
+        fp64e_t dx = bodies[j].pos[0] - bodies[i].pos[0];
+        fp64e_t dy = bodies[j].pos[1] - bodies[i].pos[1];
+        fp64e_t dz = bodies[j].pos[2] - bodies[i].pos[2];
+
+        fp64e_t r2 = dx * dx + dy * dy + dz * dz + EPS;
+        fp64e_t r = libmin_sqrt(r2);
+
+        fp64e_t a = G * bodies[j].mass / r2;
+        acc[i][0] = acc[i][0] + a * (dx / r);
+        acc[i][1] = acc[i][1] + a * (dy / r);
+        acc[i][2] = acc[i][2] + a * (dz / r);
+      }
+    }
+
+    for (int i = 0; i < N_BODIES; i++)
+    {
+      bodies[i].vel[0] = bodies[i].vel[0] + acc[i][0] * DT;
+      bodies[i].vel[1] = bodies[i].vel[1] + acc[i][1] * DT;
+      bodies[i].vel[2] = bodies[i].vel[2] + acc[i][2] * DT;
+      bodies[i].pos[0] = bodies[i].pos[0] + bodies[i].vel[0] * DT;
+      bodies[i].pos[1] = bodies[i].pos[1] + bodies[i].vel[1] * DT;
+      bodies[i].pos[2] = bodies[i].pos[2] + bodies[i].vel[2] * DT;
+    }
   }
 
-  unsigned bloom_set_bits = 0;
-  for (unsigned i = 0; i < BLOOM_BITS; ++i)
-    bloom_set_bits += (encounter_bloom[i] != 0).decrypt() ? 1u : 0u;
-
-  libmin_printf("N-body simulation benchmark:\n");
-  libmin_printf("  bodies=%u steps=%u dt=%lf\n", BODIES, STEPS, DT);
-  libmin_printf("  kinetic_energy=%lf\n", total_ke.decrypt());
-  libmin_printf("  momentum=(%lf,%lf,%lf)\n", momentum_x.decrypt(), momentum_y.decrypt(), momentum_z.decrypt());
-  libmin_printf("  encrypted_bloom_set_bits=%u/%u\n", bloom_set_bits, BLOOM_BITS);
+  libmin_printf("Final state after %d steps:\n", NUM_STEPS);
+  for (int i = 0; i < N_BODIES; i++)
+  {
+    libmin_printf("Body %d:\n", i);
+    libmin_printf(" Position = (%f, %f, %f) m\n", bodies[i].pos[0].decrypt(), bodies[i].pos[1].decrypt(),
+                  bodies[i].pos[2].decrypt());
+    libmin_printf(" Velocity = (%f, %f, %f) m/s\n\n", bodies[i].vel[0].decrypt(), bodies[i].vel[1].decrypt(),
+                  bodies[i].vel[2].decrypt());
+  }
 
   libmin_success();
   return 0;
