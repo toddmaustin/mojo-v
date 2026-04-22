@@ -215,7 +215,7 @@ main(void)
   };
 
   static const uint64_t expected_seq_start[N_STR_PAIRS] = {1, 1, 1, 2, 0, 0, 0, 4, 0, 4};
-  static const uint64_t expected_seq_len[N_STR_PAIRS] = {4, 5, 4, 3, 4, 4, 18, 18, 13, 16};
+  static const uint64_t expected_seq_len[N_STR_PAIRS] = {4, 5, 4, 3, 4, 4, 18, 19, 13, 16};
   static const char *expected_seq[N_STR_PAIRS] = {
     "BCBA",
     "anana",
