@@ -165,8 +165,6 @@ main(void)
   };
 
   uint64_t failures = 0;
-  uint64_t agg_start = 0;
-  uint64_t agg_len = 0;
   uint64_t got_starts[N_STRINGS];
   uint64_t got_lens[N_STRINGS];
 
@@ -188,40 +186,33 @@ main(void)
     uint64_t exp_len = 0;
     plain_longest_palindrome(plain_inputs[i], n, &exp_start, &exp_len);
 
-    libmin_printf("manacher-lps[%lu]: start=%lu len=%lu\n", i, got_start, got_len);
+    libmin_printf("manacher-lps[%2lu]: start=%2lu len=%2lu   ", i, got_start, got_len);
 
     got_starts[i] = got_start;
     got_lens[i] = got_len;
 
-    agg_start += got_start;
-    agg_len += got_len;
-
     if (got_start != exp_start || got_len != exp_len)
     {
       failures++;
-      libmin_printf("ERROR: mismatch i=%lu expected=(%lu,%lu) got=(%lu,%lu)\n",
+      libmin_printf("\nERROR: mismatch i=%2lu expected=(%2lu,%2lu) got=(%lu,%lu)\n",
         i, exp_start, exp_len, got_start, got_len);
+    }
+    else
+    {
+      char palindrome[MAX_STR_LEN + 1];
+      uint64_t pal_len = got_lens[i];
+      uint64_t pal_start = got_starts[i];
+
+      for (uint64_t j = 0; j < pal_len; ++j)
+        palindrome[j] = plain_inputs[i][pal_start + j];
+      palindrome[pal_len] = '\0';
+
+      libmin_printf("  string[%2lu]=\"%s\" longest=\"%s\"\n", i, plain_inputs[i], palindrome);
     }
   }
 
-  libmin_printf("manacher-lps: aggregate start=%lu len=%lu\n", agg_start, agg_len);
-
   if (failures != 0)
     return -1;
-
-  libmin_printf("manacher-lps: final string/palindrome summary\n");
-  for (uint64_t i = 0; i < N_STRINGS; ++i)
-  {
-    char palindrome[MAX_STR_LEN + 1];
-    uint64_t pal_len = got_lens[i];
-    uint64_t pal_start = got_starts[i];
-
-    for (uint64_t j = 0; j < pal_len; ++j)
-      palindrome[j] = plain_inputs[i][pal_start + j];
-    palindrome[pal_len] = '\0';
-
-    libmin_printf("  string[%lu]=\"%s\" longest=\"%s\"\n", i, plain_inputs[i], palindrome);
-  }
 
   libmin_success();
   return 0;

@@ -9,14 +9,13 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 0 (fast)
 manacher-lps: processing 10 encrypted strings
-manacher-lps[0]: start=1 len=5
-manacher-lps[1]: start=3 len=10
-manacher-lps[2]: start=0 len=3
-manacher-lps[3]: start=0 len=8
-manacher-lps[4]: start=5 len=7
-manacher-lps[5]: start=0 len=1
-manacher-lps[6]: start=1 len=9
-manacher-lps[7]: start=0 len=14
-manacher-lps[8]: start=5 len=6
-manacher-lps[9]: start=0 len=7
-manacher-lps: aggregate start=15 len=70
+manacher-lps[ 0]: start= 1 len= 5     string[ 0]="bananas" longest="anana"
+manacher-lps[ 1]: start= 3 len=10     string[ 1]="forgeeksskeegfor" longest="geeksskeeg"
+manacher-lps[ 2]: start= 0 len= 3     string[ 2]="abacdfgdcaba" longest="aba"
+manacher-lps[ 3]: start= 0 len= 8     string[ 3]="abbaabba" longest="abbaabba"
+manacher-lps[ 4]: start= 5 len= 7     string[ 4]="mojovracecarbenchmark" longest="racecar"
+manacher-lps[ 5]: start= 0 len= 1     string[ 5]="abcdef" longest="a"
+manacher-lps[ 6]: start= 1 len= 9     string[ 6]="aaaaabaaaa" longest="aaaabaaaa"
+manacher-lps[ 7]: start= 0 len=14     string[ 7]="neveroddoreven" longest="neveroddoreven"
+manacher-lps[ 8]: start= 5 len= 6     string[ 8]="xyzyx123321" longest="123321"
+manacher-lps[ 9]: start= 0 len= 7     string[ 9]="tacocatlevelstats" longest="tacocat"
