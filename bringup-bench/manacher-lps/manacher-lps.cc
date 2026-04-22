@@ -167,6 +167,8 @@ main(void)
   uint64_t failures = 0;
   uint64_t agg_start = 0;
   uint64_t agg_len = 0;
+  uint64_t got_starts[N_STRINGS];
+  uint64_t got_lens[N_STRINGS];
 
   libmin_printf("manacher-lps: processing %d encrypted strings\n", N_STRINGS);
 
@@ -188,6 +190,9 @@ main(void)
 
     libmin_printf("manacher-lps[%lu]: start=%lu len=%lu\n", i, got_start, got_len);
 
+    got_starts[i] = got_start;
+    got_lens[i] = got_len;
+
     agg_start += got_start;
     agg_len += got_len;
 
@@ -203,6 +208,20 @@ main(void)
 
   if (failures != 0)
     return -1;
+
+  libmin_printf("manacher-lps: final string/palindrome summary\n");
+  for (uint64_t i = 0; i < N_STRINGS; ++i)
+  {
+    char palindrome[MAX_STR_LEN + 1];
+    uint64_t pal_len = got_lens[i];
+    uint64_t pal_start = got_starts[i];
+
+    for (uint64_t j = 0; j < pal_len; ++j)
+      palindrome[j] = plain_inputs[i][pal_start + j];
+    palindrome[pal_len] = '\0';
+
+    libmin_printf("  string[%lu]=\"%s\" longest=\"%s\"\n", i, plain_inputs[i], palindrome);
+  }
 
   libmin_success();
   return 0;
