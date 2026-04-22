@@ -1,0 +1,23 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+LCS: processing 10 encrypted string pairs
+LCS pair[0]: A="ABCBDAB" B="BDCABA" => start=1 len=4 lcs="BCBA"
+LCS pair[1]: A="banana" B="ananas" => start=1 len=5 lcs="anana"
+LCS pair[2]: A="XMJYAUZ" B="MZJAWXU" => start=1 len=4 lcs="MJAU"
+LCS pair[3]: A="stone" B="longest" => start=2 len=3 lcs="one"
+LCS pair[4]: A="mojov" B="vmojo" => start=0 len=4 lcs="mojo"
+LCS pair[5]: A="encrypt" B="secret" => start=0 len=4 lcs="ecrt"
+LCS pair[6]: A="subsequenceanalysisbenchmark" B="securesequenceanalyticsmodel" => start=0 len=18 lcs="susequenceanalyise"
+LCS pair[7]: A="dataprivacypreservingsystems" B="privacyawarecomputingsystems" => start=4 len=19 lcs="privacyreingsystems"
+LCS pair[8]: A="abcdefghijklmnoqrstuvwxyz" B="acegikmoqsuwy" => start=0 len=13 lcs="acegikmoqsuwy"
+LCS pair[9]: A="ttttggccaattggccaattggccaa" B="ggccaattggccaatt" => start=4 len=16 lcs="ggccaattggccaatt"
+LCS totals: start_sum=13 len_sum=90
+LCS PASS: all expected start/len/string checks passed
