@@ -64,7 +64,7 @@ static stringe_t encrypt_fixed_string(const char *s, unsigned cap)
 static uint8e_t secret_char_at(const stringe_t &s, uint64e_t idx)
 {
   uint8e_t out(0);
-  for (unsigned j = 0; j < s.length(); ++j)
+  for (uint64_t j = 0; j < s.length(); ++j)
   {
     uint64e_t choose = (idx == uint64e_t(j)) && (uint64e_t(j) < s.size());
     out = cmov(choose, s[j], out);
@@ -75,7 +75,7 @@ static uint8e_t secret_char_at(const stringe_t &s, uint64e_t idx)
 static uint64e_t fuzzy_subsequence_match(const stringe_t &pattern, const stringe_t &text)
 {
   uint64e_t pi(0);
-  for (unsigned i = 0; i < text.length(); ++i)
+  for (uint64_t i = 0; i < text.length(); ++i)
   {
     uint64e_t text_in = uint64e_t(i) < text.size();
     uint64e_t pat_in = pi < pattern.size();
@@ -101,8 +101,8 @@ static void compute_match_bit_vector(
   {
     uint64e_t is_match = fuzzy_subsequence_match(pattern, entries[i]);
     unsigned w = i / 64;
-    unsigned b = i % 64;
-    uint64e_t mask = uint64e_t(1ULL << b);
+    uint64_t b = i % 64;
+    uint64e_t mask = uint64e_t(1ul << b);
     bitvec[w] = bitvec[w] | cmov(is_match, mask, uint64e_t(0));
   }
 }
