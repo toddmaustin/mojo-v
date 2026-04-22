@@ -214,9 +214,6 @@ main(void)
     "ggccaattggccaatt"
   };
 
-  static const uint64_t lhs_len[N_STR_PAIRS] = {7, 6, 7, 5, 5, 7, 28, 27, 25, 26};
-  static const uint64_t rhs_len[N_STR_PAIRS] = {6, 6, 7, 7, 5, 6, 26, 26, 13, 16};
-
   static const uint64_t expected_seq_start[N_STR_PAIRS] = {1, 1, 1, 2, 0, 0, 0, 4, 0, 4};
   static const uint64_t expected_seq_len[N_STR_PAIRS] = {4, 5, 4, 3, 4, 4, 18, 19, 13, 16};
   static const char *expected_seq[N_STR_PAIRS] = {
@@ -257,11 +254,21 @@ main(void)
 
   for (uint64_t i = 0; i < N_STR_PAIRS; ++i)
   {
-    stringe_t lhs = make_encrypted_string(lhs_plain[i], lhs_len[i]);
-    stringe_t rhs = make_encrypted_string(rhs_plain[i], rhs_len[i]);
+    uint64_t lhs_len = libmin_strlen(lhs_plain[i]);
+    uint64_t rhs_len = libmin_strlen(rhs_plain[i]);
 
-    MatchResult lcseq = lcseq_start_and_length(lhs, rhs, lhs_len[i], rhs_len[i]);
-    MatchResult lcsub = lcsub_start_and_length(lhs, rhs, lhs_len[i], rhs_len[i]);
+    if (lhs_len > MAX_STR_LEN || rhs_len > MAX_STR_LEN)
+    {
+      libmin_printf("LCS FAIL: pair[%lu] input exceeds MAX_STR_LEN=%d (lhs_len=%lu rhs_len=%lu)\n",
+        (unsigned long)i, MAX_STR_LEN, (unsigned long)lhs_len, (unsigned long)rhs_len);
+      return -1;
+    }
+
+    stringe_t lhs = make_encrypted_string(lhs_plain[i], lhs_len);
+    stringe_t rhs = make_encrypted_string(rhs_plain[i], rhs_len);
+
+    MatchResult lcseq = lcseq_start_and_length(lhs, rhs, lhs_len, rhs_len);
+    MatchResult lcsub = lcsub_start_and_length(lhs, rhs, lhs_len, rhs_len);
 
     uint64_t seq_start = u64(lcseq.start_index);
     uint64_t seq_len = u64(lcseq.length);
@@ -270,7 +277,7 @@ main(void)
 
     char lcseq_buf[MAX_STR_LEN + 1];
     char lcsub_buf[MAX_STR_LEN + 1];
-    lcseq_string_plain(lhs_plain[i], rhs_plain[i], lhs_len[i], rhs_len[i], lcseq_buf);
+    lcseq_string_plain(lhs_plain[i], rhs_plain[i], lhs_len, rhs_len, lcseq_buf);
     slice_plain(lhs_plain[i], sub_start, sub_len, lcsub_buf);
 
     total_seq_start += seq_start;
