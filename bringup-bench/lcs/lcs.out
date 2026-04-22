@@ -9,15 +9,15 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 0 (fast)
 LCS: processing 10 encrypted string pairs
-LCS pair[0]: A="ABCBDAB" B="BDCABA" => start=1 len=4 lcs="BCBA"
-LCS pair[1]: A="banana" B="ananas" => start=1 len=5 lcs="anana"
-LCS pair[2]: A="XMJYAUZ" B="MZJAWXU" => start=1 len=4 lcs="MJAU"
-LCS pair[3]: A="stone" B="longest" => start=2 len=3 lcs="one"
-LCS pair[4]: A="mojov" B="vmojo" => start=0 len=4 lcs="mojo"
-LCS pair[5]: A="encrypt" B="secret" => start=0 len=4 lcs="ecrt"
-LCS pair[6]: A="subsequenceanalysisbenchmark" B="securesequenceanalyticsmodel" => start=0 len=18 lcs="susequenceanalyise"
-LCS pair[7]: A="dataprivacypreservingsystems" B="privacyawarecomputingsystems" => start=4 len=19 lcs="privacyreingsystems"
-LCS pair[8]: A="abcdefghijklmnoqrstuvwxyz" B="acegikmoqsuwy" => start=0 len=13 lcs="acegikmoqsuwy"
-LCS pair[9]: A="ttttggccaattggccaattggccaa" B="ggccaattggccaatt" => start=4 len=16 lcs="ggccaattggccaatt"
-LCS totals: start_sum=13 len_sum=90
-LCS PASS: all expected start/len/string checks passed
+LCS pair[0]: A="ABCBDAB" B="BDCABA" => LCseq(start=1,len=4,LCseq="BCBA") LCsub(start=0,len=2,LCsub="AB")
+LCS pair[1]: A="banana" B="ananas" => LCseq(start=1,len=5,LCseq="anana") LCsub(start=1,len=5,LCsub="anana")
+LCS pair[2]: A="XMJYAUZ" B="MZJAWXU" => LCseq(start=1,len=4,LCseq="MJAU") LCsub(start=0,len=1,LCsub="X")
+LCS pair[3]: A="stone" B="longest" => LCseq(start=2,len=3,LCseq="one") LCsub(start=0,len=2,LCsub="st")
+LCS pair[4]: A="mojov" B="vmojo" => LCseq(start=0,len=4,LCseq="mojo") LCsub(start=0,len=4,LCsub="mojo")
+LCS pair[5]: A="encrypt" B="secret" => LCseq(start=0,len=4,LCseq="ecrt") LCsub(start=2,len=2,LCsub="cr")
+LCS pair[6]: A="subsequenceanalysisbenchmark" B="securesequenceanalyticsmodel" => LCseq(start=0,len=18,LCseq="susequenceanalyise") LCsub(start=3,len=13,LCsub="sequenceanaly")
+LCS pair[7]: A="dataprivacypreservingsystems" B="privacyawarecomputingsystems" => LCseq(start=4,len=19,LCseq="privacyreingsystems") LCsub(start=18,len=10,LCsub="ingsystems")
+LCS pair[8]: A="abcdefghijklmnoqrstuvwxyz" B="acegikmoqsuwy" => LCseq(start=0,len=13,LCseq="acegikmoqsuwy") LCsub(start=14,len=2,LCsub="oq")
+LCS pair[9]: A="ttttggccaattggccaattggccaa" B="ggccaattggccaatt" => LCseq(start=4,len=16,LCseq="ggccaattggccaatt") LCsub(start=4,len=16,LCsub="ggccaattggccaatt")
+LCS totals: LCseq_start_sum=13 LCseq_len_sum=90 LCsub_start_sum=42 LCsub_len_sum=57
+LCS PASS: all expected LCseq/LCsub checks passed
