@@ -57,7 +57,7 @@ static const RegexAutomaton kAutomata[kNumAutomata] = {
     "ab+c",
     5,
     0,
-    4,
+    3,
     {
       {1, 4, 4, 4}, // 0
       {4, 2, 4, 4}, // 1
