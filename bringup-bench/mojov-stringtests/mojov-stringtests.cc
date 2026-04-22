@@ -97,6 +97,7 @@ int main(void)
   check_bool("operator+ length", sum.length() == 8);
 
   stringe_t over_l = make_string("abcde", 5, 5);
+  over_l.push_back(uint8e_t('l'));
   stringe_t over_r = make_string("XYZ", 3, 3);
   stringe_t over_sum = over_l + over_r;
   check_bool("operator+ overflow sticky exception", u64(over_sum.exception()) != 0);
@@ -124,7 +125,7 @@ int main(void)
   check_bool("compare prefix longer greater", i64(lex2.compare(lex1)) > 0);
 
   // find/rfind and variants
-  stringe_t txt = make_string("bananaband", 9, 16);
+  stringe_t txt = make_string("bananaband", 10, 16);
   stringe_t needle = make_string("ana", 3, 8);
   check_bool("find substring", u64(txt.find(needle)) == 1);
   check_bool("rfind substring", u64(txt.rfind(needle)) == 3);
@@ -146,7 +147,7 @@ int main(void)
   check_bool("find_last_of missing", u64(txt.find_last_of(make_string("xyz", 3, 8))) == npos64());
   check_bool("find_first_not_of", u64(txt.find_first_not_of(vowels)) == 0);
   check_bool("find_first_not_of(pos)", u64(txt.find_first_not_of(vowels, uint64e_t(1))) == 2);
-  check_bool("find_last_not_of", u64(txt.find_last_not_of(vowels)) == 8);
+  check_bool("find_last_not_of", u64(txt.find_last_not_of(vowels)) == 9);
   check_bool("find_first_of(char)", u64(txt.find_first_of(uint8e_t('n'))) == 2);
   check_bool("find_first_of(char,pos)", u64(txt.find_first_of(uint8e_t('a'), uint64e_t(2))) == 3);
   check_bool("find_last_of(char)", u64(txt.find_last_of(uint8e_t('a'))) == 7);
@@ -159,14 +160,15 @@ int main(void)
   check_bool("substr size", u64(sub.size()) == 4);
   check_bool("substr[0]", u8(sub[0]) == (uint8_t)'n');
   check_bool("starts_with", u64(txt.starts_with(make_string("ban", 3, 8))) == /* true */1);
-  check_bool("ends_with", u64(txt.ends_with(make_string("band", 4, 8))) == /* false */0);
+  check_bool("ends_with", u64(txt.ends_with(make_string("band", 4, 8))) == /* true */1);
   check_bool("contains true", u64(txt.contains(make_string("nab", 3, 8))) == /* true */1);
   check_bool("contains false", u64(txt.contains(make_string("zzz", 3, 8))) == /* false */0);
 
   stringe_t tail = txt.substr(uint64e_t(7), 4);
-  check_bool("substr tail size clipped", u64(tail.size()) == 2);
-  check_bool("substr tail first", u8(tail[0]) == (uint8_t)'n');
-  check_bool("substr tail second", u8(tail[1]) == (uint8_t)'d');
+  check_bool("substr tail size clipped", u64(tail.size()) == 3);
+  check_bool("substr tail first", u8(tail[0]) == (uint8_t)'a');
+  check_bool("substr tail second", u8(tail[1]) == (uint8_t)'n');
+  check_bool("substr tail third", u8(tail[2]) == (uint8_t)'d');
   stringe_t empty_sub = txt.substr(uint64e_t(12), 5);
   check_bool("substr out-of-range empty size", u64(empty_sub.size()) == 0);
   check_bool("substr out-of-range length", empty_sub.length() == 5);
@@ -176,7 +178,7 @@ int main(void)
 
   stringe_t empty = make_string("", 0, 6);
   check_bool("find empty needle returns pos", u64(txt.find(empty, uint64e_t(4))) == 4);
-  check_bool("rfind empty needle default pos=size", u64(txt.rfind(empty)) == 9);
+  check_bool("rfind empty needle default pos=size", u64(txt.rfind(empty)) == 10);
   check_bool("rfind empty needle explicit pos", u64(txt.rfind(empty, uint64e_t(3))) == 3);
   check_bool("find empty char set npos", u64(txt.find_first_of(empty)) == npos64());
   check_bool("find_first_not_of(empty) => 0", u64(txt.find_first_not_of(empty)) == 0);
