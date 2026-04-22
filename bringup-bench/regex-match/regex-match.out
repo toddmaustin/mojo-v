@@ -1,27 +1,154 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
 regex `ab*c` matches:
-  ac
-  abc
-  abbbc
-  abbc
-  abbbbc
+  ac => MATCH
+  abc => MATCH
+  abbbc => MATCH
+  axc => NO MATCH
+  abbc => MATCH
+  abx => NO MATCH
+  abbbbc => MATCH
+  abbbcdef => NO MATCH
+  abbbc! => NO MATCH
+  abbbc? => NO MATCH
+  a12c => NO MATCH
+  a!@#$%^&*()_+c => NO MATCH
+  a!b!c => NO MATCH
+  acc => NO MATCH
+  a => NO MATCH
+  c => NO MATCH
+  bc => NO MATCH
+  cab => NO MATCH
+  bbb => NO MATCH
+  cccc => NO MATCH
+  baac => NO MATCH
+  ab => NO MATCH
+  acb => NO MATCH
+  a_cx => NO MATCH
+  zzzz => NO MATCH
+  abdc => NO MATCH
+  aac => NO MATCH
+  adcx => NO MATCH
+  abbbcx => NO MATCH
+  abb => NO MATCH
+  axbc => NO MATCH
+  aXbc => NO MATCH
+  aaac => NO MATCH
 total matches: 5
 
 regex `a.c` matches:
-  abc
-  axc
-  acc
-total matches: 3
+  ac => NO MATCH
+  abc => MATCH
+  abbbc => NO MATCH
+  axc => MATCH
+  abbc => NO MATCH
+  abx => NO MATCH
+  abbbbc => NO MATCH
+  abbbcdef => NO MATCH
+  abbbc! => NO MATCH
+  abbbc? => NO MATCH
+  a12c => NO MATCH
+  a!@#$%^&*()_+c => NO MATCH
+  a!b!c => NO MATCH
+  acc => MATCH
+  a => NO MATCH
+  c => NO MATCH
+  bc => NO MATCH
+  cab => NO MATCH
+  bbb => NO MATCH
+  cccc => NO MATCH
+  baac => NO MATCH
+  ab => NO MATCH
+  acb => NO MATCH
+  a_cx => NO MATCH
+  zzzz => NO MATCH
+  abdc => NO MATCH
+  aac => MATCH
+  adcx => NO MATCH
+  abbbcx => NO MATCH
+  abb => NO MATCH
+  axbc => NO MATCH
+  aXbc => NO MATCH
+  aaac => NO MATCH
+total matches: 4
 
 regex `ab+c` matches:
-  abc
-  abbbc
-  abbc
-  abbbbc
+  ac => NO MATCH
+  abc => MATCH
+  abbbc => MATCH
+  axc => NO MATCH
+  abbc => MATCH
+  abx => NO MATCH
+  abbbbc => MATCH
+  abbbcdef => NO MATCH
+  abbbc! => NO MATCH
+  abbbc? => NO MATCH
+  a12c => NO MATCH
+  a!@#$%^&*()_+c => NO MATCH
+  a!b!c => NO MATCH
+  acc => NO MATCH
+  a => NO MATCH
+  c => NO MATCH
+  bc => NO MATCH
+  cab => NO MATCH
+  bbb => NO MATCH
+  cccc => NO MATCH
+  baac => NO MATCH
+  ab => NO MATCH
+  acb => NO MATCH
+  a_cx => NO MATCH
+  zzzz => NO MATCH
+  abdc => NO MATCH
+  aac => NO MATCH
+  adcx => NO MATCH
+  abbbcx => NO MATCH
+  abb => NO MATCH
+  axbc => NO MATCH
+  aXbc => NO MATCH
+  aaac => NO MATCH
 total matches: 4
 
 regex `a[^abc]*c` matches:
-  ac
-  axc
-  a12c
-  a!@#$%^&*()_+c
+  ac => MATCH
+  abc => NO MATCH
+  abbbc => NO MATCH
+  axc => MATCH
+  abbc => NO MATCH
+  abx => NO MATCH
+  abbbbc => NO MATCH
+  abbbcdef => NO MATCH
+  abbbc! => NO MATCH
+  abbbc? => NO MATCH
+  a12c => MATCH
+  a!@#$%^&*()_+c => MATCH
+  a!b!c => NO MATCH
+  acc => NO MATCH
+  a => NO MATCH
+  c => NO MATCH
+  bc => NO MATCH
+  cab => NO MATCH
+  bbb => NO MATCH
+  cccc => NO MATCH
+  baac => NO MATCH
+  ab => NO MATCH
+  acb => NO MATCH
+  a_cx => NO MATCH
+  zzzz => NO MATCH
+  abdc => NO MATCH
+  aac => NO MATCH
+  adcx => NO MATCH
+  abbbcx => NO MATCH
+  abb => NO MATCH
+  axbc => NO MATCH
+  aXbc => NO MATCH
+  aaac => NO MATCH
 total matches: 4
+

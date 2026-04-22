@@ -200,12 +200,11 @@ int main(void)
     for (unsigned i = 0; i < kNumTexts; ++i)
     {
       uint64_t is_match = secret_match(kAutomata[a], texts[i]).decrypt();
-
       if (is_match)
-      {
-        libmin_printf("  %s\n", kPlainTexts[i]);
         matches++;
-      }
+      libmin_printf("  %s => %s\n",
+                    kPlainTexts[i],
+                    is_match != 0 ? "MATCH" : "NO MATCH");
     }
 
     libmin_printf("total matches: %lu\n\n", matches);
