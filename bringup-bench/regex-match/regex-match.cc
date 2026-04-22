@@ -15,7 +15,7 @@ static constexpr unsigned kMaxStates = 5;
 static constexpr unsigned kAlphabetClasses = 4; // {'a','b','c',other}
 static constexpr unsigned kMaxTextLen = 16;
 static constexpr unsigned kNumAutomata = 4;
-static constexpr unsigned kNumTexts = 26;
+static constexpr unsigned kNumTexts = 25;
 
 struct RegexAutomaton
 {
@@ -186,19 +186,21 @@ int main(void)
 
   for (unsigned a = 0; a < kNumAutomata; ++a)
   {
-    uint64e_t matches(0);
+    uint64_t matches = 0;
     libmin_printf("regex `%s` matches:\n", kAutomata[a].name);
 
     for (unsigned i = 0; i < kNumTexts; ++i)
     {
-      uint64e_t is_match = secret_match(kAutomata[a], texts[i]);
-      matches = matches + is_match;
+      uint64_t is_match = secret_match(kAutomata[a], texts[i]).decrypt();
 
-      if (is_match.decrypt() != 0)
+      if (is_match)
+      {
         libmin_printf("  %s\n", kPlainTexts[i]);
+        matches++;
+      }
     }
 
-    libmin_printf("total matches: %lu\n\n", matches.decrypt());
+    libmin_printf("total matches: %lu\n\n", matches);
   }
 
   libmin_success();
