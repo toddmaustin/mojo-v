@@ -15,7 +15,7 @@ static constexpr unsigned kMaxStates = 5;
 static constexpr unsigned kAlphabetClasses = 4; // {'a','b','c',other}
 static constexpr unsigned kMaxTextLen = 16;
 static constexpr unsigned kNumAutomata = 4;
-static constexpr unsigned kNumTexts = 26;
+static constexpr unsigned kNumTexts = 25;
 
 struct RegexAutomaton
 {
@@ -57,7 +57,7 @@ static const RegexAutomaton kAutomata[kNumAutomata] = {
     "ab+c",
     5,
     0,
-    4,
+    3,
     {
       {1, 4, 4, 4}, // 0
       {4, 2, 4, 4}, // 1
@@ -122,7 +122,7 @@ static void secret_classify_char(uint8e_t ch, uint64e_t &is_a, uint64e_t &is_b, 
   is_a = (uint64e_t)(ch == uint8e_t('a'));
   is_b = (uint64e_t)(ch == uint8e_t('b'));
   is_c = (uint64e_t)(ch == uint8e_t('c'));
-  is_other = uint64e_t(1) ^ (is_a | is_b | is_c);
+  is_other = !(is_a || is_b || is_c);
 }
 
 static uint64e_t secret_match(const RegexAutomaton &aut, const stringe_t &text)
@@ -159,8 +159,8 @@ static uint64e_t secret_match(const RegexAutomaton &aut, const stringe_t &text)
         uint64e_t on_c = uint64e_t(aut.trans[t][2] == s);
         uint64e_t on_o = uint64e_t(aut.trans[t][3] == s);
 
-        uint64e_t edge = (is_a & on_a) | (is_b & on_b) | (is_c & on_c) | (is_other & on_o);
-        next_active[s] = next_active[s] | (active[t] & edge);
+        uint64e_t edge = (is_a && on_a) || (is_b && on_b) || (is_c && on_c) || (is_other && on_o);
+        next_active[s] = next_active[s] || (active[t] && edge);
       }
     }
 
