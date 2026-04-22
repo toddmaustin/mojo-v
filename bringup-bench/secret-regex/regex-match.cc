@@ -83,7 +83,7 @@ static uint64e_t secret_match(const RegexAutomaton &aut, const stringe_t &text)
   for (unsigned s = 0; s < kMaxStates; ++s)
     active[s] = uint64e_t(s == aut.start_state ? 1 : 0);
 
-  for (unsigned i = 0; i < kMaxTextLen; ++i)
+  for (uint64_t i = 0; i < kMaxTextLen; ++i)
   {
     uint64e_t process = uint64e_t(i) < text.size();
 
