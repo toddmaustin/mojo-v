@@ -159,8 +159,8 @@ static uint64e_t secret_match(const RegexAutomaton &aut, const stringe_t &text)
         uint64e_t on_c = uint64e_t(aut.trans[t][2] == s);
         uint64e_t on_o = uint64e_t(aut.trans[t][3] == s);
 
-        uint64e_t edge = (is_a & on_a) | (is_b & on_b) | (is_c & on_c) | (is_other & on_o);
-        next_active[s] = next_active[s] | (active[t] & edge);
+        uint64e_t edge = (is_a && on_a) || (is_b && on_b) || (is_c && on_c) || (is_other && on_o);
+        next_active[s] = next_active[s] || (active[t] && edge);
       }
     }
 
