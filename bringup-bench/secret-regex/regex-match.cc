@@ -14,8 +14,8 @@ using namespace exo;
 static constexpr unsigned kMaxStates = 5;
 static constexpr unsigned kAlphabetClasses = 4; // {'a','b','c',other}
 static constexpr unsigned kMaxTextLen = 16;
-static constexpr unsigned kNumAutomata = 2;
-static constexpr unsigned kNumTexts = 6;
+static constexpr unsigned kNumAutomata = 4;
+static constexpr unsigned kNumTexts = 26;
 
 struct RegexAutomaton
 {
@@ -52,11 +52,61 @@ static const RegexAutomaton kAutomata[kNumAutomata] = {
       {4, 4, 4, 4}, // 3 accept -> consume more => reject
       {4, 4, 4, 4}  // 4 sink
     }
+  },
+  {
+    "ab+c",
+    5,
+    0,
+    4,
+    {
+      {1, 4, 4, 4}, // 0
+      {4, 2, 4, 4}, // 1
+      {4, 2, 3, 4}, // 2
+      {4, 4, 4, 4}, // 3 accept -> consume more => reject
+      {4, 4, 4, 4}  // 4 sink
+    }
+  },
+  {
+    "a[^abc]*c",
+    4,
+    0,
+    3,
+    {
+      {1, 2, 2, 2}, // 0
+      {2, 2, 3, 1}, // 1
+      {2, 2, 2, 2}, // 2 sink
+      {2, 2, 2, 2}, // 3 accept -> consume more => reject
+      {0, 0, 0, 0}
+    }
   }
 };
 
 static const char *kPlainTexts[kNumTexts] = {
-  "ac", "abc", "abbbc", "axc", "abbc", "abx"
+  "ac",
+  "abc",
+  "abbbc",
+  "axc",
+  "abbc",
+  "abx",
+  "abbbbc",
+  "abbbcdef",
+  "abbbc!",
+  "abbbc?",
+  "a12c",
+  "a!@#$%^&*()_+c",
+  "a!b!c",
+  "acc",
+  "a",
+  "c",
+  "bc",
+  "cab",
+  "bbb",
+  "cccc",
+  "baac",
+  "ab",
+  "acb",
+  "a_cx",
+  "zzzz"
 };
 
 static stringe_t encrypt_fixed_text(const char *s)
