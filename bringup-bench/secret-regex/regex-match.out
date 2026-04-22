@@ -3,10 +3,25 @@ regex `ab*c` matches:
   abc
   abbbc
   abbc
-total matches: 4
+  abbbbc
+total matches: 5
 
 regex `a.c` matches:
   abc
   axc
-total matches: 2
+  acc
+total matches: 3
 
+regex `ab+c` matches:
+  abc
+  abbbc
+  abbc
+  abbbbc
+total matches: 4
+
+regex `a[^abc]*c` matches:
+  ac
+  axc
+  a12c
+  a!@#$%^&*()_+c
+total matches: 4
