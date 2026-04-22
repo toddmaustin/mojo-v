@@ -14,7 +14,7 @@ using namespace exo;
 #define MAX_STR_LEN 48
 #define N_STR_PAIRS 10
 
-struct LcsResult {
+struct MatchResult {
   uint64e_t start_index;
   uint64e_t length;
 };
@@ -39,8 +39,8 @@ is_better_choice(uint64e_t cand_len, uint64e_t cand_start, uint64e_t cur_len, ui
   return longer || (same_len && earlier);
 }
 
-static LcsResult
-lcs_start_and_length(const stringe_t &lhs, const stringe_t &rhs, uint64_t lhs_len, uint64_t rhs_len)
+static MatchResult
+lcseq_start_and_length(const stringe_t &lhs, const stringe_t &rhs, uint64_t lhs_len, uint64_t rhs_len)
 {
   uint64e_t dp[MAX_STR_LEN + 1][MAX_STR_LEN + 1];
   uint64e_t start[MAX_STR_LEN + 1][MAX_STR_LEN + 1];
@@ -85,14 +85,50 @@ lcs_start_and_length(const stringe_t &lhs, const stringe_t &rhs, uint64_t lhs_le
     }
   }
 
-  LcsResult ret;
+  MatchResult ret;
   ret.start_index = cmov(dp[lhs_len][rhs_len] == 0, uint64e_t(lhs_len), start[lhs_len][rhs_len]);
   ret.length = dp[lhs_len][rhs_len];
   return ret;
 }
 
+static MatchResult
+lcsub_start_and_length(const stringe_t &lhs, const stringe_t &rhs, uint64_t lhs_len, uint64_t rhs_len)
+{
+  uint64e_t dp[MAX_STR_LEN + 1][MAX_STR_LEN + 1];
+  uint64e_t best_len = 0;
+  uint64e_t best_start = lhs_len;
+
+  for (uint64_t i = 0; i <= lhs_len; ++i)
+  {
+    for (uint64_t j = 0; j <= rhs_len; ++j)
+      dp[i][j] = 0;
+  }
+
+  for (uint64_t i = 1; i <= lhs_len; ++i)
+  {
+    for (uint64_t j = 1; j <= rhs_len; ++j)
+    {
+      uint64e_t match = lhs[i - 1] == rhs[j - 1];
+      uint64e_t cand_len = dp[i - 1][j - 1] + 1;
+      uint64e_t run_len = cmov(match, cand_len, uint64e_t(0));
+      dp[i][j] = run_len;
+
+      uint64e_t cand_start = uint64e_t(i) - run_len;
+      uint64e_t better = is_better_choice(run_len, cand_start, best_len, best_start);
+      uint64e_t take = (run_len > 0) && better;
+      best_len = cmov(take, run_len, best_len);
+      best_start = cmov(take, cand_start, best_start);
+    }
+  }
+
+  MatchResult ret;
+  ret.start_index = cmov(best_len == 0, uint64e_t(lhs_len), best_start);
+  ret.length = best_len;
+  return ret;
+}
+
 static void
-lcs_string_plain(const char *lhs, const char *rhs, uint64_t lhs_len, uint64_t rhs_len, char out[MAX_STR_LEN + 1])
+lcseq_string_plain(const char *lhs, const char *rhs, uint64_t lhs_len, uint64_t rhs_len, char out[MAX_STR_LEN + 1])
 {
   uint16_t dp[MAX_STR_LEN + 1][MAX_STR_LEN + 1];
 
@@ -134,6 +170,14 @@ lcs_string_plain(const char *lhs, const char *rhs, uint64_t lhs_len, uint64_t rh
   }
 }
 
+static void
+slice_plain(const char *src, uint64_t start, uint64_t len, char out[MAX_STR_LEN + 1])
+{
+  for (uint64_t i = 0; i < len; ++i)
+    out[i] = src[start + i];
+  out[len] = '\0';
+}
+
 int
 main(void)
 {
@@ -172,9 +216,10 @@ main(void)
 
   static const uint64_t lhs_len[N_STR_PAIRS] = {7, 6, 7, 5, 5, 7, 28, 27, 25, 26};
   static const uint64_t rhs_len[N_STR_PAIRS] = {6, 6, 7, 7, 5, 6, 26, 26, 13, 16};
-  static const uint64_t expected_start[N_STR_PAIRS] = {1, 1, 1, 2, 0, 0, 0, 4, 0, 4};
-  static const uint64_t expected_len[N_STR_PAIRS] = {4, 5, 4, 3, 4, 4, 18, 19, 13, 16};
-  static const char *expected_lcs[N_STR_PAIRS] = {
+
+  static const uint64_t expected_seq_start[N_STR_PAIRS] = {1, 1, 1, 2, 0, 0, 0, 4, 0, 4};
+  static const uint64_t expected_seq_len[N_STR_PAIRS] = {4, 5, 4, 3, 4, 4, 18, 19, 13, 16};
+  static const char *expected_seq[N_STR_PAIRS] = {
     "BCBA",
     "anana",
     "MJAU",
@@ -187,8 +232,25 @@ main(void)
     "ggccaattggccaatt"
   };
 
-  uint64_t total_len = 0;
-  uint64_t total_start = 0;
+  static const uint64_t expected_sub_start[N_STR_PAIRS] = {0, 1, 0, 0, 0, 2, 3, 18, 14, 4};
+  static const uint64_t expected_sub_len[N_STR_PAIRS] = {2, 5, 1, 2, 4, 2, 13, 10, 2, 16};
+  static const char *expected_sub[N_STR_PAIRS] = {
+    "AB",
+    "anana",
+    "X",
+    "st",
+    "mojo",
+    "cr",
+    "sequenceanaly",
+    "ingsystems",
+    "oq",
+    "ggccaattggccaatt"
+  };
+
+  uint64_t total_seq_len = 0;
+  uint64_t total_seq_start = 0;
+  uint64_t total_sub_len = 0;
+  uint64_t total_sub_start = 0;
   uint64_t failures = 0;
 
   libmin_printf("LCS: processing %d encrypted string pairs\n", N_STR_PAIRS);
@@ -198,25 +260,40 @@ main(void)
     stringe_t lhs = make_encrypted_string(lhs_plain[i], lhs_len[i]);
     stringe_t rhs = make_encrypted_string(rhs_plain[i], rhs_len[i]);
 
-    LcsResult res = lcs_start_and_length(lhs, rhs, lhs_len[i], rhs_len[i]);
-    uint64_t start = u64(res.start_index);
-    uint64_t len = u64(res.length);
+    MatchResult lcseq = lcseq_start_and_length(lhs, rhs, lhs_len[i], rhs_len[i]);
+    MatchResult lcsub = lcsub_start_and_length(lhs, rhs, lhs_len[i], rhs_len[i]);
 
-    char lcs_buf[MAX_STR_LEN + 1];
-    lcs_string_plain(lhs_plain[i], rhs_plain[i], lhs_len[i], rhs_len[i], lcs_buf);
+    uint64_t seq_start = u64(lcseq.start_index);
+    uint64_t seq_len = u64(lcseq.length);
+    uint64_t sub_start = u64(lcsub.start_index);
+    uint64_t sub_len = u64(lcsub.length);
 
-    total_start += start;
-    total_len += len;
+    char lcseq_buf[MAX_STR_LEN + 1];
+    char lcsub_buf[MAX_STR_LEN + 1];
+    lcseq_string_plain(lhs_plain[i], rhs_plain[i], lhs_len[i], rhs_len[i], lcseq_buf);
+    slice_plain(lhs_plain[i], sub_start, sub_len, lcsub_buf);
 
-    failures += (start != expected_start[i]) ? 1 : 0;
-    failures += (len != expected_len[i]) ? 1 : 0;
-    failures += (libmin_strcmp(lcs_buf, expected_lcs[i]) != 0) ? 1 : 0;
+    total_seq_start += seq_start;
+    total_seq_len += seq_len;
+    total_sub_start += sub_start;
+    total_sub_len += sub_len;
 
-    libmin_printf("LCS pair[%lu]: A=\"%s\" B=\"%s\" => start=%lu len=%lu lcs=\"%s\"\n",
-      (unsigned long)i, lhs_plain[i], rhs_plain[i], (unsigned long)start, (unsigned long)len, lcs_buf);
+    failures += (seq_start != expected_seq_start[i]) ? 1 : 0;
+    failures += (seq_len != expected_seq_len[i]) ? 1 : 0;
+    failures += (libmin_strcmp(lcseq_buf, expected_seq[i]) != 0) ? 1 : 0;
+    failures += (sub_start != expected_sub_start[i]) ? 1 : 0;
+    failures += (sub_len != expected_sub_len[i]) ? 1 : 0;
+    failures += (libmin_strcmp(lcsub_buf, expected_sub[i]) != 0) ? 1 : 0;
+
+    libmin_printf("LCS pair[%lu]: A=\"%s\" B=\"%s\" => LCseq(start=%lu,len=%lu,LCseq=\"%s\") LCsub(start=%lu,len=%lu,LCsub=\"%s\")\n",
+      (unsigned long)i, lhs_plain[i], rhs_plain[i],
+      (unsigned long)seq_start, (unsigned long)seq_len, lcseq_buf,
+      (unsigned long)sub_start, (unsigned long)sub_len, lcsub_buf);
   }
 
-  libmin_printf("LCS totals: start_sum=%lu len_sum=%lu\n", (unsigned long)total_start, (unsigned long)total_len);
+  libmin_printf("LCS totals: LCseq_start_sum=%lu LCseq_len_sum=%lu LCsub_start_sum=%lu LCsub_len_sum=%lu\n",
+    (unsigned long)total_seq_start, (unsigned long)total_seq_len,
+    (unsigned long)total_sub_start, (unsigned long)total_sub_len);
 
   if (failures != 0)
   {
@@ -224,7 +301,7 @@ main(void)
     return -1;
   }
 
-  libmin_printf("LCS PASS: all expected start/len/string checks passed\n");
+  libmin_printf("LCS PASS: all expected LCseq/LCsub checks passed\n");
 
   libmin_success();
   return 0;
