@@ -278,17 +278,52 @@ main(void)
     total_sub_start += sub_start;
     total_sub_len += sub_len;
 
-    failures += (seq_start != expected_seq_start[i]) ? 1 : 0;
-    failures += (seq_len != expected_seq_len[i]) ? 1 : 0;
-    failures += (libmin_strcmp(lcseq_buf, expected_seq[i]) != 0) ? 1 : 0;
-    failures += (sub_start != expected_sub_start[i]) ? 1 : 0;
-    failures += (sub_len != expected_sub_len[i]) ? 1 : 0;
-    failures += (libmin_strcmp(lcsub_buf, expected_sub[i]) != 0) ? 1 : 0;
+    uint64_t pair_failures = 0;
+    uint64_t seq_start_mismatch = (seq_start != expected_seq_start[i]) ? 1 : 0;
+    uint64_t seq_len_mismatch = (seq_len != expected_seq_len[i]) ? 1 : 0;
+    uint64_t seq_str_mismatch = (libmin_strcmp(lcseq_buf, expected_seq[i]) != 0) ? 1 : 0;
+    uint64_t sub_start_mismatch = (sub_start != expected_sub_start[i]) ? 1 : 0;
+    uint64_t sub_len_mismatch = (sub_len != expected_sub_len[i]) ? 1 : 0;
+    uint64_t sub_str_mismatch = (libmin_strcmp(lcsub_buf, expected_sub[i]) != 0) ? 1 : 0;
+
+    pair_failures += seq_start_mismatch;
+    pair_failures += seq_len_mismatch;
+    pair_failures += seq_str_mismatch;
+    pair_failures += sub_start_mismatch;
+    pair_failures += sub_len_mismatch;
+    pair_failures += sub_str_mismatch;
+    failures += pair_failures;
 
     libmin_printf("LCS pair[%lu]: A=\"%s\" B=\"%s\" => LCseq(start=%lu,len=%lu,LCseq=\"%s\") LCsub(start=%lu,len=%lu,LCsub=\"%s\")\n",
       (unsigned long)i, lhs_plain[i], rhs_plain[i],
       (unsigned long)seq_start, (unsigned long)seq_len, lcseq_buf,
       (unsigned long)sub_start, (unsigned long)sub_len, lcsub_buf);
+
+    if (pair_failures != 0)
+    {
+      libmin_printf("  FAIL pair[%lu]: expected LCseq(start=%lu,len=%lu,LCseq=\"%s\") LCsub(start=%lu,len=%lu,LCsub=\"%s\")\n",
+        (unsigned long)i,
+        (unsigned long)expected_seq_start[i], (unsigned long)expected_seq_len[i], expected_seq[i],
+        (unsigned long)expected_sub_start[i], (unsigned long)expected_sub_len[i], expected_sub[i]);
+      if (seq_start_mismatch)
+        libmin_printf("    mismatch: LCseq start expected=%lu actual=%lu\n",
+          (unsigned long)expected_seq_start[i], (unsigned long)seq_start);
+      if (seq_len_mismatch)
+        libmin_printf("    mismatch: LCseq len expected=%lu actual=%lu\n",
+          (unsigned long)expected_seq_len[i], (unsigned long)seq_len);
+      if (seq_str_mismatch)
+        libmin_printf("    mismatch: LCseq str expected=\"%s\" actual=\"%s\"\n",
+          expected_seq[i], lcseq_buf);
+      if (sub_start_mismatch)
+        libmin_printf("    mismatch: LCsub start expected=%lu actual=%lu\n",
+          (unsigned long)expected_sub_start[i], (unsigned long)sub_start);
+      if (sub_len_mismatch)
+        libmin_printf("    mismatch: LCsub len expected=%lu actual=%lu\n",
+          (unsigned long)expected_sub_len[i], (unsigned long)sub_len);
+      if (sub_str_mismatch)
+        libmin_printf("    mismatch: LCsub str expected=\"%s\" actual=\"%s\"\n",
+          expected_sub[i], lcsub_buf);
+    }
   }
 
   libmin_printf("LCS totals: LCseq_start_sum=%lu LCseq_len_sum=%lu LCsub_start_sum=%lu LCsub_len_sum=%lu\n",
