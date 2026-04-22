@@ -13,7 +13,6 @@ using namespace exo;
 
 #define MAX_STR_LEN 64
 #define N_STRINGS 10
-#define MAX_TRANSFORMED_LEN (2 * MAX_STR_LEN + 1)
 
 struct PalResult {
   uint64e_t start_index;
@@ -29,63 +28,40 @@ make_encrypted_string(const char *plain, uint64_t len)
   return out;
 }
 
-static uint8e_t
-transformed_at(const stringe_t &s, uint64_t t_index)
-{
-  if ((t_index & 1u) == 0u)
-    return uint8e_t('#');
-  return s[t_index >> 1];
-}
 
 static PalResult
 longest_palindrome_manacher_encrypted(const stringe_t &s, uint64_t n)
 {
-  const uint64_t t_len = 2 * n + 1;
-  uint64e_t p[MAX_TRANSFORMED_LEN];
-
-  for (uint64_t i = 0; i < t_len; ++i)
-    p[i] = 0;
-
-  uint64_t center = 0;
-  uint64_t right = 0;
   uint64e_t best_len = 0;
   uint64e_t best_start = n;
 
-  for (uint64_t i = 0; i < t_len; ++i)
+  for (uint64_t start = 0; start < n; ++start)
   {
-    if (i < right)
+    for (uint64_t len = 1; len <= (n - start); ++len)
     {
-      uint64_t mirror = (2 * center) - i;
-      uint64_t mirror_plain = p[mirror].decrypt();
-      uint64_t bound = right - i;
-      p[i] = (mirror_plain < bound) ? uint64e_t(mirror_plain) : uint64e_t(bound);
+      uint64e_t is_pal = 1;
+      const uint64_t half = len >> 1;
+
+      for (uint64_t k = 0; k < MAX_STR_LEN; ++k)
+      {
+        if (k < half)
+        {
+          const uint64_t left_idx = start + k;
+          const uint64_t right_idx = start + len - 1 - k;
+          const uint64e_t eq = s[left_idx] == s[right_idx];
+          is_pal = cmov(!eq, uint64e_t(0), is_pal);
+        }
+      }
+
+      const uint64e_t cand_len = uint64e_t(len);
+      const uint64e_t cand_start = uint64e_t(start);
+      const uint64e_t longer = cand_len > best_len;
+      const uint64e_t tie_break = (cand_len == best_len) && (cand_start < best_start);
+      const uint64e_t better = is_pal && (longer || tie_break);
+
+      best_len = cmov(better, cand_len, best_len);
+      best_start = cmov(better, cand_start, best_start);
     }
-
-    while ((i > p[i].decrypt()) && ((i + p[i].decrypt() + 1) < t_len))
-    {
-      uint64_t left_t = i - p[i].decrypt() - 1;
-      uint64_t right_t = i + p[i].decrypt() + 1;
-
-      uint64e_t eq = transformed_at(s, left_t) == transformed_at(s, right_t);
-      if (!eq.decrypt())
-        break;
-
-      p[i] = p[i] + 1;
-    }
-
-    uint64_t cur_rad = p[i].decrypt();
-    if (i + cur_rad > right)
-    {
-      center = i;
-      right = i + cur_rad;
-    }
-
-    uint64e_t cand_len = p[i];
-    uint64e_t cand_start = uint64e_t((i - cur_rad) / 2);
-
-    uint64e_t better = (cand_len > best_len) || ((cand_len == best_len) && (cand_start < best_start));
-    best_len = cmov(better, cand_len, best_len);
-    best_start = cmov(better, cand_start, best_start);
   }
 
   PalResult ret;
