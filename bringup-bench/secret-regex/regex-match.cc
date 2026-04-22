@@ -15,7 +15,7 @@ static constexpr unsigned kMaxStates = 5;
 static constexpr unsigned kAlphabetClasses = 4; // {'a','b','c',other}
 static constexpr unsigned kMaxTextLen = 16;
 static constexpr unsigned kNumAutomata = 4;
-static constexpr unsigned kNumTexts = 14;
+static constexpr unsigned kNumTexts = 26;
 
 struct RegexAutomaton
 {
@@ -95,7 +95,18 @@ static const char *kPlainTexts[kNumTexts] = {
   "a12c",
   "a!@#$%^&*()_+c",
   "a!b!c",
-  "acc"
+  "acc",
+  "a",
+  "c",
+  "bc",
+  "cab",
+  "bbb",
+  "cccc",
+  "baac",
+  "ab",
+  "acb",
+  "a_cx",
+  "zzzz"
 };
 
 static stringe_t encrypt_fixed_text(const char *s)
