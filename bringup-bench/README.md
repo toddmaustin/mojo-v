@@ -139,6 +139,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **life** - Conway's game of life simulation.
 
+- **lcs** - Computes the longest common subsequence over encrypted string pairs and reports encrypted start index and length.
+
 - **longdiv** - Computes a long division using the pencil-on-paper method.
 
 - **lu-decomp** - Performs LU decomposition of an input matrix.
