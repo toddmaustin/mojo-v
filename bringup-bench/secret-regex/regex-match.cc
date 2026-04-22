@@ -195,15 +195,16 @@ int main(void)
   for (unsigned a = 0; a < kNumAutomata; ++a)
   {
     uint64e_t matches(0);
-    libmin_printf("regex `%s` matches:\n", kAutomata[a].name);
+    libmin_printf("regex `%s` tests:\n", kAutomata[a].name);
 
     for (unsigned i = 0; i < kNumTexts; ++i)
     {
       uint64e_t is_match = secret_match(kAutomata[a], texts[i]);
       matches = matches + is_match;
 
-      if (is_match.decrypt() != 0)
-        libmin_printf("  %s\n", kPlainTexts[i]);
+      libmin_printf("  %s => %s\n",
+                    kPlainTexts[i],
+                    is_match.decrypt() != 0 ? "MATCH" : "NO MATCH");
     }
 
     libmin_printf("total matches: %lu\n\n", matches.decrypt());
