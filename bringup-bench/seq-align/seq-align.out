@@ -1,0 +1,29 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+Seq-Align (Needleman-Wunsch): 16 encrypted string pairs (match=2 mismatch=-1 gap=-2)
+NW pair[0]: A="GATTACA" B="GCATGCU" => score=2
+NW pair[1]: A="ACTG" B="ACGT" => score=2
+NW pair[2]: A="AAAA" B="TTTT" => score=-4
+NW pair[3]: A="ACGTACGT" B="ACGACG" => score=8
+NW pair[4]: A="TTAACCGG" B="TTACGG" => score=8
+NW pair[5]: A="SUNDAY" B="SATURDAY" => score=5
+NW pair[6]: A="ALIGNMENT" B="SLIME" => score=-1
+NW pair[7]: A="ENCRYPTEDSTRING" B="ENCRYPTIONRING" => score=17
+NW pair[8]: A="HELLOWORLD" B="YELLOWBIRD" => score=8
+NW pair[9]: A="BIOINFORMATICS" B="INFORMATION" => score=10
+NW pair[10]: A="A" B="A" => score=2
+NW pair[11]: A="" B="MOJOV" => score=-10
+NW pair[12]: A="TTTTTTTT" B="" => score=-16
+NW pair[13]: A="MATRIXCOMPUTE" B="MATRICESCOMPUTED" => score=17
+NW pair[14]: A="NEEDLEMANWUNSCH" B="NEEDLEWUNSCH" => score=18
+NW pair[15]: A="CAGTCAGTGGAC" B="CAGTAGTAGGAC" => score=18
+NW totals: score_sum=84
+NW PASS: encrypted scores match plaintext reference across all test inputs

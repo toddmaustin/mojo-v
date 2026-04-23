@@ -140,7 +140,7 @@ These test benchmarks demonstrate Mojo-V ISA rules, EXO-library behavior, and se
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
-The current bring-up benchmark set includes 41 Mojo-V benchmark applications:
+The current bring-up benchmark set includes 42 Mojo-V benchmark applications:
 
 | Program | Description |
 |:---------|:-------------|
@@ -163,6 +163,7 @@ The current bring-up benchmark set includes 41 Mojo-V benchmark applications:
 | `kalman-filter` | Kalman filtering benchmark |
 | `kcore-decomp` | Graph k-core decomposition benchmark |
 | `lcs` | Data-oblivious longest-common-subsequence benchmark over encrypted strings |
+| `seq-align` | Global sequence-alignment benchmark (Needleman-Wunsch) over encrypted strings |
 | `kepler-calc` | Kepler equation/numerical calculation benchmark |
 | `knapsack` | Knapsack optimization benchmark |
 | `lda` | Latent Dirichlet allocation benchmark |
