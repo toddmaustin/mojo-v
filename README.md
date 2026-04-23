@@ -134,17 +134,19 @@ make clean build test
 | `mojov-typetests` | Type-system validation tests for Mojo-V encrypted types and EXO-library usage |
 | `mojov-pctests` | Hand-coded integrity checking test suite for RV64GC+Mojo-V that includes positive and negative tests for Mojo-V's proof-carrying encryption format (proofcarrying) |
 | `mojov-sectests` | Hand-coded security test suite for RV64GC+Mojo-V that includes 130 pos + 245 neg tests == 375 total (int,fp,fast,strong) |
+| `mojov-stringtests` | Encrypted EXO string-library validation tests for secure string operations and comparisons |
 | `mojov-mathtests` | Encrypted EXO math-library validation tests for `_sincos`, `mojov_sin`, `mojov_cos`, `mojov_fabs`, `mojov_floor`, `mojov_pow`, `mojov_round`, and `mojov_sqrt` |
 
 These test benchmarks demonstrate Mojo-V ISA rules, EXO-library behavior, and security semantics.
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
-The current bring-up benchmark set includes 42 Mojo-V benchmark applications:
+The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
 
 | Program | Description |
 |:---------|:-------------|
 | `bitonic-sort` | Data-oblivious bitonic sorting benchmark |
+| `bloom-filter` | Bloom-filter set-membership benchmark |
 | `bubble-sort` | Integer bubble-sort benchmark |
 | `bubble-sort-strong` | Integer bubble-sort benchmark configured for strong encryption |
 | `distinctness` | Distinctness analysis benchmark |
@@ -154,24 +156,29 @@ The current bring-up benchmark set includes 42 Mojo-V benchmark applications:
 | `fft-int` | Integer FFT benchmark |
 | `flood-fill` | Flood-fill benchmark |
 | `flood-fill-On2` | Flood-fill benchmark variant with O(n²) behavior |
+| `fuzzy-match` | Fuzzy string-matching benchmark |
 | `gcd-list` | Greatest-common-divisor over list benchmark |
 | `gemm` | General matrix multiplication benchmark |
 | `gemm-strong` | GEMM benchmark configured for strong encryption |
 | `grad-descent` | Gradient-descent optimization benchmark |
+| `heat-calc` | Heat-transfer/heat-equation calculation benchmark |
 | `highlife` | HighLife cellular-automata benchmark with encrypted board-state evolution |
 | `kadane` | Maximum-subarray benchmark (Kadane’s algorithm) |
 | `kalman-filter` | Kalman filtering benchmark |
 | `kcore-decomp` | Graph k-core decomposition benchmark |
-| `lcs` | Data-oblivious longest-common-subsequence benchmark over encrypted strings |
-| `seq-align` | Global sequence-alignment benchmark (Needleman-Wunsch) over encrypted strings |
 | `kepler-calc` | Kepler equation/numerical calculation benchmark |
 | `knapsack` | Knapsack optimization benchmark |
+| `lcs` | Data-oblivious longest-common-subsequence benchmark over encrypted strings |
 | `lda` | Latent Dirichlet allocation benchmark |
+| `manacher-lps` | Longest-palindromic-substring benchmark (Manacher’s algorithm) |
 | `mersenne` | Mersenne-number computation benchmark |
 | `minspan` | Minimum spanning structure benchmark |
+| `monte-carlo` | Monte Carlo simulation benchmark |
+| `nbody-sim` | N-body simulation benchmark |
 | `nonlinear-nn` | Non-linear neural-network benchmark |
 | `nr-solver` | Newton-Raphson solver benchmark |
 | `ntt-kernel` | Number-theoretic transform kernel benchmark |
+| `packet-filter` | Packet-filtering benchmark |
 | `pagerank` | PageRank graph benchmark |
 | `parrondo` | Parrondo process/strategy benchmark |
 | `primal-test` | Primality testing benchmark |
@@ -180,14 +187,19 @@ The current bring-up benchmark set includes 42 Mojo-V benchmark applications:
 | `rabinkarp-search` | Rabin-Karp pattern-search benchmark |
 | `rad-to-deg` | Radian-to-degree conversion benchmark |
 | `randshell-sort` | Randomized Shell-sort benchmark |
+| `ransac` | RANSAC model-fitting benchmark |
+| `regex-match` | Regular-expression matching benchmark |
 | `risk-score` | Risk-scoring analytics benchmark |
+| `seq-align` | Global sequence-alignment benchmark (Needleman-Wunsch) over encrypted strings |
 | `shortest-path` | Shortest-path graph benchmark |
+| `sieve` | Prime-sieve benchmark |
 | `skeleton` | Skeleton/template benchmark used as a bring-up baseline |
 | `soundex` | Soundex phonetic encoding benchmark |
 | `string-search` | String-search benchmark |
 | `tea-cipher` | TEA cipher benchmark |
+| `tiny-NN` | Tiny neural-network inference benchmark |
 | `triangle-count` | Triangle counting graph benchmark |
-
+| `verlet` | Verlet-integration physics benchmark |
 
 
 ## 🛠️ Mojo-V Data Contract Multi-tool Usage
