@@ -200,12 +200,20 @@ main(void)
     const uint64_t ref_count = plain_duval(plain_inputs[t], n, ref_starts, ref_lens);
 
     const uint64_t got_count = enc_res.count.decrypt();
-    libmin_printf("lyndon[%lu]: \"%s\" => factors=%lu\n", t, plain_inputs[t], got_count);
+    libmin_printf("lyndon[%lu]: \"%s\" => encrypted_factors=%lu plain_factors=%lu\n",
+      t, plain_inputs[t], got_count, ref_count);
 
-    if (got_count != ref_count)
-      failures++;
+    libmin_printf("  plain_duval factors:\n");
+    for (uint64_t f = 0; f < ref_count; ++f)
+    {
+      libmin_printf("    plain[%2lu]: start=%2lu len=%2lu text=\"", f, ref_starts[f], ref_lens[f]);
+      for (uint64_t c = 0; c < ref_lens[f]; ++c)
+        libmin_printf("%c", plain_inputs[t][ref_starts[f] + c]);
+      libmin_printf("\"\n");
+    }
 
     uint64_t recovered_total = 0;
+    uint64_t agrees = (got_count == ref_count) ? 1 : 0;
     for (uint64_t f = 0; f < got_count; ++f)
     {
       uint64_t got_start = enc_res.starts[f].decrypt();
@@ -218,10 +226,15 @@ main(void)
       libmin_printf("\"\n");
 
       if (f >= ref_count || got_start != ref_starts[f] || got_len != ref_lens[f])
-        failures++;
+        agrees = 0;
     }
 
     if (recovered_total != n)
+      agrees = 0;
+
+    libmin_printf("  encrypted_vs_plain_duval: %s\n", agrees ? "agree" : "DISAGREE");
+
+    if (!agrees)
       failures++;
 
     total_factors += got_count;
