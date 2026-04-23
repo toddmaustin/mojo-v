@@ -141,6 +141,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **lcs** - Computes the longest common subsequence over encrypted string pairs and reports encrypted start index and length.
 
+- **lyndon-factors** - Computes Duval-style Lyndon factorization over encrypted strings and reports encrypted factor start indices and lengths.
+
 - **manacher-lps** - Computes the longest palindromic substring over encrypted strings using Manacher's algorithm and reports encrypted start index and length.
 
 - **longdiv** - Computes a long division using the pencil-on-paper method.

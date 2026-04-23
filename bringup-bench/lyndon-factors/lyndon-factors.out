@@ -1,0 +1,52 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+lyndon-factors: processing 8 encrypted strings
+lyndon[0]: "banana" => factors=4
+  factor[ 0]: start= 0 len= 1 text="b"
+  factor[ 1]: start= 1 len= 2 text="an"
+  factor[ 2]: start= 3 len= 2 text="an"
+  factor[ 3]: start= 5 len= 1 text="a"
+lyndon[1]: "mississippi" => factors=5
+  factor[ 0]: start= 0 len= 1 text="m"
+  factor[ 1]: start= 1 len= 3 text="iss"
+  factor[ 2]: start= 4 len= 3 text="iss"
+  factor[ 3]: start= 7 len= 3 text="ipp"
+  factor[ 4]: start=10 len= 1 text="i"
+lyndon[2]: "abcabca" => factors=3
+  factor[ 0]: start= 0 len= 3 text="abc"
+  factor[ 1]: start= 3 len= 3 text="abc"
+  factor[ 2]: start= 6 len= 1 text="a"
+lyndon[3]: "zzzzzz" => factors=6
+  factor[ 0]: start= 0 len= 1 text="z"
+  factor[ 1]: start= 1 len= 1 text="z"
+  factor[ 2]: start= 2 len= 1 text="z"
+  factor[ 3]: start= 3 len= 1 text="z"
+  factor[ 4]: start= 4 len= 1 text="z"
+  factor[ 5]: start= 5 len= 1 text="z"
+lyndon[4]: "abababab" => factors=4
+  factor[ 0]: start= 0 len= 2 text="ab"
+  factor[ 1]: start= 2 len= 2 text="ab"
+  factor[ 2]: start= 4 len= 2 text="ab"
+  factor[ 3]: start= 6 len= 2 text="ab"
+lyndon[5]: "cabbaabbac" => factors=3
+  factor[ 0]: start= 0 len= 1 text="c"
+  factor[ 1]: start= 1 len= 3 text="abb"
+  factor[ 2]: start= 4 len= 6 text="aabbac"
+lyndon[6]: "qwertyqwert" => factors=3
+  factor[ 0]: start= 0 len= 2 text="qw"
+  factor[ 1]: start= 2 len= 6 text="ertyqw"
+  factor[ 2]: start= 8 len= 3 text="ert"
+lyndon[7]: "lyndonlyndon" => factors=3
+  factor[ 0]: start= 0 len= 3 text="lyn"
+  factor[ 1]: start= 3 len= 6 text="donlyn"
+  factor[ 2]: start= 9 len= 3 text="don"
+lyndon totals: factor_count_sum=31 recovered_len_sum=71
+lyndon PASS: encrypted Duval-style factorization matched plaintext reference
