@@ -44,11 +44,11 @@ secret_char_at(const stringe_t &s, uint64e_t idx, uint64_t n)
 }
 
 static void
-oblivious_store_u64e(uint64e_t arr[MAX_FACTORS], uint64e_t secret_idx, uint64e_t value)
+oblivious_store_u64e(uint64e_t arr[MAX_FACTORS], uint64e_t secret_idx, uint64e_t value, uint64e_t enable)
 {
   for (uint64_t slot = 0; slot < MAX_FACTORS; ++slot)
   {
-    const uint64e_t choose = secret_idx == uint64e_t(slot);
+    const uint64e_t choose = enable && (secret_idx == uint64e_t(slot));
     arr[slot] = cmov(choose, value, arr[slot]);
   }
 }
@@ -107,8 +107,8 @@ duval_factorization_encrypted_oblivious(const stringe_t &s, uint64_t n)
     emit_k_limit = cmov(emit_trigger, k, emit_k_limit);
 
     const uint64e_t emit_active = !done && phase_emit && i_in && (i <= emit_k_limit);
-    oblivious_store_u64e(out.starts, out.count, i);
-    oblivious_store_u64e(out.lens, out.count, emit_period);
+    oblivious_store_u64e(out.starts, out.count, i, emit_active);
+    oblivious_store_u64e(out.lens, out.count, emit_period, emit_active);
     out.count = cmov(emit_active, out.count + uint64e_t(1), out.count);
     i = cmov(emit_active, i + emit_period, i);
 
