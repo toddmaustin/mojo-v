@@ -47,9 +47,12 @@ As of release 1.01, 64-bit secret computation remains fully secretized for softw
 
 4. **Mojo-V Bringup-Bench Benchmarks**
 
-   - Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
    - Full battery of security tests for RV64GC+Mojo-V
    - Full battery of integrity attack tests for RV64GC+Mojo-V
+   - Full battery of EXO compiler library tests
+   - Full batteries of EXO math and string library tests
+   - Numerous privacy-oriented benchmarks build using the EXO Mojo-V compiler library
+   - Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
 
@@ -243,7 +246,7 @@ The following options have been added to Spike, the standard RISC-V ISA simulato
 
 ## 🧠 Mojo-V Programming Overview
 
-Mojo-V software development currently uses the EXO compatibility library and follows secure data-oblivious coding practices:
+Mojo-V software development currently uses the EXO compiler library and follows secure data-oblivious coding practices:
 
 1. **Program with the EXO library headers**
    - Include `exo/mojov-exo.h` to access the Mojo-V programming framework and encrypted-type abstractions.
