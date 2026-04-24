@@ -177,6 +177,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **parrondo** - A game theory based solver that simulates Parrondo's paradox.
 
+- **partition-equal** - Solves Partition Equal Subset Sum using dynamic programming over encrypted sets, decrypting only final per-set results.
+
 - **pascal** - Compute Pascal's triangle, to a specified depth.
 
 - **pi-calc** - An integer based high-precision PI calculator.
