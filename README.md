@@ -165,7 +165,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `gemm-strong` | GEMM benchmark configured for strong encryption |
 | `grad-descent` | Gradient-descent optimization benchmark |
 | `heat-calc` | Heat-transfer/heat-equation calculation benchmark |
-| `heldkarp-tsp` | Traveling-salesman benchmark using Held-Karp dynamic programming over an encrypted graph |
+| `heldkarp-tsp` | Held-Karp dynamic-programming traveling-salesman benchmark over encrypted graphs |
 | `highlife` | HighLife cellular-automata benchmark with encrypted board-state evolution |
 | `kadane` | Maximum-subarray benchmark (Kadane’s algorithm) |
 | `kalman-filter` | Kalman filtering benchmark |
@@ -185,11 +185,11 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `packet-filter` | Packet-filtering benchmark |
 | `pagerank` | PageRank graph benchmark |
 | `parrondo` | Parrondo process/strategy benchmark |
-| `partition-equal` | Partition Equal Subset Sum dynamic-programming benchmark over encrypted sets with revealed final partition pairs |
+| `partition-equal` | Partition Equal Subset Sum benchmark over encrypted sets |
 | `primal-test` | Primality testing benchmark |
 | `private-join` | Privacy-preserving join benchmark |
 | `psi` | Private-set-intersection benchmark |
-| `quartile-stats` | Encrypted quartile cut and quartile-average analytics benchmark |
+| `quartile-stats` | Quartile-cut and quartile-average analytics benchmark over encrypted data |
 | `rabinkarp-search` | Rabin-Karp pattern-search benchmark |
 | `rad-to-deg` | Radian-to-degree conversion benchmark |
 | `randshell-sort` | Randomized Shell-sort benchmark |
