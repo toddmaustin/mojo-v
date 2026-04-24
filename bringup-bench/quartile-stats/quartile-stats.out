@@ -1,0 +1,16 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+quartile-stats: encrypted quartile analysis complete
+input summary: samples=128 range=[38, 1510]
+quartile cuts order positions (1-based): Q1=32 Q2=64 Q3=96
+quartile cuts order positions (0-based): Q1=31 Q2=63 Q3=95
+quartile cuts (Q1,Q2,Q3): 263, 529, 892
+quartile averages (Q1,Q2,Q3,Q4): 138, 393, 697, 1188
