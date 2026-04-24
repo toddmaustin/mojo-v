@@ -117,6 +117,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **hanoi** - Solves the Tower's of Hanoi problem for a variable number of towers.
 
+- **heldkarp-tsp** - Solves traveling salesman with Held-Karp dynamic programming over an encrypted graph, reporting encrypted-state-derived tour cost and route.
+
 - **heapsort** - Performs a heap sort on a randomly generated data set
 
 - **heat-calc** - Performs heat flow analysis of a metal pipe.

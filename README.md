@@ -165,6 +165,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `gemm-strong` | GEMM benchmark configured for strong encryption |
 | `grad-descent` | Gradient-descent optimization benchmark |
 | `heat-calc` | Heat-transfer/heat-equation calculation benchmark |
+| `heldkarp-tsp` | Traveling-salesman benchmark using Held-Karp dynamic programming over an encrypted graph |
 | `highlife` | HighLife cellular-automata benchmark with encrypted board-state evolution |
 | `kadane` | Maximum-subarray benchmark (Kadane’s algorithm) |
 | `kalman-filter` | Kalman filtering benchmark |
