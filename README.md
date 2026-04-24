@@ -144,7 +144,7 @@ These test benchmarks demonstrate Mojo-V ISA rules, EXO-library behavior, and se
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
-The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
+The current bring-up benchmark set includes 56 Mojo-V benchmark applications:
 
 | Program | Description |
 |:---------|:-------------|
@@ -165,6 +165,7 @@ The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
 | `gemm-strong` | GEMM benchmark configured for strong encryption |
 | `grad-descent` | Gradient-descent optimization benchmark |
 | `heat-calc` | Heat-transfer/heat-equation calculation benchmark |
+| `heldkarp-tsp` | Traveling-salesman benchmark using Held-Karp dynamic programming over an encrypted graph |
 | `highlife` | HighLife cellular-automata benchmark with encrypted board-state evolution |
 | `kadane` | Maximum-subarray benchmark (Kadane’s algorithm) |
 | `kalman-filter` | Kalman filtering benchmark |
