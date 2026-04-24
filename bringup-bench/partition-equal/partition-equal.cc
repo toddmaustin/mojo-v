@@ -42,7 +42,7 @@ plain_partition_equal(const partition_set_t *set)
   for (uint64_t i = 0; i < set->len; ++i)
     sum += set->values[i];
 
-  if ((sum & 1ull) != 0)
+  if ((sum & 1ul) != 0)
     return 0;
 
   uint64_t target = sum / 2;
@@ -125,7 +125,7 @@ encrypted_partition_equal(const partition_set_t *set)
     }
 
     uint64e_t take = can_partition && found;
-    subset_mask = subset_mask | cmov(take, uint64e_t(1ull << i), uint64e_t(0));
+    subset_mask = subset_mask | cmov(take, uint64e_t(1ul << i), uint64e_t(0));
     current_sum = cmov(take, prev_sum_choice, current_sum);
   }
 
@@ -145,7 +145,7 @@ print_partition_from_mask(const partition_set_t *set, uint64_t mask)
   uint64_t first = 1;
   for (uint64_t i = 0; i < set->len; ++i)
   {
-    if ((mask & (1ull << i)) != 0)
+    if ((mask & (1ul << i)) != 0)
     {
       if (!first)
         libmin_printf(", ");
@@ -162,7 +162,7 @@ print_partition_from_mask(const partition_set_t *set, uint64_t mask)
   first = 1;
   for (uint64_t i = 0; i < set->len; ++i)
   {
-    if ((mask & (1ull << i)) == 0)
+    if ((mask & (1ul << i)) == 0)
     {
       if (!first)
         libmin_printf(", ");
