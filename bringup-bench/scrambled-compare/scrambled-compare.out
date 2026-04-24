@@ -1,0 +1,25 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+Scrambled-Compare: 12 encrypted string pairs
+scramble[0]: A="great" B="rgeat" => is_scramble=1
+scramble[1]: A="abcde" B="caebd" => is_scramble=0
+scramble[2]: A="a" B="a" => is_scramble=1
+scramble[3]: A="abcdefghijkl" B="efghijklabcd" => is_scramble=1
+scramble[4]: A="abab" B="baba" => is_scramble=1
+scramble[5]: A="coder" B="ocder" => is_scramble=1
+scramble[6]: A="algorithm" B="logarithm" => is_scramble=1
+scramble[7]: A="xy" B="yx" => is_scramble=1
+scramble[8]: A="aaab" B="abaa" => is_scramble=1
+scramble[9]: A="night" B="thing" => is_scramble=1
+scramble[10]: A="aabbcc" B="abcabc" => is_scramble=1
+scramble[11]: A="random" B="dorman" => is_scramble=0
+Scrambled-Compare totals: true_count=10 mismatches=0
+Scrambled-Compare PASS: encrypted dynamic-programming scramble checks match expected outcomes

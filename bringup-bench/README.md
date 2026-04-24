@@ -179,6 +179,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **parrondo** - A game theory based solver that simulates Parrondo's paradox.
 
+- **partition-equal** - Solves Partition Equal Subset Sum using dynamic programming over encrypted sets, decrypting only final per-set results.
+
 - **pascal** - Compute Pascal's triangle, to a specified depth.
 
 - **pi-calc** - An integer based high-precision PI calculator.
@@ -212,6 +214,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 - **rsa-cipher** - Implements RSA encryption and decryption using reduced-strength 128-bit keys.
 
 - **sat-solver** - Perform SATisfiability analysis on a complex logic circuit.
+
+- **scrambled-compare** - Uses encrypted dynamic programming to test whether one string is a scrambled version of another string.
 
 - **shortest-path** - Solves the all-pairs shortest path problem using the Floyd-Warshall algorithm.
 
