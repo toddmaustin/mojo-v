@@ -61,7 +61,7 @@ heldkarp_tsp(void)
         best = 0;
         best_parent = 0;
       } else {
-        for (unsigned prev = 0; prev < TSP_N; ++prev) {
+        for (uint64_t prev = 0; prev < TSP_N; ++prev) {
           if ((prev_mask & (1u << prev)) == 0)
             continue;
 
@@ -102,7 +102,7 @@ main(void)
   uint64e_t best_cycle = TSP_INF;
   uint64e_t best_last = 0;
 
-  for (unsigned end = 1; end < TSP_N; ++end) {
+  for (uint64_t end = 1; end < TSP_N; ++end) {
     uint64e_t tour = dp[full_mask][end] + graph[end][0];
     uint64e_t better = (tour < best_cycle);
     best_cycle = cmov(better, tour, best_cycle);

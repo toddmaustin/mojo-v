@@ -11,4 +11,4 @@ Decrypted data_contract_t fields:
 Held-Karp TSP benchmark (encrypted graph/state)
 Cities: 8
 Minimum Hamiltonian cycle cost: 235
-Tour: 0 -> 7 -> 2 -> 1 -> 6 -> 5 -> 3 -> 4 -> 0
+Tour: 0 -> 4 -> 3 -> 5 -> 6 -> 1 -> 2 -> 7 -> 0
