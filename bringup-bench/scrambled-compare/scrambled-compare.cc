@@ -43,7 +43,7 @@ is_scramble_encrypted(const stringe_t &lhs, const stringe_t &rhs, uint64_t n)
   for (uint64_t i = 0; i < n; ++i)
   {
     for (uint64_t j = 0; j < n; ++j)
-      dp[1][i][j] = lhs[i] == rhs[j];
+      dp[1][i][j] = (uint64e_t)(lhs[i] == rhs[j]);
   }
 
   for (uint64_t len = 2; len <= n; ++len)
