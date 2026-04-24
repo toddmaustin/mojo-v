@@ -243,6 +243,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **transcend** - Evaluates exp, sin, cos, and a mixed sequence over large arrays for fixed iterations to stress transcendental while emitting a checksum.
 
+- **variability-sample** - Estimates bootstrap-sample variability over an encrypted dataset, revealing only final per-sample variability values while keeping sampled data values encrypted throughout processing.
+
 - **vectors-3d** - A 3D vector library running a battery of tests.
 
 - **verlet** - Updates positions/velocities with the velocity-Verlet scheme over many steps, mixing FMAs and sqrt/divide for inverse-square forces to emulate physics-style FP workloads.
