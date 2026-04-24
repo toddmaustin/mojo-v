@@ -144,7 +144,7 @@ These test benchmarks demonstrate Mojo-V ISA rules, EXO-library behavior, and se
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
-The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
+The current bring-up benchmark set includes 56 Mojo-V benchmark applications:
 
 | Program | Description |
 |:---------|:-------------|
@@ -184,6 +184,7 @@ The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
 | `packet-filter` | Packet-filtering benchmark |
 | `pagerank` | PageRank graph benchmark |
 | `parrondo` | Parrondo process/strategy benchmark |
+| `partition-equal` | Partition Equal Subset Sum dynamic-programming benchmark over encrypted sets with revealed final partition pairs |
 | `primal-test` | Primality testing benchmark |
 | `private-join` | Privacy-preserving join benchmark |
 | `psi` | Private-set-intersection benchmark |
