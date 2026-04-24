@@ -165,6 +165,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **monte-carlo** - Uses a Monte Carlo simulation to find an approximation of PI.
 
+- **moving-average** - Smooths encrypted time-series data over a sliding window, revealing only the final smoothed encrypted series at program end.
+
 - **murmur-hash** - Computes the MURMUR hash of its input value.
 
 - **natlog** - Compute the value of natural log e, using an iterative method.
