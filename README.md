@@ -144,7 +144,7 @@ These test benchmarks demonstrate Mojo-V ISA rules, EXO-library behavior, and se
 
 ## 🧪 Mojo-V Bringup-Bench Benchmarks Overview
 
-The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
+The current bring-up benchmark set includes the following Mojo-V benchmark applications:
 
 | Program | Description |
 |:---------|:-------------|
@@ -193,6 +193,7 @@ The current bring-up benchmark set includes 55 Mojo-V benchmark applications:
 | `ransac` | RANSAC model-fitting benchmark |
 | `regex-match` | Regular-expression matching benchmark |
 | `risk-score` | Risk-scoring analytics benchmark |
+| `scrambled-compare` | Scramble-string comparison benchmark using encrypted dynamic programming |
 | `seq-align` | Global sequence-alignment benchmark (Needleman-Wunsch) over encrypted strings |
 | `shortest-path` | Shortest-path graph benchmark |
 | `sieve` | Prime-sieve benchmark |
