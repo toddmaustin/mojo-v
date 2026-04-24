@@ -184,6 +184,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `packet-filter` | Packet-filtering benchmark |
 | `pagerank` | PageRank graph benchmark |
 | `parrondo` | Parrondo process/strategy benchmark |
+| `partition-equal` | Partition Equal Subset Sum dynamic-programming benchmark over encrypted sets with revealed final partition pairs |
 | `primal-test` | Primality testing benchmark |
 | `private-join` | Privacy-preserving join benchmark |
 | `psi` | Private-set-intersection benchmark |
