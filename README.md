@@ -189,6 +189,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `primal-test` | Primality testing benchmark |
 | `private-join` | Privacy-preserving join benchmark |
 | `psi` | Private-set-intersection benchmark |
+| `quartile-stats` | Encrypted quartile cut and quartile-average analytics benchmark |
 | `rabinkarp-search` | Rabin-Karp pattern-search benchmark |
 | `rad-to-deg` | Radian-to-degree conversion benchmark |
 | `randshell-sort` | Randomized Shell-sort benchmark |
