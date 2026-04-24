@@ -3,7 +3,7 @@
   - Added EXO Mojo-V compiler. The EXO library supports program-level development of Mojo-V C++ applications, including support for encrypted C++ data types (e.g., uint64e_t, int32e_T, fp64e_t) and data-oblivious coding patterns.
   - Added the EXO math library, which provides encrypted versions of many popular C/C++ math library routines, e.g., sin, cos, sqrt, abs, etc.
   - Added the EXO string library, which support standard C++ string operations on encrypted strings. String allocation size is public, while string size and contents remain encrypted. EXO strings are packed, with up to 8 characters in every encrypted data element (uint64e_t).
-  - Added 50+ Bringup-Bench benchmark port, using the EXO compiler, to broaden workload coverage for Mojo-V software bring-up and evaluation.
+  - Added 59 Bringup-Bench benchmark ports, using the EXO compiler, to broaden workload coverage for Mojo-V software bring-up and evaluation, including 4 new benchmarks in Release 1.01 (heldkarp-tsp, partition-equal, quartile-stats, scrambled-compare).
   - Further extended the Mojo-V test suite, which now tests all instructions, proofcarrying data, EXO library, math library, and string library.
   - Fixed one bug in the Mojo-V reference Spike simulator where "mojov_en" was sometimes non-sticky, causing a Mojo-V program to leave secret computation
   - Improved documentation, benchmark naming consistency, and repository organization with follow-up cleanup and maintenance integration updates.
