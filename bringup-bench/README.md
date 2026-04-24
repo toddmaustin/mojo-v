@@ -213,6 +213,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **sat-solver** - Perform SATisfiability analysis on a complex logic circuit.
 
+- **scrambled-compare** - Uses encrypted dynamic programming to test whether one string is a scrambled version of another string.
+
 - **shortest-path** - Solves the all-pairs shortest path problem using the Floyd-Warshall algorithm.
 
 - **sieve** - Computes the prime values within a specified range, using the Sieve of Eratosthenes algorithmm
