@@ -167,6 +167,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **moving-average** - Smooths encrypted time-series data over a sliding window, revealing only the final smoothed encrypted series at program end.
 
+- **moving-average-fp64** - Smooths encrypted FP64 time-series samples with floating-point moving averages, revealing only the final smoothed encrypted series at program end.
+
 - **murmur-hash** - Computes the MURMUR hash of its input value.
 
 - **natlog** - Compute the value of natural log e, using an iterative method.
