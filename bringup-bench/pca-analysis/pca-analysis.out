@@ -1,0 +1,16 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa1bd51183082e0ca
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0x27a48e9de04eadbc5297fe6330cea7d6
+  contract_sig= 0x5d34f1ad3b2327b3
+  ciphers     = 0x0000000000000000
+  format_sel  = 0 (fast)
+pca-analysis: encrypted PCA complete
+dataset shape: samples=192 features=6 retained_components=2
+eigenvalues: pc1=10.515265 pc2=9.358101
+explained variance ratios: pc1=0.414783 pc2=0.369138 cumulative=0.783921
+projected sample[0]:  pc1=-4.251255 pc2=1.104000
+projected sample[191]: pc1=3.399934 pc2=2.492896
