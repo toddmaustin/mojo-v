@@ -1,216 +1,376 @@
-# Mojo-V Data Contract Multitool (`dc-tool`) Documentation
+# Bringup-Bench Benchmark Suite
 
-## Overview
+Bringup */bring-up/* **verb**
+Refers to the process of bringing a newly designed and implemented CPU, accelerator, compiler, or operating system to life and verifying its functionality.
 
-This document explains **what Mojo-V data contracts are**, **why they exist**, and **how to use the `dc-tool` multitool** to:
+## Introduction
 
-1. Generate ML-KEM-512 keypairs for Mojo-V CPU targeting.
-2. Generate Mojo-V-compliant encrypted data contracts.
-3. Validate encrypted data contracts.
+The Bringup-Bench Benchmark Suite is a collection of C code benchmarks that are purpose-built to be useful in "bringing up" newly designed CPUs, accelerators, compilers, and operating systems. Bringup-Bench facilitates the bringup process because i) its benchmarks have zero library dependencies since the "libmin" library included in the repo implements all the necessary library calls, ii) its benchmarks have near-zero system dependencies since only four simple system calls must be implement to support all the benchmarks, and iii) the benchmark build process supports code-based read-only file access, which allows benchmark file inputs to be packaged into the benchmark build.
 
-It also clarifies an important boundary:
+I (Todd Austin) have used this benchmark suite to bring up new CPUs, new compiler infrastructure and even recently a Turing-complete encrypted computation accelerator. Most developers probably don't need bringup-bench, but if you do need it, you probably need it very badly!
 
-- `dc-tool` can validate/decrypt contracts **only when you provide a software private key file**.
-- For a **real Mojo-V CPU**, the private key is intended to be hardware-bound and inaccessible, so end users cannot pass that key into `dc-tool` for decryption.
+## Bringing up Bringup-Bench
+To build and test a benchmark, simply enter one of the benchmark directories and execute the following makefile command:
+```
+make TARGET=<target> clean build test
+```
+This command will first "clean" the benchmark directory and then "build" the application, and "test" that it is running correctly. The \<target> indicates the specific target that the application should be built for. Currently, Bringup-Bench support the following targets: 
 
----
+- **Linux host target - TARGET=host** - This target builds the benchmarks to run as a Linux application.
 
-## 1) Mojo-V data contracts: why, what, and how
+- **Standalone target - TARGET=standalone** - This target builds the benchmarks to run as a memory-only standalone application. For this target, all benchmark output is spooled to a pre-defined memory buffer, and the libmin\_success() and libmin\_fail() intefaces result in the application spinning at a specific code address. This mode is designed for bringing up CPUs and accelerators that do not yet have any OS or device I/O support. See common/libtarg.c for the internal intefaces used to spool program output to internal buffers. This particular target is useful in bringing up CPUs when they still have no I/O support, simply spool benchmark output to DRAM, and dump the DRAM after the benchmark completes.
 
-### Why
+- **Simple_System target - TARGET=simple** - This target build the benchmarks to run in the RISC-V Simple_System simulation environment. Simple_system allows hardware developers to do SystemVerilog development on Verilator, with fast SystemVerilog simulation using the Simple_System target. The Simple_System target supports a character output device, plus a simple memory system. By default, this is an integer computation only mode, so any FP in the benchmarks will be emulated with GCC's soft-float support. To learn more about the RISC-V Simple_System, go here: https://github.com/lowRISC/ibex/blob/master/examples/simple_system/README.md. The current version of the Simple_System target was tested with: 1) Ibex "small" core, 2) Simple_System default devices and memory configuration.
 
-Mojo-V secure computation needs a compact, machine-readable payload that can securely carry:
+- **RISC-V Spike target = TARGET=spike** - This target is identical to the "simple" target, as it build RISC-V binaries to be run on the Spike instruction set simulator (ISS). Spike is configured to support the Simple_system RISC-V I/O devices. This target is useful as a "golden" model to compare against execution traces occurring on a (perhaps buggy) RTL design target. Before first running a simulation, do a "make spike-build" in the top-level bringup-bench directory to make the Spike device DLL.
 
-- an ephemeral symmetric key,
-- metadata/signature values,
-- format selection for execution modes.
+- **RISC-V Spike + Proxy Kernel (PK) target = TARGET=spike-pk** - This target runs the benchmarks on the RISC-V spike instruction set simulator with proxy kernel (pk). It builds RISC-V binaries to be run on the Spike instruction set simulator (ISS). Spike is configured to proxy kernel system calls (pk). This target is useful as a "golden" model to compare against execution traces occurring on a (perhaps buggy) RTL design target.
 
-A data contract provides this payload and allows a data owner to transfer contract material so only the intended Mojo-V target can recover and use it.
+- **HashAlone Host target - TARGET=hashalone-host** - This target builds the benchmarks to run on x86/Linux with a hashing output device. Instead of producing output, hash-alone binaries simply send the program output to a hash function. When the program completes it prints the final value of the hash function, which is cryptographically unique for every possible output of the program.
 
-### What
+- **HashAlone Spike target - TARGET=hashalone-spike** - This target builds the benchmarks to run on bare-metal RISC-V with a hashing output device. Instead of producing output, hash-alone binaries simply send the program output to a hash function. When the program completes it prints the final value of the hash function, which is cryptographically unique for every possible output of the program. Use this target to enhance your "golden model" to support reference hash-alone signatures for the bringup-bench benchmarks.
 
-In this implementation, the data contract is a fixed **64-byte (512-bit)** structure with fields for:
+Each benchmark support three standard Makefile targets: build, test, and clean
 
-- `salt` (64-bit random)
-- `sig` (16-byte magic/version string: `"Mojo-V ver. #001"`)
-- `sym_key_128` (128-bit random key)
-- `contract_sig` (64-bit random value)
-- `ciphers` (64-bit mask; currently `0`)
-- `format_sel` (mode selector: fast/strong/proof-carrying)
-- `pad` (7 bytes random padding)
+- **build** - Builds the benchmark
 
-The tool encodes this struct into a 64-byte wire format before encryption.
+- **test** - Runs the benchmark and validates its output.
 
-### How (high-level flow)
+- **clean** - Deleted all derived files.
 
-1. Data owner gets a Mojo-V target public key (`ML-KEM-512`).
-2. `dc-tool dcgen` encapsulates to that public key, producing:
-   - `KEM_DC` (KEM ciphertext)
-   - `ss` (shared secret)
-3. Tool derives a SIMON-128 key from `ss` via HKDF-SHA256.
-4. Tool creates and encodes the 64-byte data contract.
-5. Tool encrypts contract bytes with SIMON-128 (CBC-like chaining in code).
-6. Tool writes an output text file containing:
-   - `KEM=ML-KEM-512`
-   - `CIPHER=SIMON-128`
-   - `KEM_DC=<hex>`
-   - `MSG_DC=<hex>`
-   - `PT_SHA256=<hex>` (integrity fingerprint of plaintext contract)
-
----
-
-## 2) Roles in Mojo-V secure computation
-
-## Data owner
-
-The **data owner** is the party preparing protected input/contracts for Mojo-V execution. In this tool’s model, the data owner:
-
-- has access to the Mojo-V CPU’s public key,
-- creates an encrypted contract (`dcgen`),
-- sends that encrypted artifact toward execution/validation.
-
-## Service provider
-
-The **service provider** operates Mojo-V compute infrastructure (e.g., hosts CPUs/runtimes that execute secure workloads). In a production secure-hardware model:
-
-- service infrastructure exposes or distributes public keys,
-- private keys stay bound to hardware trust boundaries,
-- contract decryption happens inside trusted Mojo-V execution context, not by arbitrary external users.
-
----
-
-## 3) Public/private keys and ML-KEM-512 key encapsulation
-
-`dc-tool` uses OpenSSL’s `ML-KEM-512` support through EVP APIs.
-
-### Key concepts
-
-- **Public key**: safe to share; used by the data owner to encapsulate a shared secret.
-- **Private key**: secret; used by the receiving side to decapsulate and recover the same shared secret.
-
-### Why this is useful
-
-The data owner does **not** need to transmit the symmetric key directly. Instead:
-
-1. Data owner encapsulates to the public key.
-2. Encapsulation yields:
-   - KEM ciphertext (`KEM_DC`) and
-   - shared secret `ss`.
-3. Recipient (with private key) decapsulates `KEM_DC` to recover matching `ss`.
-
-This lets the owner and receiver derive the same encryption key material without exposing the receiver private key or directly sending plaintext key material.
-
-### In this tool
-
-- `ss` is fed into HKDF-SHA256 with fixed salt/info labels.
-- HKDF output is a 128-bit key used by SIMON-128 to encrypt/decrypt the 64-byte contract payload.
-
----
-
-## 4) Using the DC multitool to create Mojo-V CPU public/private keys
-
-> From `dc-tool/` directory.
-
-### Build
-
-```bash
-make build
+For example, to build, test and then clean the Bubble Sort benchmark in encrypted mode:
+```
+make TARGET=host build
+make TARGET=host test
+make TARGET=host clean
 ```
 
-### Generate keypair
+To assist in running experiments, the top-level Makefile includes a few useful targets:
+```
+make TARGET=<target> run-tests   # clean, build, and test all benchmarks in the specified target mode (host, standalone, simple)
+make all-clean   # clean all benchmark directories for all supported targets
+```
+You should be able to adapt these targets to your own project-specific tasks.
 
-```bash
-./dc-tool keygen pk-file.pem sk-file.pem
+## Benchmarks
+
+
+The Bringup-Bench benchmarks were selected for their minimal library and system dependencies, while still being interesting and non-trival codes.i Currently, the benchmark suite supports the following benchmarks. Note that the benchmarks tagged with (FP) require some form of floating point support, and the remaining benchmarks only require integer and string computation.
+
+- **ackermann** - Calculates the Ackermann function for a variety of input values.
+
+- **aes** - An AES implementation the encrypts and decrypts fixed test data.
+
+- **anagram** - Computes anagrams for the phrases in "input.txt" using the diction in the "words". This benchmark uses code-based read-only file access for multiple files.
+
+- **audio-codec** - Implements the A-Law compression algorithm for 16-bit PCM audio streams.
+
+- **avl-tree** - An AVL tree implmenetation with test code.
+
+- **banner** - Prints out a fancy vertical banner.
+
+- **bit-kernels** - Bit-twiddling kernels galore.
+
+- **blake2b** - Reference implementation and test of BLAKE2b, a cryptographic hash function based on Daniel J. Bernstein's ChaCha stream cipher.
+
+- **bloom-filter** - A Bloom filter implementation with test code that measures accuracy and false-positive rates.
+
+- **boyer-moore-search** - Performs a Boyer-Moore optimized search, given a test string and a large string to search.
+
+- **bubble-sort** - Performs a bubble sort on a randomly generated internal list of integers.
+
+- **ccmac** - Complex CMAC (FP64): Performs a complex multiply-accumulate dot product, exercising 4 multiplies and 4 adds per element to stress FP throughput.
+
+- **checkers** - Checkers game based on minimax search.
+
+- **c-interp** - A C language interpreter that interprets the test program "hello.c". This benchmark uses code-based read-only file access.
+
+- **cipher** - A TEA cipher implementation the encrypts and decrypts some fixed test data.
+
+- **connect4-minimax** - A MINIMAX implementation of the classic Connect-4 game.
+
+- **congrad** - Iteratively solves Ax=b for SPD matrices with a loop dominated by sparse matrix–vector multiplies (SpMV), AXPY and dot products.
+
+- **convex-hull** - Computes the surface of a convex hull.
+
+- **dhrystone** - An old-school Dhrystone benchmark.
+
+- **distinctness** - Computes if every element of an array is unique.
+
+- **donut** - A donut in code and action that defies proper explanation!
+
+- **fft-int** - Performs an integer fast-Fourier-transform on fixed integer input data.
+
+- **flood-fill** - Performs a color-based flood fill of a fixed tw-dimensional text array.
+
+- **frac-calc** - Computes calculations on proper and improper fractions.
+
+- **fuzzy-match** - Performs fuzzy matching of strings (e.g., slightly misspelled strings will match), with test code.
+
+- **fy-shuffle** - A Fisher-Yates perfect random vector shuffle implementation.
+
+- **gcd-list** - Computes the greatest common divisor for a list of integers using the division algorithm.
+
+- **grad-descent** - Gradient descent with linear regression implementation, with test code.
+
+- **graph-tests** - A graph data-structure manipulation library with many tests.
+
+- **hanoi** - Solves the Tower's of Hanoi problem for a variable number of towers.
+
+- **heldkarp-tsp** - Solves traveling salesman with Held-Karp dynamic programming over an encrypted graph, reporting encrypted-state-derived tour cost and route.
+
+- **heapsort** - Performs a heap sort on a randomly generated data set
+
+- **heat-calc** - Performs heat flow analysis of a metal pipe.
+
+- **huff-encode** - Performs string compression and decompression using a Huffman encoding technique.
+
+- **idct-alg** - Computes the integer DCT over a collection of pixels.
+
+- **indirect-test** - A few specialized tests to validate indirect jumps, switch tables, and function returns.
+
+- **kadane** - Implementation of Kadane's algorithm, which finds find the maximum sum of a contiguous subarray.
+
+- **kepler** - Calculates an orbital path for a planetary body based on the Kepler parameters.
+
+- **k-means** - A K-Means clustering algorithm running on synthetic data.
+
+- **knapsack** - A knapsack packing algorithm running various tests.
+
+- **knights-tour** - A dynamic programming implementation of the Knight's Tour problem (i.e., one chess knight visits all board squares).
+
+- **life** - Conway's game of life simulation.
+
+- **lcs** - Computes the longest common subsequence over encrypted string pairs and reports encrypted start index and length.
+
+- **lyndon-factors** - Computes Duval-style Lyndon factorization over encrypted strings and reports encrypted factor start indices and lengths.
+
+- **manacher-lps** - Computes the longest palindromic substring over encrypted strings using Manacher's algorithm and reports encrypted start index and length.
+
+- **longdiv** - Computes a long division using the pencil-on-paper method.
+
+- **lu-decomp** - Performs LU decomposition of an input matrix.
+
+- **lz-compress** - A compression/decompress tool based on the LZ compression algorithm.
+
+- **mandelbrot** - Calculate and print using ASCII graphics a Mendelbrot fractal.
+
+- **matmult** - Performs a variety of matrix multiplications, checking its results.
+
+- **max-subseq** - Computes the longest subsequence common (LSC) to all sequences in a set of sequences using the dynamic programming method.
+
+- **mersenne** - Generate a sequence of pseudo-random numbers using the Mersenne Twister algorithm.
+
+- **minspan** - Finds the minimal spanning tree of a graph (via Kruscal's algorithm over the graph's adjacency matrix).
+
+- **monte-carlo** - Uses a Monte Carlo simulation to find an approximation of PI.
+
+- **moving-average** - Smooths encrypted time-series data over a sliding window, revealing only the final smoothed encrypted series at program end.
+
+- **moving-average-fp64** - Smooths encrypted FP64 time-series samples with floating-point moving averages, revealing only the final smoothed encrypted series at program end.
+
+- **murmur-hash** - Computes the MURMUR hash of its input value.
+
+- **natlog** - Compute the value of natural log e, using an iterative method.
+
+- **nbody-sim** - Performs an N-body simulation to high detail.
+
+- **n-queens** - Solves the N-queens problem, of various sizes.
+
+- **nr-solver** - Computes a square-root value using a Newton-Raphson solver.
+
+- **packet-filter** - Performs complex packet filtering on a randomly generated steam of network packets.
+
+- **parrondo** - A game theory based solver that simulates Parrondo's paradox.
+
+- **partition-equal** - Solves Partition Equal Subset Sum using dynamic programming over encrypted sets, decrypting only final per-set results.
+
+- **pascal** - Compute Pascal's triangle, to a specified depth.
+
+- **pi-calc** - An integer based high-precision PI calculator.
+
+- **primal-test** - Performs the Miller-Rabin stochastic primarility test to extremely high certainty.
+
+- **priority-queue** - Implements and tests a priority queue data structure.
+
+- **qsort-demo** - Performs a sorting operation using the library QSORT capability.
+
+- **qsort-test** - Tests the library's QSORT implementation, using a range of self-validating tests.
+
+- **quaternions** - Computes a geometry problem using quaternions.
+
+- **quine** - A C program that prints itself.
+
+- **rabinkarp-search** - Implements the very efficient Rabin-Karp data-oblivious string search algorithm. This search algorithm is O(N) in the length of the string searched.
+
+- **rand-test** - Performs a set of randomness tests on a good and bad random number generator.
+
+- **ransac** - Performs RANSAC (RANdom SAmple Consensus) robustly estimate the parameters of a mathematical model from a randomly generated dataset.
+
+- **regex-parser** - A regular-expression parser running a battery of tests.
+
+- **rho-factor** - A Pollard's Rho integer factorization algorithm.
+
+- **risk-score** - Applies a fixed clinical risk model to encrypted patient features and reveals only each patient's final risk score and tier.
+
+- **rle-compress** - A run-length-encoding (RLE) compressor, with multiple tests.
+
+- **rsa-cipher** - Implements RSA encryption and decryption using reduced-strength 128-bit keys.
+
+- **sat-solver** - Perform SATisfiability analysis on a complex logic circuit.
+
+- **scrambled-compare** - Uses encrypted dynamic programming to test whether one string is a scrambled version of another string.
+
+- **shortest-path** - Solves the all-pairs shortest path problem using the Floyd-Warshall algorithm.
+
+- **sieve** - Computes the prime values within a specified range, using the Sieve of Eratosthenes algorithmm
+
+- **simple-grep** - A simplified implementation of the Unix grep command.
+
+- **skeleton** - A minimal program, for use a starting point for new application ports and developments.
+
+- **spelt2num** - A spelled-out number to binary number converter.
+
+- **spirograph** - A spirograph simulation that produces a sequence of resulting data points.
+
+- **strange** - A strange C program that acts strangely in an expected manner.
+
+- **sudoku-solver** - Solves a fairly challenging Sudoku board.
+
+- **tetris-sim** - Plays tetris until the board fills.
+
+- **tiny-NN** - A deep neural net (DNN) implementation, with training and inference tests.
+
+- **topo-sort** - Tolologically sorts a graph and prints the result in breadth-first order.
+
+- **totient** - Calculates the Euler totient function phi.
+
+- **transcend** - Evaluates exp, sin, cos, and a mixed sequence over large arrays for fixed iterations to stress transcendental while emitting a checksum.
+
+- **variability-sample** - Estimates bootstrap-sample variability over an encrypted dataset, revealing only final per-sample variability values while keeping sampled data values encrypted throughout processing.
+
+- **vectors-3d** - A 3D vector library running a battery of tests.
+
+- **verlet** - Updates positions/velocities with the velocity-Verlet scheme over many steps, mixing FMAs and sqrt/divide for inverse-square forces to emulate physics-style FP workloads.
+
+- **weekday** - Given a year, month, and day, deterime the day of the week for the specified date.
+
+## Minimal library dependencies
+
+Bringup-Bench has no library dependencies, to reduce the amount of system infrastructure needed to get your first application running. Instead of needing system libraries, Bringup-bench implements its own library in "libmin". "libmin" includes most of what simple applications need, including:
+
+- printing values
+- parsing numbers from text
+- options parsing
+- string processing
+- memory copy and setting
+- program exit interfaces
+- pseudo-random number generation
+- dynamic storage allocator
+- code-based read-only file access functions
+- sorting functions
+- character class tests (from ctype.h)
+- floating-point math functions
+
+See the file "common/libmin.h" for more details.
+
+## Minimal system dependencies
+
+To minimize the system OS requirements, the Bringup-Bench only requires four system call interfaces to be implement. The interfaced required are as follows:
+```
+/* benchmark completed successfully */
+void libtarg_success(void);
+
+/* benchmark completed with error CODE */
+void libtarg_fail(int code);
+
+/* output a single character, to wherever the target wants to send it... */
+void libtarg_putc(char c);
+
+/* get some memory */
+void *libtarg_sbrk(size_t inc);
+```
+Once these four interfaces are implemented, all of the Bringup-Bench benchmarks can be built and run. To facilitate testing, the "TARGET=host" target defines the four required system interfaces by passing them on to the Linux OS. In addition, the repo also provides a standalone target "TARGET=sa" which only requires that the target support provbable memory.
+
+Optionally, the following two system calls can be implemented and enabled by defining `LIBTARG_PERF_HOOKS`:
+
+```c
+/* start perf-monitoring */
+void libtarg_start_perf();
+
+/* stop perf-monitoring */
+void libtarg_stop_perf();
 ```
 
-Output:
+These hooks, if enabled, are called at the beginning and end of each benchmark, and can be used for platform specific instrumentation and performance monitoring.
 
-- `pk-file.pem`: ML-KEM-512 public key (shareable)
-- `sk-file.pem`: ML-KEM-512 private key (sensitive)
+For benchmarks where computation is self-contained, only the core computation is placed in between the markers. For all other benchmarks, the complete benchmark code is placed between the markers.
 
-In a real deployment, private keys should be hardware-protected and not exported as regular files.
+## Using the code-based read-only file system
 
----
+Using the code-based read-only file system, it is possible for a benchmark to access a read-only file that is incorporated into its code. To convert an input file to a read-only code-based file, use the following command (shown for the benchmark "anagram"):
+```
+python3 scriptsr/file2hex.py words words.h __words
+```
+Where "words" is the file to convert, "words.h" is the name of the output header file with the data, and "__words" is the name of the variable defined in the header file "words.h". The resulting file produces two values: __words_sz is the size of the data in the __words array. To access the file, include into a MFILE definition in the benchmark file, for example:
+```
+MFILE __mwords = {
+  "words",
+  __words_sz,
+  __words,
+  0
+};
+MFILE *mwords = &__mwords;
+```
+Now the code-based read-only memory file "mwords" is now available for opening, reading, and closing. The following interfaces are available to access memory files:
+```
+/* open an in-memory file */
+void libmin_mopen(MFILE *mfile, const char *mode);
 
-## 5) Using the DC multitool to create Mojo-V compliant data contracts
+/* return in-memory file size */
+size_t libmin_msize(MFILE *mfile);
 
-Generate a contract ciphertext file using a recipient public key:
+/* at end of file */
+int libmin_meof(MFILE *mfile);
 
-```bash
-./dc-tool dcgen pk-file.pem strong dc-file.txt
+/* close the in-memory file */
+void libmin_mclose(MFILE *mfile);
+
+/* read a buffer from the in-memory file */
+size_t libmin_mread(void *ptr, size_t size, MFILE *mfile);
+
+/* get a string from the in-memory file */
+char *libmin_mgets(char *s, size_t size, MFILE *mfile);
+
+/* read a character from the in-memory file */
+int libmin_mgetc(MFILE *mfile);
 ```
 
-Mode options:
+## Hash-Alone execution
 
-- `fast`  -> `format_sel = 0`
-- `strong` -> `format_sel = 1`
-- `proof-carrying` (or `proofcarrying`) -> `format_sel = 2`
+Hash-alone execution targets (e.g., hashalone-host, hashalone-spike) allow pure bare-metal benchmark execution. As such, benchmarks configured for the hash-alone targets can execution completely and verify their results with NO output or input devices. To run the benchmark, simply load its binary and jump to the start address specified in the ELF binary. When the libmin_success() interface is called, simply spin to terminate the program. At completion, the memory variable "__hashval" contains a hash signature of the output of the program as it run, since in this target mode all libtarg_putc() output goes to a FNV1a hash function. The final hash value will indicate the full output of the program. To verify the hash function, use one of the reference hash-alone targets (e.g., hashalone-host, hashalone-spike). For RISC-V targets, to debug a hash-alone output hash signature mismatch, simply use the hashalone-spike target as your golden model -- this target will run the RISC-V binaries deterministically and with the same addresses each time, so it is possible to perform a cycle-by-cycle comparisons against your design-under-test.
 
-The produced `dc-file.txt` includes all components needed for later validation by a holder of the matching private key.
+## Porting the Bringup-Bench to other targets
 
-### Example end-to-end (software simulation)
+To port the Bringup-bench to your new CPU, accelerator, compiler, or operating system, you need only concern yourself with the "libtarg.h" and "libmin.c" files. First define a new target specifier in "Makefile" and then add it to the "libtarg.h" and "libtarg.c" files. Inside the "libtarg.h" file you will need to define basic data type sizes plus define how the benchmarks access "vararg" parameter arguments. Inside the "libtarg.c" file, you will need to define the following four system call interfaces:
+```
+/* benchmark completed successfully */
+void libtarg_success(void);
 
-```bash
-./dc-tool keygen pk-file.pem sk-file.pem
-./dc-tool dcgen pk-file.pem proof-carrying dc-file.txt
-./dc-tool dcchk sk-file.pem dc-file.txt
+/* benchmark completed with error CODE */
+void libtarg_fail(int code);
+
+/* output a single character, to wherever the target wants to send it... */
+void libtarg_putc(char c);
+
+/* get some memory */
+void *libtarg_sbrk(size_t inc);
 ```
 
-For verbose decrypted-field output (test/development):
+## Licensing details
 
-```bash
-./dc-tool dcchk-v sk-file.pem dc-file.txt
-```
+The portions of the benchmark suite that was built by the benchmark team are (C) 2021-2024 and available for use under
+the [Apache License, version 2.0](https://www.apache.org/licenses/LICENSE-2.0) 
 
----
-
-## 6) Validating data contracts with the DC multitool + hardware-key limitation
-
-Validation command:
-
-```bash
-./dc-tool dcchk <sk_file> <ct_file>
-```
-
-What validation checks:
-
-1. Parses `KEM_DC`, `MSG_DC`, and `PT_SHA256` from file.
-2. Decapsulates `KEM_DC` with provided private key.
-3. Derives SIMON key via HKDF.
-4. Decrypts `MSG_DC`.
-5. Recomputes plaintext SHA-256 and compares against `PT_SHA256`.
-6. Verifies contract header signature bytes equal `"Mojo-V ver. #001"`.
-
-### Why this cannot decrypt a secure contract for a real Mojo-V CPU
-
-For real secure hardware, the private key is expected to be:
-
-- device-bound,
-- inaccessible/export-restricted,
-- not provided to users as a PEM file.
-
-`dc-tool dcchk` requires a user-supplied `<sk_file>`. If the private key is sealed inside Mojo-V hardware, users cannot provide that key to the tool, so they cannot perform external software decryption of production contracts.
-
-In other words, `dcchk` is excellent for development/test validation with software keys, but not a bypass for hardware trust boundaries.
-
----
-
-## Additional practical guidance
-
-- Treat `sk-file.pem` as sensitive secret material.
-- Rotate keys and regenerate contracts as part of operational hygiene.
-- Use `dcchk-v` only in trusted debug environments because it prints decrypted fields.
-- Keep contract files immutable after generation; tampering should fail validation via hash/header checks.
-- Consider auditable key provenance for public keys distributed to data owners.
-
----
-
-## CLI quick reference
-
-```bash
-./dc-tool keygen <pk_file> <sk_file>
-./dc-tool dcgen <pk_file> {fast,strong,proof-carrying} <ct_file>
-./dc-tool dcchk <sk_file> <ct_file>
-./dc-tool dcchk-v <sk_file> <ct_file>
-```
+And, thanks to the respective authors of the benchmarks that were adapted for the Bringup-Bench Benchmark Suite from other efforts.
 
