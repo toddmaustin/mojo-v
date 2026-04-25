@@ -152,6 +152,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `bloom-filter` | Bloom-filter set-membership benchmark |
 | `bubble-sort` | Integer bubble-sort benchmark |
 | `bubble-sort-strong` | Integer bubble-sort benchmark configured for strong encryption |
+| `chi-squared` | Chi-squared statistical goodness-of-fit benchmark |
 | `distinctness` | Distinctness analysis benchmark |
 | `distinctness-Onlog2n` | Distinctness benchmark variant with O(n log² n) strategy |
 | `edit-distance` | Edit-distance (string distance) benchmark |
@@ -178,6 +179,8 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `mersenne` | Mersenne-number computation benchmark |
 | `minspan` | Minimum spanning structure benchmark |
 | `monte-carlo` | Monte Carlo simulation benchmark |
+| `moving-average` | Moving-average analytics benchmark |
+| `moving-average-fp64` | FP64 moving-average analytics benchmark |
 | `nbody-sim` | N-body simulation benchmark |
 | `nonlinear-nn` | Non-linear neural-network benchmark |
 | `nr-solver` | Newton-Raphson solver benchmark |
@@ -186,6 +189,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `pagerank` | PageRank graph benchmark |
 | `parrondo` | Parrondo process/strategy benchmark |
 | `partition-equal` | Partition Equal Subset Sum benchmark over encrypted sets |
+| `pca-analysis` | Principal-component-analysis benchmark |
 | `primal-test` | Primality testing benchmark |
 | `private-join` | Privacy-preserving join benchmark |
 | `psi` | Private-set-intersection benchmark |
@@ -206,6 +210,7 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `tea-cipher` | TEA cipher benchmark |
 | `tiny-NN` | Tiny neural-network inference benchmark |
 | `triangle-count` | Triangle counting graph benchmark |
+| `variability-sample` | Variability and sampling-statistics benchmark |
 | `verlet` | Verlet-integration physics benchmark |
 
 
