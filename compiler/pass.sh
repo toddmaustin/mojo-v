@@ -33,10 +33,16 @@ ninja -C "$LLVM_DIR/build" opt
 echo "==> Compiling $SOURCE to IR..."
 clang -O0 -Xclang -disable-O0-optnone -S -emit-llvm "$SOURCE" -o "$IR_FILE"
 
-# --- Step 4: Run the taint pass, emitting annotated IR ---
+# --- Step 4: Run taint pass, emitting annotated IR ---
 TAINTED_IR="ir/${BASENAME}.tainted.ll"
 echo "==> Running SecretTaint pass..."
 "$LLVM_DIR/build/bin/opt" -S "$IR_FILE" -passes=secrettaint -o "$TAINTED_IR"
-
 echo "==> Annotated IR written to $TAINTED_IR"
+
+# --- Step 5: Run branch elimination pass ---
+ELIM_IR="ir/${BASENAME}.elim.ll"
+echo "==> Running SecretBranchElim pass..."
+"$LLVM_DIR/build/bin/opt" -S "$TAINTED_IR" -passes=secretbranchelim -o "$ELIM_IR"
+echo "==> Branch-eliminated IR written to $ELIM_IR"
+
 echo "==> Done."
