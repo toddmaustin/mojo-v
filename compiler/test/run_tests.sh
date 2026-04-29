@@ -4,6 +4,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 OPT="$REPO_ROOT/llvm-project/build/bin/opt"
+LLC="$REPO_ROOT/llvm-project/build/bin/llc"
 FILECHECK="$REPO_ROOT/llvm-project/build/bin/FileCheck"
 
 if [ ! -f "$OPT" ]; then
@@ -19,7 +20,7 @@ fi
 PASS_COUNT=0
 FAIL_COUNT=0
 
-run_test() {
+run_opt_test() {
     local test_file="$1"
     local pass_name="$2"
     local expect_error="$3"   # "1" if the test expects opt to fail
@@ -27,7 +28,6 @@ run_test() {
     test_name="$(basename "$test_file")"
 
     if [ "$expect_error" = "1" ]; then
-        # Capture stderr; the test passes if FileCheck finds the expected error.
         if "$OPT" -S -passes="$pass_name" "$test_file" 2>&1 >/dev/null \
                 | "$FILECHECK" "$test_file" 2>&1; then
             echo "PASS: $test_name"
@@ -48,19 +48,43 @@ run_test() {
     fi
 }
 
+run_llc_test() {
+    local test_file="$1"
+    local test_name
+    test_name="$(basename "$test_file")"
+
+    if "$LLC" -mtriple=riscv64 -mattr=+m,+f,+d "$test_file" -o - 2>/dev/null \
+            | "$FILECHECK" "$test_file" 2>&1; then
+        echo "PASS: $test_name"
+        PASS_COUNT=$((PASS_COUNT + 1))
+    else
+        echo "FAIL: $test_name"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+}
+
 echo "==> SecretTaint tests"
 for f in "$SCRIPT_DIR/secrettaint/"*.ll; do
-    run_test "$f" "secrettaint" "0"
+    run_opt_test "$f" "secrettaint" "0"
 done
 
 echo ""
 echo "==> SecretBranchElim tests"
 for f in "$SCRIPT_DIR/secretbranchelim/"*.ll; do
-    # Tests using 'not opt ...' in their RUN line expect an error.
     if grep -q "^; RUN: not " "$f"; then
-        run_test "$f" "secretbranchelim" "1"
+        run_opt_test "$f" "secretbranchelim" "1"
     else
-        run_test "$f" "secretbranchelim" "0"
+        run_opt_test "$f" "secretbranchelim" "0"
+    fi
+done
+
+echo ""
+echo "==> SecretRegClass tests"
+for f in "$SCRIPT_DIR/secretregclass/"*.ll; do
+    if grep -q "^; RUN:.*llc" "$f"; then
+        run_llc_test "$f"
+    else
+        run_opt_test "$f" "secretregclass" "0"
     fi
 done
 
