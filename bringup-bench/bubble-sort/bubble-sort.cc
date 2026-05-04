@@ -26,6 +26,11 @@ print_data(uint64_t *data, unsigned size)
   }
 }
 
+// encrypted bubble sort kernel
+// 
+// inputs: data[] = encrypted uint64e_t data element
+//         size   = public number of elements to sort
+//
 void
 bubblesort(uint64e_t *data, unsigned size)
 {
