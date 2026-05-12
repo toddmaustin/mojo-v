@@ -36,9 +36,15 @@ echo "==> Running SecretTaint pass..."
 echo "==> Annotated IR written to $TAINTED_IR"
 
 # --- Step 4: Run branch elimination pass ---
+# mem2reg (function pass) must run before SecretBranchElim (module pass) so
+# that alloca/store/load patterns become phi nodes that the pass can fold.
+MEM2REG_IR="ir/${BASENAME}.mem2reg.ll"
+echo "==> Running mem2reg to promote allocas to SSA..."
+"$LLVM_DIR/build/bin/opt" -S "$TAINTED_IR" -passes="function(mem2reg)" -o "$MEM2REG_IR"
+
 ELIM_IR="ir/${BASENAME}.elim.ll"
 echo "==> Running SecretBranchElim pass..."
-"$LLVM_DIR/build/bin/opt" -S "$TAINTED_IR" -passes=secretbranchelim -o "$ELIM_IR"
+"$LLVM_DIR/build/bin/opt" -S "$MEM2REG_IR" -passes=secretbranchelim -o "$ELIM_IR"
 echo "==> Branch-eliminated IR written to $ELIM_IR"
 
 # --- Step 5: Annotate secret values with register class marker ---
@@ -47,11 +53,25 @@ echo "==> Running SecretRegClass pass..."
 "$LLVM_DIR/build/bin/opt" -S "$ELIM_IR" -passes=secretregclass -o "$REGCLASS_IR"
 echo "==> Register-class-annotated IR written to $REGCLASS_IR"
 
-# --- Step 6: Compile to RISC-V assembly ---
+# --- Step 6: Strip host CPU attributes so llc can target RISC-V ---
+# System clang (Apple M1) embeds host-specific "target-cpu" and
+# "target-features" attributes in each function. The RISC-V llc backend
+# rejects them, so we strip them here before code generation.
+CLEAN_IR="ir/${BASENAME}.clean.ll"
+python3 - "$REGCLASS_IR" "$CLEAN_IR" << 'PYEOF'
+import re, sys
+ir = open(sys.argv[1]).read()
+ir = re.sub(r' "target-cpu"="[^"]*"', '', ir)
+ir = re.sub(r' "target-features"="[^"]*"', '', ir)
+open(sys.argv[2], 'w').write(ir)
+PYEOF
+echo "==> Host CPU attributes stripped."
+
+# --- Step 7: Compile to RISC-V assembly ---
 ASM_FILE="ir/${BASENAME}.s"
 echo "==> Compiling to RISC-V assembly..."
 "$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d \
-    "$REGCLASS_IR" -o "$ASM_FILE"
+    "$CLEAN_IR" -o "$ASM_FILE"
 echo "==> RISC-V assembly written to $ASM_FILE"
 
 echo "==> Done."

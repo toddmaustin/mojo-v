@@ -25,13 +25,17 @@ LLVM IR  (-O0, disable-O0-optnone)
      ▼ SecretTaint pass  [implemented]
 LLVM IR with !secret metadata
      │
-     ▼ SecretBranchElim pass  [next]
+     ▼ mem2reg + SecretBranchElim pass  [implemented]
 LLVM IR with secret branches replaced by select
      │
-     ▼ RISC-V instruction selection
-MachineIR
+     ▼ SecretRegClass pass  [implemented]
+LLVM IR with @llvm.riscv.mojov.secret wrappers on !secret values
      │
-     ▼ Register allocation with SecretGPR class  [next]
+     ▼ RISC-V instruction selection
+     ▼ SecretConstraint pre-RA pass  [implemented]
+MachineIR: all defs that read from SecretGPR constrained to SecretGPR
+     │
+     ▼ Register allocation
 MachineIR with physical registers assigned (secret values → x16–x31)
      │
      ▼ Post-RA encrypted store/load substitution  [next]
@@ -82,39 +86,95 @@ This is over-approximate by design.
 
 ---
 
-## Step 3 — SecretBranchElim Pass (next)
+## Step 3 — SecretBranchElim Pass (done)
+
+**Location:** `llvm/lib/Transforms/Utils/SecretBranchElim.cpp`  
+**Pass name:** `secretbranchelim` (module pass)  
+**Tests:** `test/secretbranchelim/`
 
 Branching on a secret value leaks information through control-flow timing.
 Any `br` whose condition carries `!secret` metadata must be eliminated.
 
 **Strategy:**
-1. Find `br i1 %cond` instructions where `%cond` is `!secret`.
-2. Convert the enclosing if/else into a `select` (the LLVM equivalent of a
-   conditional move). This requires that both branches are free of
-   non-speculatable side effects (stores, calls, etc.).
-3. If the transformation is impossible — e.g., the branches contain side
-   effects that cannot be hoisted or speculated — emit a compiler error
-   identifying the offending source location.
+1. Run `mem2reg` first to promote alloca/store/load patterns to SSA phi nodes,
+   which SecretBranchElim requires to detect diamond-shaped control flow.
+2. Find `br i1 %cond` instructions where `%cond` is `!secret`.
+3. Convert the enclosing if/else into a `select` (the LLVM equivalent of a
+   conditional move). This requires that both branches form a diamond shape
+   and contain only speculatable instructions.
+4. If the transformation is impossible — e.g., the branches contain side
+   effects (stores, calls, etc.) — emit a compiler error identifying the
+   offending source location.
 
-This pass runs on IR, before instruction selection.
+On RISC-V, `select` lowers to `czero.eqz`/`czero.nez` from the Zicond
+extension, which execute both sides and pick the result without branching.
 
 ---
 
-## Step 4 — Register Allocation: SecretGPR Class (next)
+## Step 4 — SecretRegClass Pass (done)
 
-Mojo-V partitions the 32 RISC-V integer registers into:
-- **Public:** x0–x15
-- **Secret:** x16–x31 (note: must not use x16 or below for compressed-instruction safety; see project `NOTES.txt`)
+**Location:** `llvm/lib/Transforms/Utils/SecretRegClass.cpp`  
+**Pass name:** `secretregclass` (module pass)  
+**Tests:** `test/secretregclass/`
 
-Any value carrying `!secret` taint must be allocated to a secret physical
-register so the hardware can apply its encryption/decryption automatically.
+Ensures that every `!secret`-tagged integer value is allocated to a register
+in the secret range (x16–x31) during RISC-V code generation.
 
-**Implementation plan:**
-1. Define a `SecretGPR` register class in `RISCVRegisterInfo.td` covering x16–x31.
-2. After instruction selection, add a MachineIR pass that walks virtual
-   registers, checks whether the defining instruction carries `!secret`
-   metadata, and constrains those virtual registers to the `SecretGPR` class.
-3. The standard LLVM register allocator then respects the class constraint.
+**IR-level pass:** walks each function and wraps every `!secret` integer
+instruction with a call to `@llvm.riscv.mojov.secret.*`. Sub-word values
+(i1/i8/i16/i32) are zero-extended to i64 before the call and truncated back
+afterward, since SecretGPR only holds i64 on RV64:
+
+```llvm
+; Before:
+%sum = add i64 %x, %y, !secret !0
+
+; After:
+%sum = add i64 %x, %y, !secret !0
+%sum.secret = call i64 @llvm.riscv.mojov.secret.i64(i64 %sum)
+```
+
+All subsequent uses of `%sum` are replaced by `%sum.secret`.
+
+**Backend wiring:**
+- `SecretGPR` register class (x16–x31) defined in `RISCVRegisterInfo.td`.
+  Allocation order: caller-saved first (a6–a7, t3–t6), then callee-saved (s2–s11).
+- `@llvm.riscv.mojov.secret` intrinsic defined in `IntrinsicsRISCV.td`.
+- `RISCVISelDAGToDAG.cpp` handles the intrinsic during instruction selection
+  by emitting `COPY_TO_REGCLASS` into `SecretGPR`.
+
+---
+
+## Step 4b — SecretConstraint Pre-RA Pass (done)
+
+**Location:** `llvm/lib/Target/RISCV/RISCVSecretConstraint.cpp`  
+**Pass type:** pre-RA `MachineFunctionPass`
+
+The Mojo-V hardware rule: **any instruction that reads from a secret register
+must also write its result to a secret register.** Placing a secret-derived
+value in a public register is a hardware fault.
+
+The `COPY_TO_REGCLASS` emitted for the `@llvm.riscv.mojov.secret` intrinsic
+only constrains the *intrinsic's* output virtual register. The arithmetic
+instruction that feeds it (e.g., `xor`) can still be assigned a public GPR
+destination, producing a forbidden pattern like `xor a0, a6, a0`.
+
+This pass runs before register allocation and performs a forward fixed-point
+walk over all machine instructions. For every instruction where any USE virtual
+register belongs to `SecretGPR`, it tightens all DEF virtual registers to
+`SecretGPR` (via `getCommonSubClass`). Floating-point or other disjoint classes
+are left unchanged.
+
+Result: the register allocator sees the SecretGPR constraint on the arithmetic
+instruction itself, not just on the downstream copy, and allocates accordingly:
+
+```asm
+; Before this pass:
+xor  a0, a6, a0   ; reads secret a6, writes public a0 — hardware fault
+
+; After this pass:
+xor  a6, a6, a0   ; reads secret a6, writes secret a6 — correct
+```
 
 ---
 
@@ -136,9 +196,25 @@ instruction opcodes are emitted.
 ## Building and Testing
 
 ```bash
-# Build LLVM and run the taint pass on a source file
-./pass.sh test.c          # output: ir/test.tainted.ll
+# Build LLVM and run the full pipeline on a source file:
+#   src/<file> → ir/<file>.tainted.ll → ir/<file>.mem2reg.ll
+#               → ir/<file>.elim.ll → ir/<file>.regclass.ll
+#               → ir/<file>.clean.ll → ir/<file>.s
+./pass.sh <source_file>
 
-# Run the taint-pass test suite
+# Run the full test suite (unit tests + end-to-end tests)
 ./test/run_tests.sh
 ```
+
+### Test layout
+
+| Directory | Type | What it tests |
+|---|---|---|
+| `test/secrettaint/` | opt FileCheck | SecretTaint pass on hand-crafted IR |
+| `test/secretbranchelim/` | opt FileCheck | SecretBranchElim pass on hand-crafted IR |
+| `test/secretregclass/` | opt / llc FileCheck | SecretRegClass IR wrapping + SecretGPR regalloc |
+| `test/e2e/src/` | C source → full pipeline | Taint, branch elim, regclass, and assembly from real C |
+
+End-to-end tests use per-prefix `FileCheck` patterns embedded in C comments
+(`TAINT`, `ELIM`, `REGCLASS`, `ASM`). Each file is compiled through the full
+pipeline and checked at each stage.

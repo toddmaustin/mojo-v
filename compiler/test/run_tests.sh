@@ -89,5 +89,17 @@ for f in "$SCRIPT_DIR/secretregclass/"*.ll; do
 done
 
 echo ""
+echo "==> End-to-end tests"
+if [ -f "$SCRIPT_DIR/e2e/run_tests.sh" ]; then
+    # Run in a subshell; capture its exit status without triggering set -e.
+    e2e_output="$("$SCRIPT_DIR/e2e/run_tests.sh" 2>&1)" || true
+    e2e_pass=$(echo "$e2e_output" | grep -c "^PASS:" || true)
+    e2e_fail=$(echo "$e2e_output" | grep -c "^FAIL" || true)
+    echo "$e2e_output" | grep -E "^(PASS|FAIL)"
+    PASS_COUNT=$((PASS_COUNT + e2e_pass))
+    FAIL_COUNT=$((FAIL_COUNT + e2e_fail))
+fi
+
+echo ""
 echo "Results: $PASS_COUNT passed, $FAIL_COUNT failed"
 [ "$FAIL_COUNT" -eq 0 ]
