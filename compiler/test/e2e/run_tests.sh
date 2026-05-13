@@ -63,7 +63,28 @@ run_e2e() {
         return
     fi
 
-    # SecretBranchElim
+    # SecretBranchElim — check first whether this test expects a compiler error.
+    if grep -q "^// ELIM-ERROR:" "$src"; then
+        # The test expects secretbranchelim to fail. Capture stderr and check
+        # it against the ELIM-ERROR patterns; treat pipeline success as a failure.
+        local elim_err
+        elim_err="$("$OPT" -S -passes=secretbranchelim "$mem2reg_ir" \
+                        -o "$elim_ir" 2>&1 >/dev/null)" || true
+        if "$OPT" -S -passes=secretbranchelim "$mem2reg_ir" \
+                -o /dev/null 2>/dev/null; then
+            echo "FAIL [ELIM-ERROR: pass succeeded unexpectedly]: $base"
+            FAIL_COUNT=$((FAIL_COUNT + 1))
+        elif echo "$elim_err" | "$FILECHECK" --check-prefix=ELIM-ERROR "$src" \
+                2>/dev/null; then
+            echo "PASS: $base"
+            PASS_COUNT=$((PASS_COUNT + 1))
+        else
+            echo "FAIL [ELIM-ERROR: wrong error message]: $base"
+            FAIL_COUNT=$((FAIL_COUNT + 1))
+        fi
+        return
+    fi
+
     if ! "$OPT" -S -passes=secretbranchelim "$mem2reg_ir" -o "$elim_ir" 2>/dev/null; then
         echo "FAIL [secretbranchelim]: $base"
         FAIL_COUNT=$((FAIL_COUNT + 1))
