@@ -12,7 +12,12 @@ SOURCE="src/$1"
 BASENAME=$(basename "${SOURCE%.*}")  # e.g. src/test.c -> test
 IR_FILE="ir/${BASENAME}.ll"
 
-mkdir -p ir
+LIBMIN_DIR="../bringup-bench/common"
+LIBTARG_DIR="../bringup-bench/target"
+LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -S -emit-llvm
+               -DTARGET_HOST -D_SSIZE_T -I "$LIBTARG_DIR" -I "$LIBMIN_DIR")
+
+mkdir -p ir ir/libmin
 
 # --- Step 1: Configure and build LLVM ---
 if [ ! -d "$LLVM_DIR/build" ]; then
@@ -23,16 +28,36 @@ else
 fi
 
 echo "==> Building LLVM..."
-ninja -C "$LLVM_DIR/build" opt llc
+ninja -C "$LLVM_DIR/build" opt llc llvm-link
 
 # --- Step 2: Compile source to LLVM IR ---
 echo "==> Compiling $SOURCE to IR..."
-clang -O0 -Xclang -disable-O0-optnone -S -emit-llvm "$SOURCE" -o "$IR_FILE"
+clang "${LIBMIN_CFLAGS[@]}" "$SOURCE" -o "$IR_FILE"
+
+# --- Step 2b: Compile libmin + libtarg to IR and link into one module ---
+echo "==> Compiling libmin sources to IR..."
+libmin_irs=()
+for src in "$LIBMIN_DIR"/libmin_*.c; do
+    name=$(basename "${src%.c}")
+    ir="ir/libmin/${name}.ll"
+    clang "${LIBMIN_CFLAGS[@]}" "$src" -o "$ir" 2>/dev/null
+    libmin_irs+=("$ir")
+done
+
+echo "==> Compiling libtarg to IR..."
+clang "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/libtarg.c" -o "ir/libmin/libtarg.ll" 2>/dev/null
+
+echo "==> Linking with libmin..."
+LINKED_IR="ir/${BASENAME}.linked.ll"
+"$LLVM_DIR/build/bin/llvm-link" -S \
+    "$IR_FILE" "${libmin_irs[@]}" "ir/libmin/libtarg.ll" \
+    -o "$LINKED_IR"
+echo "==> Linked IR written to $LINKED_IR"
 
 # --- Step 3: Run taint pass, emitting annotated IR ---
 TAINTED_IR="ir/${BASENAME}.tainted.ll"
 echo "==> Running SecretTaint pass..."
-"$LLVM_DIR/build/bin/opt" -S "$IR_FILE" -passes=secrettaint -o "$TAINTED_IR"
+"$LLVM_DIR/build/bin/opt" -S "$LINKED_IR" -passes=secrettaint -o "$TAINTED_IR"
 echo "==> Annotated IR written to $TAINTED_IR"
 
 # --- Step 4: Run branch elimination pass ---

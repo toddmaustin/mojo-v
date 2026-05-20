@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include "libmin.h"
 
 #define SECRET __attribute__((annotate("secret")))
 
@@ -19,8 +17,8 @@ uint8_t foo(void) {
 }
 
 int main(void) {
-    printf("Hello, world!\n");
+    libmin_printf("Hello, world!\n");
 
     uint8_t x = foo();
-    return EXIT_SUCCESS;
+    libtarg_success();
 }

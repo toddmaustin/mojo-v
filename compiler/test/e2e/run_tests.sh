@@ -10,10 +10,34 @@ FILECHECK="$REPO_ROOT/llvm-project/build/bin/FileCheck"
 PASS_COUNT=0
 FAIL_COUNT=0
 
+LIBMIN_DIR="$REPO_ROOT/../bringup-bench/common"
+LIBTARG_DIR="$REPO_ROOT/../bringup-bench/target"
+LLVM_LINK="$REPO_ROOT/llvm-project/build/bin/llvm-link"
+
 die() { echo "Error: $*" >&2; exit 1; }
 [ -f "$OPT" ]       || die "opt not found — run pass.sh to build LLVM"
 [ -f "$LLC" ]       || die "llc not found"
 [ -f "$FILECHECK" ] || die "FileCheck not found"
+[ -f "$LLVM_LINK" ] || die "llvm-link not found"
+[ -d "$LIBMIN_DIR" ] || die "bringup-bench/common not found at $LIBMIN_DIR"
+
+LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -S -emit-llvm
+               -DTARGET_HOST -D_SSIZE_T -I "$LIBTARG_DIR" -I "$LIBMIN_DIR")
+
+# Compile libmin + libtarg to IR once, reused by all tests.
+LIBMIN_TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$LIBMIN_TMPDIR"' EXIT
+
+echo "==> Compiling libmin..."
+LIBMIN_IRS=()
+for src in "$LIBMIN_DIR"/libmin_*.c; do
+    ir="$LIBMIN_TMPDIR/$(basename "${src%.c}").ll"
+    clang "${LIBMIN_CFLAGS[@]}" "$src" -o "$ir" 2>/dev/null
+    LIBMIN_IRS+=("$ir")
+done
+clang "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/libtarg.c" \
+    -o "$LIBMIN_TMPDIR/libtarg.ll" 2>/dev/null
+LIBMIN_IRS+=("$LIBMIN_TMPDIR/libtarg.ll")
 
 has_prefix() {
     local src="$1" prefix="$2"
@@ -33,22 +57,29 @@ run_e2e() {
     trap 'rm -rf "$tmpdir"' RETURN
 
     local raw_ir="$tmpdir/raw.ll"
+    local linked_ir="$tmpdir/linked.ll"
     local tainted_ir="$tmpdir/tainted.ll"
     local elim_ir="$tmpdir/elim.ll"
     local regclass_ir="$tmpdir/regclass.ll"
     local clean_ir="$tmpdir/clean.ll"
     local asm="$tmpdir/out.s"
 
-    # Compile C → IR (suppress host attributes from system clang)
-    if ! clang -O0 -Xclang -disable-O0-optnone -S -emit-llvm \
-            "$src" -o "$raw_ir" 2>/dev/null; then
+    # Compile C → IR
+    if ! clang "${LIBMIN_CFLAGS[@]}" "$src" -o "$raw_ir" 2>/dev/null; then
         echo "FAIL [compile]: $base"
         FAIL_COUNT=$((FAIL_COUNT + 1))
         return
     fi
 
+    # Link with libmin
+    if ! "$LLVM_LINK" -S "$raw_ir" "${LIBMIN_IRS[@]}" -o "$linked_ir" 2>/dev/null; then
+        echo "FAIL [llvm-link]: $base"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        return
+    fi
+
     # SecretTaint
-    if ! "$OPT" -S -passes=secrettaint "$raw_ir" -o "$tainted_ir" 2>/dev/null; then
+    if ! "$OPT" -S -passes=secrettaint "$linked_ir" -o "$tainted_ir" 2>/dev/null; then
         echo "FAIL [secrettaint]: $base"
         FAIL_COUNT=$((FAIL_COUNT + 1))
         return

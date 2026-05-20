@@ -7,6 +7,7 @@
 // ELIM-LABEL: define{{.*}} @classify
 // ELIM:        select i1
 // ELIM-NOT:    br i1
+// ELIM:        ret
 
 #include <stdint.h>
 #define SECRET __attribute__((annotate("secret")))
