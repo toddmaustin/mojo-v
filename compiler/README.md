@@ -92,22 +92,40 @@ This is over-approximate by design.
 **Pass name:** `secretbranchelim` (module pass)  
 **Tests:** `test/secretbranchelim/`
 
-Branching on a secret value leaks information through control-flow timing.
-Any `br` whose condition carries `!secret` metadata must be eliminated.
+Secret-dependent control flow and memory access patterns leak information
+through timing side channels. This pass detects all three forms and either
+eliminates them or emits a hard compiler error.
 
-**Strategy:**
+**Conditional branches** (`br i1 %cond` where `%cond` carries `!secret`):
 1. Run `mem2reg` first to promote alloca/store/load patterns to SSA phi nodes,
    which SecretBranchElim requires to detect diamond-shaped control flow.
-2. Find `br i1 %cond` instructions where `%cond` is `!secret`.
-3. Convert the enclosing if/else into a `select` (the LLVM equivalent of a
+2. Convert the enclosing if/else into a `select` (the LLVM equivalent of a
    conditional move). This requires that both branches form a diamond shape
    and contain only speculatable instructions.
-4. If the transformation is impossible — e.g., the branches contain side
-   effects (stores, calls, etc.) — emit a compiler error identifying the
-   offending source location.
+3. If the transformation is impossible — e.g., the branches contain side
+   effects (stores, calls, etc.) — emit a hard compiler error.
 
 On RISC-V, `select` lowers to `czero.eqz`/`czero.nez` from the Zicond
 extension, which execute both sides and pick the result without branching.
+
+**Secret-dependent memory addresses** (`load`/`store` whose pointer operand
+carries `!secret`): using a secret-derived address reveals which cache line was
+touched, leaking the secret through cache timing. No safe transformation exists;
+the compiler emits a hard error:
+```
+error: secret-dependent memory address in '<func>' leaks via cache timing
+```
+Note: this fires when the *address* is secret. A store whose *value* is secret
+but whose address is public is fine — the value will be placed in a secret
+register and encrypted by the hardware on the way out.
+
+**Secret-dependent indirect control flow** (`indirectbr` with a secret address,
+or an indirect `call`/`invoke` through a secret function pointer): the jump
+target itself reveals secret information via branch target prediction. No safe
+transformation exists; the compiler emits a hard error:
+```
+error: secret-dependent indirect control flow in '<func>' is not transformable
+```
 
 ---
 
