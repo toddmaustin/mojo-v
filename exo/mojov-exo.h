@@ -191,7 +191,9 @@ private:
     return _andi(raw, kMask);
   }
 
-  storage_type value_;
+  // Annotated as "secret" so the Mojo-V SecretTaint compiler pass seeds taint
+  // from every field access, enabling full taint tracking through EXO operations.
+  storage_type value_ __attribute__((annotate("secret")));
 };
 
 template <std::size_t Bits>
@@ -235,7 +237,9 @@ public:
   fpe_t& operator/=(value_type rhs) { value_ = _fdivi(value_, static_cast<double>(rhs)); return *this; }
 
 private:
-  storage_type value_;
+  // Annotated as "secret" so the Mojo-V SecretTaint compiler pass seeds taint
+  // from every field access, enabling full taint tracking through EXO operations.
+  storage_type value_ __attribute__((annotate("secret")));
 };
 
 // ============================================================================

@@ -14,8 +14,10 @@ IR_FILE="ir/${BASENAME}.ll"
 
 LIBMIN_DIR="../bringup-bench/common"
 LIBTARG_DIR="../bringup-bench/target"
+EXO_DIR="../exo"
 LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -S -emit-llvm
-               -DTARGET_HOST -D_SSIZE_T -I "$LIBTARG_DIR" -I "$LIBMIN_DIR")
+               -DTARGET_HOST -D_SSIZE_T
+               -I "$LIBTARG_DIR" -I "$LIBMIN_DIR" -I "$EXO_DIR")
 
 mkdir -p ir ir/libmin
 
@@ -31,8 +33,13 @@ echo "==> Building LLVM..."
 ninja -C "$LLVM_DIR/build" opt llc llvm-link
 
 # --- Step 2: Compile source to LLVM IR ---
+# Use clang++ for C++ sources (.cc/.cpp), clang for C sources.
 echo "==> Compiling $SOURCE to IR..."
-clang "${LIBMIN_CFLAGS[@]}" "$SOURCE" -o "$IR_FILE"
+case "$SOURCE" in
+    *.cc|*.cpp) COMPILER="clang++ -target riscv64-unknown-elf" ;;
+    *)          COMPILER="clang" ;;
+esac
+$COMPILER "${LIBMIN_CFLAGS[@]}" "$SOURCE" -o "$IR_FILE"
 
 # --- Step 2b: Compile libmin + libtarg to IR and link into one module ---
 echo "==> Compiling libmin sources to IR..."
@@ -44,13 +51,17 @@ for src in "$LIBMIN_DIR"/libmin_*.c; do
     libmin_irs+=("$ir")
 done
 
-echo "==> Compiling libtarg to IR..."
-clang "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/libtarg.c" -o "ir/libmin/libtarg.ll" 2>/dev/null
+echo "==> Compiling libtarg, simon, and mojov-utils to IR..."
+clang   "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/libtarg.c"      -o "ir/libmin/libtarg.ll"     2>/dev/null
+# simon.c and mojov-utils.c use C++ types (bool, etc.) — compile as C++.
+clang++ "${LIBMIN_CFLAGS[@]}" "$LIBMIN_DIR/simon.c"         -o "ir/libmin/simon.ll"       2>/dev/null
+clang++ "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/mojov-utils.c"  -o "ir/libmin/mojov-utils.ll" 2>/dev/null
 
-echo "==> Linking with libmin..."
+echo "==> Linking with libmin + exo support..."
 LINKED_IR="ir/${BASENAME}.linked.ll"
 "$LLVM_DIR/build/bin/llvm-link" -S \
-    "$IR_FILE" "${libmin_irs[@]}" "ir/libmin/libtarg.ll" \
+    "$IR_FILE" "${libmin_irs[@]}" \
+    "ir/libmin/libtarg.ll" "ir/libmin/simon.ll" "ir/libmin/mojov-utils.ll" \
     -o "$LINKED_IR"
 echo "==> Linked IR written to $LINKED_IR"
 

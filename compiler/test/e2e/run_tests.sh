@@ -12,6 +12,7 @@ FAIL_COUNT=0
 
 LIBMIN_DIR="$REPO_ROOT/../bringup-bench/common"
 LIBTARG_DIR="$REPO_ROOT/../bringup-bench/target"
+EXO_DIR="$REPO_ROOT/../exo"
 LLVM_LINK="$REPO_ROOT/llvm-project/build/bin/llvm-link"
 
 die() { echo "Error: $*" >&2; exit 1; }
@@ -20,24 +21,30 @@ die() { echo "Error: $*" >&2; exit 1; }
 [ -f "$FILECHECK" ] || die "FileCheck not found"
 [ -f "$LLVM_LINK" ] || die "llvm-link not found"
 [ -d "$LIBMIN_DIR" ] || die "bringup-bench/common not found at $LIBMIN_DIR"
+[ -d "$EXO_DIR" ]    || die "exo directory not found at $EXO_DIR"
 
 LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -S -emit-llvm
-               -DTARGET_HOST -D_SSIZE_T -I "$LIBTARG_DIR" -I "$LIBMIN_DIR")
+               -DTARGET_HOST -D_SSIZE_T
+               -I "$LIBTARG_DIR" -I "$LIBMIN_DIR" -I "$EXO_DIR")
 
-# Compile libmin + libtarg to IR once, reused by all tests.
+# Compile libmin + exo support to IR once, reused by all tests.
 LIBMIN_TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$LIBMIN_TMPDIR"' EXIT
 
-echo "==> Compiling libmin..."
+echo "==> Compiling libmin + exo support..."
 LIBMIN_IRS=()
 for src in "$LIBMIN_DIR"/libmin_*.c; do
     ir="$LIBMIN_TMPDIR/$(basename "${src%.c}").ll"
     clang "${LIBMIN_CFLAGS[@]}" "$src" -o "$ir" 2>/dev/null
     LIBMIN_IRS+=("$ir")
 done
-clang "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/libtarg.c" \
-    -o "$LIBMIN_TMPDIR/libtarg.ll" 2>/dev/null
-LIBMIN_IRS+=("$LIBMIN_TMPDIR/libtarg.ll")
+clang   "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/libtarg.c"      -o "$LIBMIN_TMPDIR/libtarg.ll"     2>/dev/null
+# simon.c and mojov-utils.c use C++ types (bool, etc.) — compile as C++.
+clang++ "${LIBMIN_CFLAGS[@]}" "$LIBMIN_DIR/simon.c"         -o "$LIBMIN_TMPDIR/simon.ll"       2>/dev/null
+clang++ "${LIBMIN_CFLAGS[@]}" "$LIBTARG_DIR/mojov-utils.c"  -o "$LIBMIN_TMPDIR/mojov-utils.ll" 2>/dev/null
+LIBMIN_IRS+=("$LIBMIN_TMPDIR/libtarg.ll"
+             "$LIBMIN_TMPDIR/simon.ll"
+             "$LIBMIN_TMPDIR/mojov-utils.ll")
 
 has_prefix() {
     local src="$1" prefix="$2"
@@ -51,7 +58,10 @@ strip_attrs() {
 run_e2e() {
     local src="$1"
     local base
-    base="$(basename "${src%.c}")"
+    # Strip both .c and .cc extensions
+    base="$(basename "$src")"
+    base="${base%.cc}"
+    base="${base%.c}"
     local tmpdir
     tmpdir="$(mktemp -d)"
     trap 'rm -rf "$tmpdir"' RETURN
@@ -64,14 +74,21 @@ run_e2e() {
     local clean_ir="$tmpdir/clean.ll"
     local asm="$tmpdir/out.s"
 
-    # Compile C → IR
-    if ! clang "${LIBMIN_CFLAGS[@]}" "$src" -o "$raw_ir" 2>/dev/null; then
+    # Compile C or C++ → IR.
+    # C++ sources (.cc/.cpp) include EXO headers with RISC-V-specific inline asm
+    # (register names f28/x28 etc.), so they must be compiled targeting RISC-V.
+    local compiler
+    case "$src" in
+        *.cc|*.cpp) compiler="clang++ -target riscv64-unknown-elf" ;;
+        *)          compiler="clang" ;;
+    esac
+    if ! $compiler "${LIBMIN_CFLAGS[@]}" "$src" -o "$raw_ir" 2>/dev/null; then
         echo "FAIL [compile]: $base"
         FAIL_COUNT=$((FAIL_COUNT + 1))
         return
     fi
 
-    # Link with libmin
+    # Link with libmin + exo support
     if ! "$LLVM_LINK" -S "$raw_ir" "${LIBMIN_IRS[@]}" -o "$linked_ir" 2>/dev/null; then
         echo "FAIL [llvm-link]: $base"
         FAIL_COUNT=$((FAIL_COUNT + 1))
@@ -184,8 +201,8 @@ run_e2e() {
 }
 
 echo "==> End-to-end tests"
-for f in "$SCRIPT_DIR/src/"*.c; do
-    run_e2e "$f"
+for f in "$SCRIPT_DIR/src/"*.c "$SCRIPT_DIR/src/"*.cc; do
+    [ -f "$f" ] && run_e2e "$f"
 done
 
 echo ""
