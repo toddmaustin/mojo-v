@@ -31,6 +31,7 @@
   )
 #define IS_SECREG(reg) (((reg_deps_t)1 << (reg)) & SECREGS)
 #define CHECK_LEAKY(reg) ((p->get_secreg_mode() && IS_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
+#define CHECK_DATAGRANT_R(reg) ((p->get_secreg_mode() && STATE.datagrant_xpr[reg]) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_SECREG(reg))
 #define SECREG_RESET \
   { STATE.XPR.write(X_P0, 0); STATE.XPR.write(X_P1, 0); STATE.XPR.write(X_P2, 0); STATE.XPR.write(X_P3, 0); \
@@ -59,7 +60,7 @@
 #define DFHASH_REG_W(reg) ((STATE.dfhash_xpr[reg] = dfhash_gen(p, insn)), ({ if (SECREG_REF(reg)) dfhash_debug(p, reg, STATE.dfhash_xpr[reg]); }), (void)0)
 
 // Mojo-V: track the input dependencies
-#define CHECK_REG_R(reg) (DFHASH_REG_R(reg), insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
+#define CHECK_REG_R(reg) (CHECK_DATAGRANT_R(reg), DFHASH_REG_R(reg), insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << (reg))), (void) 0)
 // Mojo-V: illegal instruction iff input deps include a secret reg AND dest reg is NOT a secret reg
 #define CHECK_REG_W(reg) \
   (DFHASH_REG_W(reg), \
@@ -98,6 +99,7 @@
     CHECK_REG_W(reg); \
     if (DECODE_MACRO_USAGE_LOGGED) STATE.log_reg_write[(reg) << 4] = {wdata, 0}; \
     STATE.XPR.write(reg, wdata); \
+    STATE.datagrant_xpr[reg] = false; \
   })
 #define WRITE_FREG(reg, value) ({ \
     /* Mojo-V: need to evaluate the value BEFORE checking output dependencies! */ \
