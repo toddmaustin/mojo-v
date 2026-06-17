@@ -508,15 +508,15 @@ public:
   const std::array<reg_t, 4>& mojov_kmsm_status() const { return kmsm_status; }
 
   //
-  // Mojo-V: destroy all dataflow metadata. Mode transitions invalidate
-  // datagrant and dfhash metadata regardless of whether Mojo-V is being
-  // enabled or disabled.
+  // Mojo-V: destroy architectural dataflow metadata. Mode transitions
+  // invalidate datagrant and register dfhash metadata regardless of whether
+  // Mojo-V is being enabled or disabled.  Do not clear the current
+  // instruction's transient dfhash_input tracker here: mode changes can occur
+  // while executing the CSR write that toggles Mojo-V, and that instruction
+  // still needs its decode-time dfhash inputs to complete normally.
   //
   void mojov_destroy_metadata()
   {
-    state.n_inputs = 0;
-    for (unsigned i=0; i<MAX_INPUTS; i++)
-       state.dfhash_input[i] = { 0, 0 };
     for (unsigned i=0; i<NXPR; i++)
     {
        state.dfhash_xpr[i] = 0;
@@ -547,6 +547,9 @@ public:
     const size_t pk_bytes = std::min(cfg->mojov_pk_der.size(), max_pk_bytes);
     memcpy(kmsm_bytes.data(), cfg->mojov_pk_der.data(), pk_bytes);
 
+    state.n_inputs = 0;
+    for (unsigned i=0; i<MAX_INPUTS; i++)
+       state.dfhash_input[i] = { 0, 0 };
     mojov_destroy_metadata();
   }
 
