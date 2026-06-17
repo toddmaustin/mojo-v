@@ -8,15 +8,37 @@ if [ -z "$1" ]; then
 fi
 
 LLVM_DIR="llvm-project"
-SOURCE="src/$1"
+
+# Parse optional --target=<host|spike> flag (env var MOJOV_TARGET also works)
+TARGET="${MOJOV_TARGET:-host}"
+for arg in "$@"; do
+    case "$arg" in
+        --target=*) TARGET="${arg#--target=}" ;;
+    esac
+done
+# Strip the flag from positional args so SOURCE parsing still works
+set -- $(echo "$@" | sed 's/--target=[^ ]*//g')
+
+# Accept either a bare filename (looked up in src/) or a full/relative path.
+if [[ "$1" = /* ]] || [[ "$1" = ./* ]] || [[ "$1" = */* ]]; then
+    SOURCE="$1"
+else
+    SOURCE="src/$1"
+fi
 BASENAME=$(basename "${SOURCE%.*}")  # e.g. src/test.c -> test
 IR_FILE="ir/${BASENAME}.ll"
 
 LIBMIN_DIR="../bringup-bench/common"
 LIBTARG_DIR="../bringup-bench/target"
 EXO_DIR="../exo"
+
+case "$TARGET" in
+    spike) TARGET_DEFINES="-DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8" ;;
+    host|*) TARGET_DEFINES="-DTARGET_HOST" ;;
+esac
+
 LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -S -emit-llvm
-               -DTARGET_HOST -D_SSIZE_T
+               $TARGET_DEFINES -D_SSIZE_T
                -I "$LIBTARG_DIR" -I "$LIBMIN_DIR" -I "$EXO_DIR")
 
 mkdir -p ir ir/libmin
@@ -109,5 +131,13 @@ echo "==> Compiling to RISC-V assembly..."
 "$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d \
     "$CLEAN_IR" -o "$ASM_FILE"
 echo "==> RISC-V assembly written to $ASM_FILE"
+
+if [ "$TARGET" = "spike" ]; then
+    OBJ_FILE="ir/${BASENAME}.o"
+    echo "==> Generating RISC-V object file (spike target)..."
+    "$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d \
+        -filetype=obj "$CLEAN_IR" -o "$OBJ_FILE"
+    echo "==> Object file written to $OBJ_FILE"
+fi
 
 echo "==> Done."
