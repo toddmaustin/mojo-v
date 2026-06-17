@@ -2,9 +2,10 @@
 
 LLVM-based compiler from C/C++ to Mojo-V RISC-V assembly. Mojo-V is a RISC-V
 ISA extension for secret computation. It partitions registers into secret
-(x16–x31, f16–f31) and public (x0–x15, f0–f15) groups. When a secret register
-value is stored to memory, the hardware automatically encrypts it; when an
-encrypted value is loaded into a secret register, the hardware decrypts it.
+(x24–x31, f24–f31) and public (x0–x23, f0–f23) groups. When a secret register
+value is stored to memory, the hardware automatically encrypts it using SDE;
+when an encrypted value is loaded into a secret register, the hardware decrypts
+it using LDE.
 The encryption key and mode (fast / strong / proof-carrying) are supplied by a
 hardware data contract — the compiler is not involved in key management or
 encryption. All security properties are enforced by hardware at decode time.
@@ -36,10 +37,10 @@ LLVM IR with @llvm.riscv.mojov.secret wrappers on !secret values
 MachineIR: all defs that read from SecretGPR constrained to SecretGPR
      │
      ▼ Register allocation
-MachineIR with physical registers assigned (secret values → x16–x31)
+MachineIR with physical registers assigned (secret values → x24–x31)
      │
-     ▼ Post-RA encrypted store/load substitution  [next]
-Mojo-V RISC-V assembly
+     ▼ SecretMemSubst post-RA pass  [implemented]
+Mojo-V RISC-V assembly  (SD→SDE, LD→LDE for x24–x31 registers)
 ```
 
 ---
@@ -136,12 +137,14 @@ error: secret-dependent indirect control flow in '<func>' is not transformable
 **Tests:** `test/secretregclass/`
 
 Ensures that every `!secret`-tagged integer value is allocated to a register
-in the secret range (x16–x31) during RISC-V code generation.
+in the secret range (x24–x31) during RISC-V code generation. Values wider than
+64 bits (e.g. i128 ciphertext structs) are skipped — they are memory formats,
+not register values.
 
 **IR-level pass:** walks each function and wraps every `!secret` integer
-instruction with a call to `@llvm.riscv.mojov.secret.*`. Sub-word values
-(i1/i8/i16/i32) are zero-extended to i64 before the call and truncated back
-afterward, since SecretGPR only holds i64 on RV64:
+instruction (≤ 64 bits) with a call to `@llvm.riscv.mojov.secret.*`. Sub-word
+values (i1/i8/i16/i32) are zero-extended to i64 before the call and truncated
+back afterward, since SecretGPR only holds i64 on RV64:
 
 ```llvm
 ; Before:
@@ -155,8 +158,10 @@ afterward, since SecretGPR only holds i64 on RV64:
 All subsequent uses of `%sum` are replaced by `%sum.secret`.
 
 **Backend wiring:**
-- `SecretGPR` register class (x16–x31) defined in `RISCVRegisterInfo.td`.
-  Allocation order: caller-saved first (a6–a7, t3–t6), then callee-saved (s2–s11).
+- `SecretGPR` register class (x24–x31) defined in `RISCVRegisterInfo.td`.
+  Allocation order: caller-saved first (t3–t6 = x28–x31), then callee-saved
+  (s8–s11 = x24–x27). Spill size is 128 bits to fit SDE's fast-format
+  ciphertext.
 - `@llvm.riscv.mojov.secret` intrinsic defined in `IntrinsicsRISCV.td`.
 - `RISCVISelDAGToDAG.cpp` handles the intrinsic during instruction selection
   by emitting `COPY_TO_REGCLASS` into `SecretGPR`.
@@ -188,33 +193,57 @@ instruction itself, not just on the downstream copy, and allocates accordingly:
 
 ```asm
 ; Before this pass:
-xor  a0, a6, a0   ; reads secret a6, writes public a0 — hardware fault
+xor  a0, t3, a0   ; reads secret t3 (x28), writes public a0 — hardware fault
 
 ; After this pass:
-xor  a6, a6, a0   ; reads secret a6, writes secret a6 — correct
+xor  t3, t3, a0   ; reads secret t3 (x28), writes secret t3 — correct
 ```
 
 ---
 
-## Step 5 — Encrypted Store/Load Substitution (next)
+## Step 5 — Encrypted Store/Load Substitution (done)
 
-After register allocation, physical registers are known. A post-RA pass
-replaces conventional load/store instructions with Mojo-V's encrypted variants
-whenever the source or destination register is in the secret range (x16–x31).
+**Location:** `llvm/lib/Target/RISCV/RISCVSecretMemSubst.cpp`  
+**Pass type:** post-RA `MachineFunctionPass` (runs in `addPostRegAlloc`)  
+**Instructions:** `SDE` / `LDE` defined in `RISCVInstrInfoMojoV.td`
 
-The Mojo-V ISA adds only four new instructions in total; the encrypted load and
-store are two of them. Once emitted, these instructions trigger hardware
-encryption (on store) and decryption (on load) using the key and mode
-established by the data contract loaded into the CPU. The compiler does not
-select or implement an encryption algorithm — it only ensures the correct
-instruction opcodes are emitted.
+After register allocation, physical registers are known. This pass walks every
+`MachineInstr` and replaces any store or load whose data register is in the
+secret range (x24–x31) with the corresponding Mojo-V encrypted variant:
+
+| Original | Replaced with | Condition |
+|---|---|---|
+| `SB / SH / SW / SD` | `SDE` | source register (rs2) ∈ x24–x31 |
+| `LB / LH / LW / LD / LBU / LHU / LWU` | `LDE` | destination register (rd) ∈ x24–x31 |
+
+**Instruction encoding** (CUSTOM-0, opcode `0x0b`):
+- `SDE rs2, offset(rs1)` — S-type, funct3=0x1. Encrypts the 64-bit value in
+  rs2 and writes 128-bit ciphertext (fast format) to `mem[rs1 + offset]`.
+- `LDE rd, offset(rs1)` — I-type, funct3=0x0. Reads 128-bit ciphertext from
+  `mem[rs1 + offset]`, decrypts it, and writes the plaintext to rd.
+
+The caller is responsible for ensuring secret memory slots are at least 16 bytes
+wide (fast format) or 32 bytes wide (strong / proof-carrying format). The
+compiler allocates 128-bit stack slots for SecretGPR spills automatically via
+the `SpillSize` field in `RISCVRegisterInfo.td`.
+
+The compiler does not select or implement an encryption algorithm — it only
+ensures the correct opcodes are emitted. The hardware enforces all security
+properties at decode time using the key and mode from the loaded data contract.
 
 ---
 
 ## Building and Testing
 
 ```bash
-# Build LLVM and run the full pipeline on a source file:
+# First-time LLVM build (RISC-V backend only, Release for speed):
+cmake -S llvm-project/llvm -B llvm-project/build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DLLVM_TARGETS_TO_BUILD=RISCV \
+  -DLLVM_ENABLE_PROJECTS=""
+ninja -C llvm-project/build opt llc llvm-link FileCheck
+
+# Run the full pipeline on a source file:
 #   src/<file> → ir/<file>.tainted.ll → ir/<file>.mem2reg.ll
 #               → ir/<file>.elim.ll → ir/<file>.regclass.ll
 #               → ir/<file>.clean.ll → ir/<file>.s
@@ -232,6 +261,9 @@ instruction opcodes are emitted.
 | `test/secretbranchelim/` | opt FileCheck | SecretBranchElim pass on hand-crafted IR |
 | `test/secretregclass/` | opt / llc FileCheck | SecretRegClass IR wrapping + SecretGPR regalloc |
 | `test/e2e/src/` | C source → full pipeline | Taint, branch elim, regclass, and assembly from real C |
+
+End-to-end `ASM` checks verify that secret stores use `sde` with a register in
+the x24–x31 range (e.g. `sde t3, …`) rather than a plain `sd`.
 
 End-to-end tests use per-prefix `FileCheck` patterns embedded in C comments
 (`TAINT`, `ELIM`, `REGCLASS`, `ASM`). Each file is compiled through the full
