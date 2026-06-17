@@ -69,17 +69,22 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
   simon_128_128_decrypt(&p->simon_state, ctval.ct.ct_hi, &ptval.ct.ct_hi);
   ptval.ct.ct_hi = ptval.ct.ct_hi ^ ctval.ct.ct_lo;
 
-  if (ptval.pt.auth_sig != p->get_state()->mojov_dc.contract_sig)
+  const uint64_t contract_sig = p->get_state()->mojov_dc.contract_sig;
+  const bool is_datagrant = (ptval.pt.auth_sig == contract_sig + 1);
+  if (ptval.pt.auth_sig != contract_sig && !is_datagrant)
   {
-    // Mojo-V not valid ciphertext, trap out...
+    // Mojo-V not valid ciphertext or datagrant, trap out...
     throw trap_security_exception(insn.bits());
   }
 
-  // Mojo-V: all good, write the decrypted 3rd-party value to the secret register
+  // Mojo-V: all good, write the decrypted 3rd-party value to the secret register.
+  // Datagrants load their granted dfhash into the integer register value and
+  // mark it so only DISC/FDISC may consume it.
   WRITE_RD(ptval.pt.val);
+  p->get_state()->datagrant_xpr[insn.rd()] = is_datagrant;
 
   // Mojo-V: override the dfhash output, instead, take it from the decrypted packet
-  p->get_state()->dfhash_xpr[insn.rd()] = ptval.pt.metadata;
+  p->get_state()->dfhash_xpr[insn.rd()] = is_datagrant ? 0 : ptval.pt.metadata;
 }
 else
 {

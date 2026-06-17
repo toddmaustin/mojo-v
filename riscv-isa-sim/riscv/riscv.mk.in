@@ -1117,6 +1117,8 @@ riscv_insn_ext_zkmojov = \
 	sde \
 	flde \
 	fsde \
+	disc \
+	fdisc \
 
 riscv_insn_ext_zvk = \
 	$(riscv_insn_ext_zvbb) \

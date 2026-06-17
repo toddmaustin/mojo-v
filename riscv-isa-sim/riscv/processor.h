@@ -100,6 +100,9 @@ struct state_t
   // FPR reg dfhash values, one for each 
   dfhash_t dfhash_fpr[NFPR];
 
+  // XPR datagrant metadata, used by Mojo-V safe disclosures.
+  bool datagrant_xpr[NXPR];
+
   // control and status registers
   std::unordered_map<reg_t, csr_t_p> csrmap;
   reg_t prv;    // TODO: Can this be an enum instead?
@@ -421,6 +424,7 @@ public:
   void set_secreg_mode(bool en)
     {
       secreg_mode = en;
+      mojov_destroy_metadata();
       if (en)
       {
         if (!state.mojov_dcvalid)
@@ -504,7 +508,26 @@ public:
   const std::array<reg_t, 4>& mojov_kmsm_status() const { return kmsm_status; }
 
   //
-  // Mojo-V: dfhash reset
+  // Mojo-V: destroy architectural dataflow metadata. Mode transitions
+  // invalidate datagrant and register dfhash metadata regardless of whether
+  // Mojo-V is being enabled or disabled.  Do not clear the current
+  // instruction's transient dfhash_input tracker here: mode changes can occur
+  // while executing the CSR write that toggles Mojo-V, and that instruction
+  // still needs its decode-time dfhash inputs to complete normally.
+  //
+  void mojov_destroy_metadata()
+  {
+    for (unsigned i=0; i<NXPR; i++)
+    {
+       state.dfhash_xpr[i] = 0;
+       state.datagrant_xpr[i] = false;
+    }
+    for (unsigned i=0; i<NFPR; i++)
+       state.dfhash_fpr[i] = 0;
+  }
+
+  //
+  // Mojo-V: reset KMSM/data-contract state and all metadata
   //
   void mojov_reset()
   {
@@ -524,14 +547,10 @@ public:
     const size_t pk_bytes = std::min(cfg->mojov_pk_der.size(), max_pk_bytes);
     memcpy(kmsm_bytes.data(), cfg->mojov_pk_der.data(), pk_bytes);
 
-    // reset the dfhash core
     state.n_inputs = 0;
     for (unsigned i=0; i<MAX_INPUTS; i++)
        state.dfhash_input[i] = { 0, 0 };
-    for (unsigned i=0; i<NXPR; i++)
-       state.dfhash_xpr[i] = 0;
-    for (unsigned i=0; i<NFPR; i++)
-       state.dfhash_fpr[i] = 0;
+    mojov_destroy_metadata();
   }
 
 private:
