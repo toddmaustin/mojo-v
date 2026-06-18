@@ -185,6 +185,7 @@ bool mojov_open_contract_from_components(const char *sk_pem_path,
     goto out;
   }
 
+  {
   simon_state_t local_simon_state;
   simon_128_128_keyexpand(&local_simon_state, *((uint128_t *)k), 68);
 
@@ -210,6 +211,7 @@ bool mojov_open_contract_from_components(const char *sk_pem_path,
     if (status)
       *status = mojov_open_status_t::BAD_SIGNATURE;
     goto out;
+  }
   }
 
   OPENSSL_cleanse(k, sizeof(k));

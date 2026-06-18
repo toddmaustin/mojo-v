@@ -15,6 +15,7 @@
 #include "debug_defines.h"
 #include <cinttypes>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -180,8 +181,9 @@ bool processor_t::mojov_kmsm_open_contract()
 
   state.mojov_dcvalid = true;
 
-  // Keep a hard validation that key_valid is reflected immediately in mojov_cfg.
-  if ((state.mojov_cfg->read() & ((reg_t)1 << 1)) == 0) {
+  // Verify key_valid is reflected immediately in mojov_cfg.
+  reg_t cfg_val = state.mojov_cfg->read();
+  if ((cfg_val & ((reg_t)1 << 1)) == 0) {
     state.mojov_dcvalid = false;
     kmsm_ctrl_status = mojov_kmsm_status_to_ctrl_field(mojov_open_status_t::BAD_INPUT);
     kmsm_ctrl_busy = false;

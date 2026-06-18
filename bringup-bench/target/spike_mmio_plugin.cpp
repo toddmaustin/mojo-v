@@ -34,10 +34,15 @@ public:
   bool store(reg_t addr, size_t len, const uint8_t* bytes) override {
     if (addr == OFF_OUT && len == sizeof(uint32_t)) {
       std::fprintf(stdout, "%c", (char)*(const uint32_t*)bytes);
+      std::fflush(stdout);
       return true;
-    } else if (addr == OFF_CTRL && len == sizeof(uint32_t)) {
-      // terminate simulation: match original behavior (exit(code-1))
-      std::exit((*(const uint32_t*)bytes) - 1);
+    } else if (addr == OFF_CTRL && (len == sizeof(uint32_t) || len == sizeof(uint64_t))) {
+      // Spike's HTIF writes tohost=0x20008 as 8 bytes during init (value 0 = ignore).
+      // Both 4-byte writes (from simple_halt SW) and 8-byte writes (HTIF init) must work.
+      uint64_t val = (len == sizeof(uint64_t)) ? *(const uint64_t*)bytes
+                                               : (uint64_t)*(const uint32_t*)bytes;
+      if (val == 0) return true;  // HTIF zero-init: ignore
+      std::exit((int)(val & 0xffffffff) - 1);
     } else if (addr == OFF_HIHASH && len == sizeof(uint32_t)) {
       uint32_t hv = *(const uint32_t*)bytes;
       std::fprintf(stdout, "** hashval = 0x%08x", hv);

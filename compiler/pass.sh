@@ -37,7 +37,7 @@ case "$TARGET" in
     host|*) TARGET_DEFINES="-DTARGET_HOST" ;;
 esac
 
-LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -S -emit-llvm
+LIBMIN_CFLAGS=(-O0 -Xclang -disable-O0-optnone -fno-stack-protector -S -emit-llvm
                $TARGET_DEFINES -D_SSIZE_T
                -I "$LIBTARG_DIR" -I "$LIBMIN_DIR" -I "$EXO_DIR")
 
