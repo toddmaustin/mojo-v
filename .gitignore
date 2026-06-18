@@ -38,5 +38,6 @@
 
 # debug information files
 *.dwo
+*.dSYM/
 
 *.swp
