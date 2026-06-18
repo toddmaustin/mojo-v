@@ -58,7 +58,7 @@ ninja -C "$LLVM_DIR/build" opt llc llvm-link
 # Use clang++ for C++ sources (.cc/.cpp), clang for C sources.
 echo "==> Compiling $SOURCE to IR..."
 case "$SOURCE" in
-    *.cc|*.cpp) COMPILER="clang++ -target riscv64-unknown-elf" ;;
+    *.cc|*.cpp) COMPILER="clang++ -target riscv64-unknown-elf -march=rv64gc -mabi=lp64d" ;;
     *)          COMPILER="clang" ;;
 esac
 $COMPILER "${LIBMIN_CFLAGS[@]}" "$SOURCE" -o "$IR_FILE"
