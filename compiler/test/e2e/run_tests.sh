@@ -206,5 +206,29 @@ for f in "$SCRIPT_DIR/src/"*.c "$SCRIPT_DIR/src/"*.cc; do
 done
 
 echo ""
+echo "==> Spike execution tests (e2e)"
+ACTUAL_REPO="$(dirname "$REPO_ROOT")"
+SPIKE_BIN="$ACTUAL_REPO/riscv-isa-sim/build/spike"
+RISCV_GCC_BIN="/opt/riscv/bin/riscv64-unknown-elf-gcc"
+SPIKE_PLUGIN="$ACTUAL_REPO/bringup-bench/target/spike_mmio_plugin.so"
+if [ -x "$SPIKE_BIN" ] && [ -x "$RISCV_GCC_BIN" ] && [ -f "$SPIKE_PLUGIN" ]; then
+    for f in "$SCRIPT_DIR/src/"*.c "$SCRIPT_DIR/src/"*.cc; do
+        [ -f "$f" ] || continue
+        grep -q "^// ELIM-ERROR:" "$f" && continue
+        base="$(basename "${f%.cc}")"
+        base="${base%.c}"
+        if (cd "$ACTUAL_REPO" && bash run_spike.sh "$f") >/dev/null 2>&1; then
+            echo "PASS: $base (spike)"
+            PASS_COUNT=$((PASS_COUNT + 1))
+        else
+            echo "FAIL: $base (spike)"
+            FAIL_COUNT=$((FAIL_COUNT + 1))
+        fi
+    done
+else
+    echo "(skipped — Spike, riscv64-unknown-elf-gcc, or MMIO plugin not found)"
+fi
+
+echo ""
 echo "Results: $PASS_COUNT passed, $FAIL_COUNT failed"
 [ "$FAIL_COUNT" -eq 0 ]

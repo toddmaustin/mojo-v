@@ -17,6 +17,7 @@
 
 #include "libmin.h"
 #include "mojov-utils.h"
+#include "dc-fast.h"
 typedef mojov_mem_fast_u64_t  _uint64e_t;
 typedef mojov_mem_fast_fp64_t _fp64e_t;
 #include "mojov-intrinsics.h"
@@ -36,5 +37,32 @@ _uint64e_t secret_exo_arithmetic(uint64_t pub_val) {
     _uint64e_t enc_secret = _enc(secret_val);
     _uint64e_t enc_pub    = _enc(pub_val);
     return _add(enc_secret, enc_pub);
+}
+
+static uint128_t simon_key_g = SIMON128_KEY;
+static simon_state_t simon_state_g;
+
+int main(void) {
+    if (mojov_configure_kmsm_from_dc_fast() != 0) {
+        libmin_printf("FAIL: KMSM setup failed\n");
+        libmin_fail(1);
+    }
+    if (mojov_enable_and_verify() != 0) {
+        libmin_printf("FAIL: secreg enable failed\n");
+        libmin_fail(1);
+    }
+
+    _uint64e_t result = secret_exo_arithmetic(100);
+
+    simon_128_128_keyexpand(&simon_state_g, simon_key_g, 68);
+    uint64_t val = mojov_decrypt_fast_u64(&simon_state_g, result, CONTRACT_SIG);
+
+    if (val != 142) {
+        libmin_printf("FAIL: expected 142, got %lu\n", val);
+        libmin_fail(1);
+    }
+    libmin_printf("PASS: exo_arithmetic result = %lu\n", val);
+    libmin_success();
+    return 0;
 }
 }
