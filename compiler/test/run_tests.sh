@@ -89,6 +89,12 @@ for f in "$SCRIPT_DIR/secretregclass/"*.ll; do
 done
 
 echo ""
+echo "==> SecretConstraint tests"
+for f in "$SCRIPT_DIR/secretconstraint/"*.ll; do
+    run_llc_test "$f"
+done
+
+echo ""
 echo "==> End-to-end tests"
 if [ -f "$SCRIPT_DIR/e2e/run_tests.sh" ]; then
     # Run in a subshell; capture its exit status without triggering set -e.
