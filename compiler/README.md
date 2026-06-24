@@ -236,12 +236,12 @@ properties at decode time using the key and mode from the loaded data contract.
 ## Building and Testing
 
 ```bash
-# First-time LLVM build (RISC-V backend only, Release for speed):
+# First-time LLVM build (RISC-V backend + clang frontend, Release for speed):
 cmake -S llvm-project/llvm -B llvm-project/build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_TARGETS_TO_BUILD=RISCV \
-  -DLLVM_ENABLE_PROJECTS=""
-ninja -C llvm-project/build opt llc llvm-link FileCheck
+  -DLLVM_ENABLE_PROJECTS="clang"
+ninja -C llvm-project/build opt llc llvm-link FileCheck clang
 
 # Run the full pipeline on a source file:
 #   src/<file> → ir/<file>.tainted.ll → ir/<file>.mem2reg.ll
@@ -249,18 +249,29 @@ ninja -C llvm-project/build opt llc llvm-link FileCheck
 #               → ir/<file>.clean.ll → ir/<file>.s
 ./pass.sh <source_file>
 
-# Run the full test suite (unit tests + end-to-end tests)
+# Run the compiler pass test suite (unit tests + end-to-end IR/ASM checks):
 ./test/run_tests.sh
+
+# Run a Spike integration test (compiler pipeline → ELF → Spike):
+# (from the repo root)
+./run_spike.sh spike_demo.c          # positive: EXO demo
+./run_spike.sh spike_hw_trap.c       # negative: illegal SD of secret reg must trap
+
+# Run the hardware enforcement suite (247 cases; requires clang and Spike):
+# (from the repo root)
+make -C bringup-bench/mojov-sectests TARGET=mojov-llvm test
 ```
 
 ### Test layout
 
-| Directory | Type | What it tests |
+| Location | Type | What it tests |
 |---|---|---|
 | `test/secrettaint/` | opt FileCheck | SecretTaint pass on hand-crafted IR |
 | `test/secretbranchelim/` | opt FileCheck | SecretBranchElim pass on hand-crafted IR |
 | `test/secretregclass/` | opt / llc FileCheck | SecretRegClass IR wrapping + SecretGPR regalloc |
 | `test/e2e/src/` | C source → full pipeline | Taint, branch elim, regclass, and assembly from real C |
+| `src/spike_*.c` / `src/spike_*.cc` | C/C++ → ELF → Spike | Full pipeline on Spike; verify correct runtime behavior |
+| `bringup-bench/mojov-sectests/` | ELF → Spike × 247 | Hardware enforcement: case 0 is positive (200+ legal ops); cases 1–246 each execute one illegal instruction and verify Spike raises mcause=0x1f |
 
 End-to-end `ASM` checks verify that secret stores use `sde` with a register in
 the x24–x31 range (e.g. `sde t3, …`) rather than a plain `sd`.
