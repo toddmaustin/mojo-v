@@ -150,7 +150,7 @@ run_e2e() {
     strip_attrs "$regclass_ir" > "$clean_ir"
 
     # Assemble to RISC-V
-    if ! "$LLC" -mtriple=riscv64 -mattr=+m,+f,+d "$clean_ir" -o "$asm" 2>/dev/null; then
+    if ! "$LLC" -mtriple=riscv64 -mattr=+m,+f,+d,+zicond "$clean_ir" -o "$asm" 2>/dev/null; then
         echo "FAIL [llc]: $base"
         FAIL_COUNT=$((FAIL_COUNT + 1))
         return

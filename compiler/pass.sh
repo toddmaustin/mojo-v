@@ -128,14 +128,14 @@ echo "==> Host CPU attributes stripped."
 # --- Step 7: Compile to RISC-V assembly ---
 ASM_FILE="ir/${BASENAME}.s"
 echo "==> Compiling to RISC-V assembly..."
-"$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d \
+"$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d,+zicond \
     "$CLEAN_IR" -o "$ASM_FILE"
 echo "==> RISC-V assembly written to $ASM_FILE"
 
 if [ "$TARGET" = "spike" ]; then
     OBJ_FILE="ir/${BASENAME}.o"
     echo "==> Generating RISC-V object file (spike target)..."
-    "$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d \
+    "$LLVM_DIR/build/bin/llc" -mtriple=riscv64 -mattr=+m,+f,+d,+zicond \
         -filetype=obj "$CLEAN_IR" -o "$OBJ_FILE"
     echo "==> Object file written to $OBJ_FILE"
 fi

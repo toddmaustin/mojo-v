@@ -15,6 +15,11 @@ uint64_t spill_test(void) {
 }
 
 int main(void) {
-    libmin_printf("spill: %llu\n", spill_test());
+    uint64_t result = spill_test();
+    if (result != 45) {
+        libmin_printf("FAIL: expected 45, got %llu\n", result);
+        libmin_fail(1);
+    }
+    libmin_printf("PASS: spill result = %llu\n", result);
     libtarg_success();
 }
