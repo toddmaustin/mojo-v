@@ -128,8 +128,8 @@ echo "==> ELF: $ELF"
 echo "==> Running on Spike..."
 echo "------------------------------------------------------------"
 "$SPIKE" \
-    --mojov-pk="$BB_TARGET/pk-file.pem" \
-    --mojov-sk="$BB_TARGET/sk-file.pem" \
+    --mojov-pk="${MOJOV_PK:-$BB_TARGET/pk-file.pem}" \
+    --mojov-sk="${MOJOV_SK:-$BB_TARGET/sk-file.pem}" \
     --isa=rv64gc_zicond_zkmojov_zicntr \
     --misaligned \
     --extlib="$SPIKE_PLUGIN" \
