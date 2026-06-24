@@ -129,7 +129,7 @@ TARGET_REFEXT = out
 else ifeq ($(TARGET), spike64)
 #TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = /opt/riscv/bin/clang-21
-TARGET_CC = ../../llvm-project/build/bin/clang-21
+TARGET_CC = ../../compiler/llvm-project/build/bin/clang
 TARGET_AR = riscv64-unknown-linux-gnu-ar
 TARGET_CFLAGS = -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -mcmodel=medlow -Wall -g -Os -fvisibility=hidden -nostdlib -ffreestanding # -MMD -mcmodel=medany 
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/libgcc.a
@@ -187,11 +187,11 @@ TARGET_REFEXT = out
 else ifeq ($(TARGET), mojov-llvm)
 #TARGET_CC = riscv64-unknown-elf-gcc
 #TARGET_CC = /opt/riscv/bin/clang-21
-TARGET_CC = ../../llvm-project/build/bin/clang-21
-TARGET_AR = riscv64-unknown-linux-gnu-ar
-TARGET_CFLAGS = -std=c23 -fmojov -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -Wall -fvisibility=hidden -nostdlib -ffreestanding -ferror-limit=250 -mcmodel=medany # -MMD
+TARGET_CC = ../../compiler/llvm-project/build/bin/clang -target riscv64-unknown-elf
+TARGET_AR = riscv64-unknown-elf-ar
+TARGET_CFLAGS = -std=c23 -Wno-inline-asm -DTARGET_SPIKE -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc_zicond -mabi=lp64d -static -Wall -fvisibility=hidden -nostdlib -ffreestanding -ferror-limit=250 -mcmodel=medany # -MMD
 TARGET_LIBS = /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/libgcc.a
-TARGET_SIM = ../../riscv-isa-sim/build/spike --mojov-sk=../target/sk-file.pem --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
+TARGET_SIM = ../../riscv-isa-sim/build/spike --mojov-pk=../target/pk-file.pem --mojov-sk=../target/sk-file.pem --isa=rv64gc_zicond_zkmojov_zicntr --misaligned --extlib=../target/spike_mmio_plugin.so -m0x100000:0x820000 --device=spike_mmio_plugin,0x20000
 TARGET_DIFF = diff
 TARGET_EXE = $(PROG).elf
 TARGET_CLEAN = *.d ibex_simple_system_pcount.csv

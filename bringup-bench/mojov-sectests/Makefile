@@ -8,11 +8,11 @@ PROG=mojov-sectests
 include ../Makefile
 
 #
-# Janky fix to make this build LLVM only.
-# GCC cannot build this due to a JAL relocation error in the linker, not yet debugged...
+# GCC cannot build this due to a JAL relocation overflow: GCC generates the
+# 247-case switch dispatch in a separate .text.jmpN section, which the linker
+# places after libgcc (~1MB of soft-float code), making JAL targets unreachable.
+# Use TARGET=mojov-llvm which builds with our custom Mojo-V clang.
 #
-TARGET_CC = /opt/riscv/bin/clang
-TARGET_REGOUT = -ffixed-x24 -ffixed-x25 -ffixed-x26 -ffixed-x27 -ffixed-x28 -ffixed-x29 -ffixed-x30 -ffixed-x31
 
 
 test: $(TARGET_EXE)
@@ -23,4 +23,3 @@ test: $(TARGET_EXE)
 	done
 	$(TARGET_DIFF) FOO mojov-sectests.$(TARGET_REFEXT)
 	rm -f FOO
-

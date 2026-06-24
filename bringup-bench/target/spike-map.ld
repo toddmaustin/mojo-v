@@ -44,6 +44,7 @@ SECTIONS
 
     .text : {
         . = ALIGN(4);
+        *(.text.startup*)   /* main() before library code to keep JAL range viable */
         *(.text)
         *(.text.*)
     }  > ram :text
