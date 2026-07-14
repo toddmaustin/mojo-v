@@ -33,6 +33,13 @@ namespace detail {
 using uint_storage_t = _uint64e_t;
 using fp_storage_t = _fp64e_t;
 
+struct datagrant_plaintext_t {
+  uint64_t dfhash;
+  uint64_t salt;
+  uint64_t sig;
+  uint64_t metadata;
+};
+
 static_assert(std::is_trivially_copyable<uint_storage_t>::value,
               "_uint64e_t must be trivially copyable");
 static_assert(std::is_trivially_copyable<fp_storage_t>::value,
@@ -87,6 +94,14 @@ inline double decrypt_storage(const mojov_mem_proofcarrying_fp64_t& value) {
   return mojov_decrypt_proofcarrying_fp64(&debug_simon_state(), value, debug_contract_sig());
 }
 
+inline datagrant_plaintext_t decrypt_storage(const mojov_mem_datagrant_t& value) {
+  mojov_mem_datagrant_t plaintext;
+  simon_128_128_decrypt(&debug_simon_state(), value.ct.ct_lo, &plaintext.ct.ct_lo);
+  simon_128_128_decrypt(&debug_simon_state(), value.ct.ct_hi, &plaintext.ct.ct_hi);
+  plaintext.ct.ct_hi ^= value.ct.ct_lo;
+  return {plaintext.pt.dfhash, plaintext.pt.salt, plaintext.pt.sig, plaintext.pt.metadata};
+}
+
 }  // namespace detail
 
 /* Initializes decrypt() support used by encrypted wrappers during debug.
@@ -98,6 +113,35 @@ inline int debug_context(uint128_t simon128_key, uint64_t contract_sig) {
   detail::debug_context_ready() = expanded;
   return expanded ? 0 : 1;
 }
+
+class datagrant_t {
+public:
+  using storage_type = mojov_mem_datagrant_t;
+  using plaintext_type = detail::datagrant_plaintext_t;
+
+  datagrant_t() = default;
+  datagrant_t(const storage_type& encrypted) : value_(encrypted) {}
+
+  const storage_type& encrypted() const { return value_; }
+  storage_type& encrypted() { return value_; }
+  operator const storage_type&() const { return value_; }
+
+  datagrant_t& operator=(storage_type encrypted) { value_ = encrypted; return *this; }
+
+  plaintext_type decrypt() const {
+    detail::debug_context_or_die();
+    return detail::decrypt_storage(value_);
+  }
+
+  bool is_valid() const {
+    detail::debug_context_or_die();
+    const plaintext_type plaintext = detail::decrypt_storage(value_);
+    return plaintext.sig == detail::debug_contract_sig() + 1u;
+  }
+
+private:
+  storage_type value_{};
+};
 
 /* Unified encrypted scalar templates.
  *
@@ -521,6 +565,7 @@ inline fp64e_t fabs(const fp64e_t& value) { return fp64e_t(_fabs(value.encrypted
 }  // namespace exo
 
 using exo::cmov;
+using exo::datagrant_t;
 using exo::debug_context;
 using exo::fp32e_t;
 using exo::fp64e_t;

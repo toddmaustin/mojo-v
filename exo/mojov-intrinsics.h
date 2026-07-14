@@ -5,6 +5,7 @@
 #include "../bringup-bench/target/mojov-utils.h"
 
 /* Callers provide _uint64e_t and _fp64e_t before including this header. */
+typedef mojov_mem_datagrant_t _datagrant_t;
 
 
 /*
@@ -34,6 +35,65 @@ _fenc(double src)
     FSDE(f28, %0, 0)
     : : "r"(&dst), "r"(&src)
     : "f28", "memory");
+  return dst;
+}
+
+
+/* Loads a datagrant and returns its granted dfhash as an encrypted operand. */
+static inline _uint64e_t
+_loaddatagrant(_datagrant_t *src)
+{
+  _uint64e_t dst;
+  __asm__ volatile (
+    LDE(x28, %1, 0)
+    SDE(x28, %0, 0)
+    : : "r"(&dst), "r"(src)
+    : "x28", "memory");
+  return dst;
+}
+
+/* Tests a datagrant against an encrypted integer value, trapping if invalid. */
+static inline _uint64e_t
+_testdatagrant(_uint64e_t src, _datagrant_t *datagrant)
+{
+  _uint64e_t dst;
+  __asm__ volatile (
+    LDE(x28, %1, 0)
+    LDE(x29, %2, 0)
+    DISC(x30, x28, x29)
+    SDE(x30, %0, 0)
+    : : "r"(&dst), "r"(&src), "r"(datagrant)
+    : "x28", "x29", "x30", "memory");
+  return dst;
+}
+
+/* Discloses an encrypted integer value when a valid datagrant is presented. */
+static inline uint64_t
+_disclose(_uint64e_t src, _datagrant_t *datagrant)
+{
+  uint64_t dst;
+  __asm__ volatile (
+    LDE(x28, %1, 0)
+    LDE(x29, %2, 0)
+    DISC(x30, x28, x29)
+    "sd x30, (%0)\n\t"
+    : : "r"(&dst), "r"(&src), "r"(datagrant)
+    : "x28", "x29", "x30", "memory");
+  return dst;
+}
+
+/* Discloses an encrypted FP64 value when a valid datagrant is presented. */
+static inline double
+_fdisclose(_fp64e_t src, _datagrant_t *datagrant)
+{
+  double dst;
+  __asm__ volatile (
+    FLDE(f28, %1, 0)
+    LDE(x29, %2, 0)
+    FDISC(x30, f28, x29)
+    "sd x30, (%0)\n\t"
+    : : "r"(&dst), "r"(&src), "r"(datagrant)
+    : "x29", "x30", "f28", "memory");
   return dst;
 }
 

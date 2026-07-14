@@ -17,6 +17,8 @@ typedef unsigned __int128 uint128_t;
 #define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
 #define FLDE(rd,base,ofs) ".insn i 0xb, 0x2, " #rd ", " #base ", " #ofs "\n\t"
 #define FSDE(src,base,ofs) ".insn s 0xb, 0x3, " #src ", " #ofs "(" #base ")\n\t"
+#define DISC(rd,rs1,rs2) ".insn r 0xb, 0x0, 0x1, " #rd ", " #rs1 ", " #rs2 "\n\t"
+#define FDISC(rd,rs1,rs2) ".insn r 0xb, 0x1, 0x1, " #rd ", " #rs1 ", " #rs2 "\n\t"
 
 #define MOJOV_HASH64_BASIS 0x9e3779b97f4a7c15ull
 
@@ -110,6 +112,19 @@ typedef union mojov_mem_proofcarrying_fp64_t {
     uint64_t metadata;
   } pt;
 } mojov_mem_proofcarrying_fp64_t;
+
+typedef union mojov_mem_datagrant_t {
+  struct {
+    uint128_t ct_lo;
+    uint128_t ct_hi;
+  } ct;
+  struct {
+    uint64_t dfhash;
+    uint64_t salt;
+    uint64_t sig;
+    uint64_t metadata;
+  } pt;
+} mojov_mem_datagrant_t;
 
 static inline uint64_t mojov_decrypt_fast_u64(simon_state_t *simon_state, mojov_mem_fast_u64_t ctval, uint64_t sig)
 {
