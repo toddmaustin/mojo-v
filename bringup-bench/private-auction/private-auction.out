@@ -1,0 +1,8 @@
+Private auction safe disclosure demo
+  bidders: 8 encrypted bids
+  debug: winning bid grant valid: yes
+  debug: winning bidder grant valid: yes
+  disclosed winner: bidder 4
+  disclosed winning bid: 320
+  negative path: disclosing with a mismatched datagrant would trap.
+  raw losing bids remain encrypted; only granted aggregate results were disclosed.
