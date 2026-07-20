@@ -1,3 +1,13 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
 Private auction safe disclosure demo
   bidders: 8 encrypted bids
   debug: winning bid grant valid: yes

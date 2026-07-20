@@ -59,10 +59,10 @@ _disclose(_uint64e_t src, _datagrant_t *datagrant)
   __asm__ volatile (
     LDE(x28, %1, 0)
     LDE(x29, %2, 0)
-    DISC(x30, x28, x29)
-    "sd x30, (%0)\n\t"
+    DISC(x10, x28, x29)
+    "sd x10, (%0)\n\t"
     : : "r"(&dst), "r"(&src), "r"(datagrant)
-    : "x28", "x29", "x30", "memory");
+    : "x28", "x29", "x10", "memory");
   return dst;
 }
 
@@ -74,10 +74,10 @@ _fdisclose(_fp64e_t src, _datagrant_t *datagrant)
   __asm__ volatile (
     FLDE(f28, %1, 0)
     LDE(x28, %2, 0)
-    FDISC(f29, f28, x28)
-    "fsd f29, (%0)\n\t"
+    FDISC(f10, f28, x28)
+    "fsd f10, (%0)\n\t"
     : : "r"(&dst), "r"(&src), "r"(datagrant)
-    : "x28", "f28", "f29", "memory");
+    : "x28", "f28", "f10", "memory");
   return dst;
 }
 
