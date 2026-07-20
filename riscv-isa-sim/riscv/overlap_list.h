@@ -32,3 +32,9 @@ DECLARE_OVERLAP_INSN(sspopchk_x5, EXT_ZICFISS)
 DECLARE_OVERLAP_INSN(c_sspush_x1, EXT_ZICFISS)
 DECLARE_OVERLAP_INSN(c_sspopchk_x5, EXT_ZICFISS)
 DECLARE_OVERLAP_INSN(c_mop_N, EXT_ZCMOP)
+
+// Mojo-V DISC/FDISC use R-type encodings in the custom-0 opcode space that
+// overlap the broader LDE/SDE load/store patterns.  Register them before the
+// memory forms so their more-specific masks get a chance to match first.
+DECLARE_OVERLAP_INSN(disc, EXT_ZKMOJOV)
+DECLARE_OVERLAP_INSN(fdisc, EXT_ZKMOJOV)
