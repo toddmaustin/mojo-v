@@ -150,11 +150,6 @@ main(void)
   libmin_printf("  debug: winning bid grant valid: %s\n", winning_bid_grant.is_valid() ? "yes" : "no");
   libmin_printf("  debug: winning bidder grant valid: %s\n", winning_bidder_grant.is_valid() ? "yes" : "no");
 
-  libmin_printf("    _loaddatagrant...\n");
-
-  (void)_loaddatagrant(&winning_bid_grant.encrypted());
-  libmin_success();
-
   libmin_printf("    _testdatagrant...\n");
   (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
   libmin_printf("    _testdatagrant...\n");
