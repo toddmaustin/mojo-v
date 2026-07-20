@@ -1982,12 +1982,12 @@ void disassembler_t::add_instructions(const isa_parser_t* isa, bool strict)
   }
 
   if (ext_enabled(EXT_ZKMOJOV)) {
+    DEFINE_RTYPE(disc)
+    add_insn(new disasm_insn_t("fdisc", match_fdisc, mask_fdisc, {&xrd, &frs1, &xrs2}));
     DEFINE_XLOAD(lde)
     DEFINE_FLOAD(flde)
     DEFINE_XSTORE(sde)
     DEFINE_FSTORE(fsde)
-    DEFINE_RTYPE(disc)
-    add_insn(new disasm_insn_t("fdisc", match_fdisc, mask_fdisc, {&xrd, &frs1, &xrs2}));
   }
 
   if (ext_enabled(EXT_ZIMOP)) {
