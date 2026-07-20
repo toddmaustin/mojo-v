@@ -152,6 +152,14 @@ main(void)
 
   (void)_loaddatagrant(&winning_bid_grant.encrypted());
   (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+  libmin_printf("    _loaddatagrant...\n");
+
+  (void)_loaddatagrant(&winning_bid_grant.encrypted());
+  libmin_success();
+
+  libmin_printf("    _testdatagrant...\n");
+  (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+  libmin_printf("    _testdatagrant...\n");
   (void)_testdatagrant(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
 
   const uint64_t disclosed_winning_bid = _disclose(winning_bid.encrypted(), &winning_bid_grant.encrypted());
