@@ -87,6 +87,12 @@ compute_encrypted_winner(const mojov_mem_proofcarrying_u64_t encrypted_bids[AUCT
   *winning_bidder_out = winning_bidder;
 }
 
+static uint16_t
+read_mojov_arg(void)
+{
+  return (uint16_t)((mojov_read_mprivregcfg() >> 12) & 0xffffu);
+}
+
 static void
 check_dfhash_integrity(const char *name, uint64_t expected_dfhash, uint64_t received_dfhash)
 {
@@ -98,6 +104,13 @@ check_dfhash_integrity(const char *name, uint64_t expected_dfhash, uint64_t rece
                   (uint32_t)(received_dfhash >> 32), (uint32_t)received_dfhash);
     libmin_fail(-1);
   }
+}
+
+static void
+negative_test_failed(const char *test_name)
+{
+  libmin_printf("ERROR: %s failed because NO exception occurred!\n", test_name);
+  libmin_fail(2);
 }
 
 int
@@ -145,25 +158,93 @@ main(void)
                          winning_bidder_grant_plaintext.dfhash,
                          debug_dfhash_u64(winning_bidder.encrypted()));
 
+  const uint16_t mojov_arg = read_mojov_arg();
+
   libmin_printf("Private auction safe disclosure demo\n");
   libmin_printf("  bidders: %u encrypted bids\n", AUCTION_BIDDERS);
   libmin_printf("  debug: winning bid grant valid: %s\n", winning_bid_grant.is_valid() ? "yes" : "no");
   libmin_printf("  debug: winning bidder grant valid: %s\n", winning_bidder_grant.is_valid() ? "yes" : "no");
+  libmin_printf("INFO: Running private auction Mojo-V test %u...\n", (uint32_t)mojov_arg);
 
-  (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
-  (void)_testdatagrant(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
-
-  const uint64_t disclosed_winning_bid = _disclose(winning_bid.encrypted(), &winning_bid_grant.encrypted());
-  const uint64_t disclosed_winning_bidder = _disclose(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
-
-  libmin_printf("  disclosed winner: bidder %lu\n", disclosed_winning_bidder);
-  libmin_printf("  disclosed winning bid: %lu\n", disclosed_winning_bid);
-  libmin_printf("  negative path: disclosing with a mismatched datagrant would trap.\n");
-  libmin_printf("  raw losing bids remain encrypted; only granted aggregate results were disclosed.\n");
-
-  if (disclosed_winning_bidder != 4u || disclosed_winning_bid != 320u)
+  switch (mojov_arg)
   {
-    libmin_printf("ERROR: private auction disclosed the wrong winner.\n");
+  // Positive test: disclose both auction outputs with their matching datagrants.
+  case 0:
+  {
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_testdatagrant(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
+
+    const uint64_t disclosed_winning_bid = _disclose(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    const uint64_t disclosed_winning_bidder = _disclose(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
+
+    libmin_printf("  disclosed winner: bidder %lu\n", disclosed_winning_bidder);
+    libmin_printf("  disclosed winning bid: %lu\n", disclosed_winning_bid);
+    libmin_printf("  negative paths: disclosing with mismatched or invalid datagrants should trap.\n");
+    libmin_printf("  raw losing bids remain encrypted; only granted aggregate results were disclosed.\n");
+
+    if (disclosed_winning_bidder != 4u || disclosed_winning_bid != 320u)
+    {
+      libmin_printf("ERROR: private auction disclosed the wrong winner.\n");
+      libmin_fail(-1);
+    }
+    break;
+  }
+
+  // Negative test: first validate winning_bid_grant against winning_bid, then
+  // try to use that grant to disclose winning_bidder.
+  case 1:
+    libmin_printf("  negative test: disclose winning_bidder with winning_bid_grant.\n");
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(winning_bidder.encrypted(), &winning_bid_grant.encrypted());
+    negative_test_failed("winning bidder mismatched datagrant test");
+    break;
+
+  // Negative test: first validate winning_bid_grant against winning_bid, then
+  // try to use that grant to disclose the raw encrypted bid from bidder 4.
+  case 2:
+  {
+    libmin_printf("  negative test: disclose encrypted_bids[4] with winning_bid_grant.\n");
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(encrypted_bids[4], &winning_bid_grant.encrypted());
+    negative_test_failed("winning raw bid mismatched datagrant test");
+    break;
+  }
+
+  // Negative test: first validate winning_bid_grant against winning_bid, then
+  // try to use that grant to disclose bidder 4's raw encrypted winning bid.
+  case 3:
+    libmin_printf("  negative test: disclose encrypted_bids[4] with winning_bid_grant.\n");
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(encrypted_bids[4], &winning_bid_grant.encrypted());
+    negative_test_failed("raw winning bid mismatched datagrant test");
+    break;
+
+  // Negative test: first validate winning_bidder_grant against winning_bidder, then
+  // try to use that grant to disclose winning_bid.
+  case 4:
+  {
+    libmin_printf("  negative test: disclose winning_bid with winning_bidder_grant.\n");
+    (void)_testdatagrant(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
+    (void)_disclose(winning_bid.encrypted(), &winning_bidder_grant.encrypted());
+    negative_test_failed("winning bid mismatched datagrant test");
+    break;
+  }
+
+  // Negative test: use ciphertext that is not a datagrant. This should trap
+  // when _testdatagrant() checks the bogus datagrant before disclosure.
+  case 5:
+  {
+    libmin_printf("  negative test: disclose winning_bid with bogus datagrant ciphertext.\n");
+    const mojov_mem_datagrant_t *bogus_grant =
+      (const mojov_mem_datagrant_t *)&encrypted_bids[0];
+    (void)_testdatagrant(winning_bid.encrypted(), bogus_grant);
+    (void)_disclose(winning_bid.encrypted(), bogus_grant);
+    negative_test_failed("bogus datagrant ciphertext test");
+    break;
+  }
+
+  default:
+    libmin_printf("ERROR: invalid private auction test (%u).\n", (uint32_t)mojov_arg);
     libmin_fail(-1);
   }
 
