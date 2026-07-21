@@ -7,6 +7,10 @@ PROG=private-auction
 include ../Makefile
 
 test: $(TARGET_EXE)
-	-$(TARGET_SIM) --mojov-verbose ./$(TARGET_EXE) > FOO
+	rm -f FOO
+	for i in $(shell seq 0 9); do \
+	  echo "--- Test $$i ---" >> FOO; \
+	  $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE) >> FOO; \
+	done
 	$(TARGET_DIFF) FOO private-auction.$(TARGET_REFEXT)
 	rm -f FOO
