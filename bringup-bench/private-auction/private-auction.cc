@@ -234,6 +234,77 @@ main(void)
     break;
   }
 
+  // Negative test: use a datagrant ciphertext with a valid datagrant encoding
+  // but a tampered dfhash, then try to disclose winning_bid with it.
+  case 5:
+  {
+    libmin_printf("  negative test: disclose winning_bid with tampered datagrant dfhash.\n");
+    datagrant_t tampered_grant(make_datagrant(winning_bid_grant_plaintext.dfhash ^ 1u));
+    (void)_testdatagrant(winning_bid.encrypted(), &tampered_grant.encrypted());
+    (void)_disclose(winning_bid.encrypted(), &tampered_grant.encrypted());
+    negative_test_failed("tampered datagrant dfhash test");
+    break;
+  }
+
+  // Negative test: validate the original winning_bid_grant, then try to replay
+  // it against a recomputed winning bid from a modified auction.
+  case 6:
+  {
+    libmin_printf("  negative test: disclose modified auction winner with stale winning_bid_grant.\n");
+    mojov_mem_proofcarrying_u64_t modified_bids[AUCTION_BIDDERS];
+    for (unsigned i = 0; i < AUCTION_BIDDERS; i++)
+      modified_bids[i] = encrypted_bids[i];
+    modified_bids[7] = encrypt_bid(500u, BID_BRAND_BASE + 7u);
+
+    uint64e_t modified_winning_bid;
+    uint64e_t modified_winning_bidder;
+    compute_encrypted_winner(modified_bids, &modified_winning_bid, &modified_winning_bidder);
+
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(modified_winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    negative_test_failed("stale winning bid datagrant test");
+    break;
+  }
+
+  // Negative test: compute winning_bid + encrypted_one, then try to
+  // disclose that derived value with the grant for the original winning_bid.
+  case 7:
+  {
+    libmin_printf("  negative test: disclose winning_bid plus encrypted_one with winning_bid_grant.\n");
+    uint64e_t encrypted_one(encrypt_bid(1u, BID_BRAND_BASE + 0x100u));
+    uint64e_t derived_winning_bid = winning_bid + encrypted_one;
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(derived_winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    negative_test_failed("encrypted-one derived winning bid datagrant test");
+    break;
+  }
+
+  // Negative test: compute an intermediate comparison predicate and try to
+  // disclose that predicate with the winning_bid_grant.
+  case 8:
+  {
+    libmin_printf("  negative test: disclose intermediate predicate with winning_bid_grant.\n");
+    uint64e_t bidder4_bid(encrypted_bids[4]);
+    uint64e_t bidder0_bid(encrypted_bids[0]);
+    uint64e_t bidder4_beats_bidder0 = bidder4_bid > bidder0_bid;
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(bidder4_beats_bidder0.encrypted(), &winning_bid_grant.encrypted());
+    negative_test_failed("intermediate predicate datagrant test");
+    break;
+  }
+
+  // Negative test: compute winning_bid + 1 with an immediate operand, then try
+  // to disclose that derived value with the grant for the original winning_bid.
+  case 9:
+  {
+    libmin_printf("  negative test: disclose winning_bid plus immediate one with winning_bid_grant.\n");
+    uint64e_t incremented_winning_bid = winning_bid + 1u;
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(incremented_winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    negative_test_failed("immediate-one derived winning bid datagrant test");
+    break;
+  }
+
   default:
     libmin_printf("ERROR: invalid private auction test (%u).\n", (uint32_t)mojov_arg);
     libmin_fail(-1);

@@ -102,3 +102,108 @@ ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
   mtval  = 0x03de0f0b
 ERROR: failure with termination code `1'
+--- Test 5 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Private auction safe disclosure demo
+  bidders: 8 encrypted bids
+  debug: winning bid grant valid: yes
+  debug: winning bidder grant valid: yes
+INFO: Running private auction Mojo-V test 5...
+  negative test: disclose winning_bid with tampered datagrant dfhash.
+ERROR: *** TRAP ***
+  mcause = 0x1f (Mojo-V security exception)
+  mtval  = 0x03de050b
+ERROR: failure with termination code `1'
+--- Test 6 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Private auction safe disclosure demo
+  bidders: 8 encrypted bids
+  debug: winning bid grant valid: yes
+  debug: winning bidder grant valid: yes
+INFO: Running private auction Mojo-V test 6...
+  negative test: disclose modified auction winner with stale winning_bid_grant.
+ERROR: *** TRAP ***
+  mcause = 0x1f (Mojo-V security exception)
+  mtval  = 0x03de050b
+ERROR: failure with termination code `1'
+--- Test 7 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Private auction safe disclosure demo
+  bidders: 8 encrypted bids
+  debug: winning bid grant valid: yes
+  debug: winning bidder grant valid: yes
+INFO: Running private auction Mojo-V test 7...
+  negative test: disclose winning_bid plus encrypted_one with winning_bid_grant.
+ERROR: *** TRAP ***
+  mcause = 0x1f (Mojo-V security exception)
+  mtval  = 0x03de050b
+ERROR: failure with termination code `1'
+--- Test 8 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Private auction safe disclosure demo
+  bidders: 8 encrypted bids
+  debug: winning bid grant valid: yes
+  debug: winning bidder grant valid: yes
+INFO: Running private auction Mojo-V test 8...
+  negative test: disclose intermediate predicate with winning_bid_grant.
+ERROR: *** TRAP ***
+  mcause = 0x1f (Mojo-V security exception)
+  mtval  = 0x03de050b
+ERROR: failure with termination code `1'
+--- Test 9 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Private auction safe disclosure demo
+  bidders: 8 encrypted bids
+  debug: winning bid grant valid: yes
+  debug: winning bidder grant valid: yes
+INFO: Running private auction Mojo-V test 9...
+  negative test: disclose winning_bid plus immediate one with winning_bid_grant.
+ERROR: *** TRAP ***
+  mcause = 0x1f (Mojo-V security exception)
+  mtval  = 0x03de050b
+ERROR: failure with termination code `1'
