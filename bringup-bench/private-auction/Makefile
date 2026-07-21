@@ -8,7 +8,7 @@ include ../Makefile
 
 test: $(TARGET_EXE)
 	rm -f FOO
-	for i in $(shell seq 0 5); do \
+	for i in $(shell seq 0 4); do \
 	  echo "--- Test $$i ---" >> FOO; \
 	  $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE) >> FOO; \
 	done

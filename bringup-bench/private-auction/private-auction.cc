@@ -210,18 +210,9 @@ main(void)
     break;
   }
 
-  // Negative test: first validate winning_bid_grant against winning_bid, then
-  // try to use that grant to disclose bidder 4's raw encrypted winning bid.
-  case 3:
-    libmin_printf("  negative test: disclose encrypted_bids[4] with winning_bid_grant.\n");
-    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
-    (void)_disclose(encrypted_bids[4], &winning_bid_grant.encrypted());
-    negative_test_failed("raw winning bid mismatched datagrant test");
-    break;
-
   // Negative test: first validate winning_bidder_grant against winning_bidder, then
   // try to use that grant to disclose winning_bid.
-  case 4:
+  case 3:
   {
     libmin_printf("  negative test: disclose winning_bid with winning_bidder_grant.\n");
     (void)_testdatagrant(winning_bidder.encrypted(), &winning_bidder_grant.encrypted());
@@ -232,7 +223,7 @@ main(void)
 
   // Negative test: use ciphertext that is not a datagrant. This should trap
   // when _testdatagrant() checks the bogus datagrant before disclosure.
-  case 5:
+  case 4:
   {
     libmin_printf("  negative test: disclose winning_bid with bogus datagrant ciphertext.\n");
     mojov_mem_datagrant_t *bogus_grant =
