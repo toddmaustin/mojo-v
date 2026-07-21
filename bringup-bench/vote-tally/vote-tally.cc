@@ -8,7 +8,7 @@
 #define EXO_FP64E_STORAGE_TYPE mojov_mem_proofcarrying_fp64_t
 #include "mojov-exo.h"
 
-#define VOTE_BALLOTS 12u
+#define VOTE_BALLOTS 32u
 #define VOTE_CANDIDATES 3u
 #define BALLOT_BRAND_BASE 0x42414c4c4f540000ull
 #define TALLY_BRAND_BASE 0x54414c4c59000000ull
@@ -83,6 +83,19 @@ compute_encrypted_tallies(const mojov_mem_proofcarrying_u64_t encrypted_ballots[
   }
 }
 
+static void
+compute_encrypted_needs_curing(const mojov_mem_proofcarrying_u64_t encrypted_ballots_to_cure[VOTE_BALLOTS],
+                               uint64e_t encrypted_needs_curing[VOTE_BALLOTS])
+{
+  for (unsigned i = 0; i < VOTE_BALLOTS; i++)
+  {
+    uint64e_t ballot(encrypted_ballots_to_cure[i]);
+    uint64e_t matches_valid_candidate =
+      (ballot == 0u) || (ballot == 1u) || (ballot == 2u);
+    encrypted_needs_curing[i] = !matches_valid_candidate;
+  }
+}
+
 static uint16_t
 read_mojov_arg(void)
 {
@@ -113,7 +126,10 @@ int
 main(void)
 {
   static const uint64_t raw_ballots[VOTE_BALLOTS] = {
-    0u, 1u, 2u, 1u, 0u, 2u, 1u, 1u, 0u, 2u, 1u, 0u
+    0u, 1u, 2u, 0u, 1u, 2u, 0u, 1u,
+    2u, 0u, 1u, 2u, 0u, 1u, 2u, 0u,
+    1u, 2u, 0u, 1u, 2u, 0u, 1u, 2u,
+    0u, 1u, 2u, 0u, 1u, 2u, 99u, 42u
   };
 
   if (mojov_configure_kmsm_from_dc_proof() != 0)
@@ -143,8 +159,19 @@ main(void)
   datagrant_t tally_b_grant(make_datagrant(debug_dfhash_u64(expected_tallies[1].encrypted())));
   datagrant_t tally_c_grant(make_datagrant(debug_dfhash_u64(expected_tallies[2].encrypted())));
 
+  uint64e_t expected_encrypted_needs_curing[VOTE_BALLOTS];
+  compute_encrypted_needs_curing(encrypted_ballots_to_cure, expected_encrypted_needs_curing);
+  datagrant_t curing_grants[VOTE_BALLOTS];
+  for (unsigned i = 0; i < VOTE_BALLOTS; i++)
+  {
+    curing_grants[i] = make_datagrant(debug_dfhash_u64(expected_encrypted_needs_curing[i].encrypted()));
+  }
+
   uint64e_t tallies[VOTE_CANDIDATES];
   compute_encrypted_tallies(encrypted_ballots, tallies);
+
+  uint64e_t encrypted_needs_curing[VOTE_BALLOTS];
+  compute_encrypted_needs_curing(encrypted_ballots_to_cure, encrypted_needs_curing);
 
   const datagrant_t::plaintext_type tally_a_grant_plaintext = tally_a_grant.decrypt();
   const datagrant_t::plaintext_type tally_b_grant_plaintext = tally_b_grant.decrypt();
@@ -152,6 +179,12 @@ main(void)
   check_dfhash_integrity("tally_A", tally_a_grant_plaintext.dfhash, debug_dfhash_u64(tallies[0].encrypted()));
   check_dfhash_integrity("tally_B", tally_b_grant_plaintext.dfhash, debug_dfhash_u64(tallies[1].encrypted()));
   check_dfhash_integrity("tally_C", tally_c_grant_plaintext.dfhash, debug_dfhash_u64(tallies[2].encrypted()));
+  for (unsigned i = 0; i < VOTE_BALLOTS; i++)
+  {
+    const datagrant_t::plaintext_type curing_grant_plaintext = curing_grants[i].decrypt();
+    check_dfhash_integrity("ballot cure predicate", curing_grant_plaintext.dfhash,
+                           debug_dfhash_u64(encrypted_needs_curing[i].encrypted()));
+  }
 
   const uint16_t mojov_arg = read_mojov_arg();
 
@@ -177,12 +210,31 @@ main(void)
     libmin_printf("  disclosed tally_A: %lu\n", disclosed_tally_a);
     libmin_printf("  disclosed tally_B: %lu\n", disclosed_tally_b);
     libmin_printf("  disclosed tally_C: %lu\n", disclosed_tally_c);
-    libmin_printf("SUCCESS: disclosed tally_A (4), tally_B (5), and tally_C (3).\n");
+    libmin_printf("  ballots needing cure:");
+    unsigned ballots_needing_cure = 0u;
+    for (unsigned i = 0; i < VOTE_BALLOTS; i++)
+    {
+      const uint64_t needs_curing = _disclose(encrypted_needs_curing[i].encrypted(),
+                                             &curing_grants[i].encrypted());
+      if (needs_curing != 0u)
+      {
+        libmin_printf(" %u", i);
+        ballots_needing_cure++;
+      }
+    }
+    libmin_printf("\n");
+    libmin_printf("SUCCESS: disclosed tally_A (10), tally_B (10), and tally_C (10).\n");
+    libmin_printf("SUCCESS: identified 2 ballots needing cure.\n");
     libmin_printf("SUCCESS: individual ballots remain encrypted; only final aggregate counts were disclosed.\n");
 
-    if (disclosed_tally_a != 4u || disclosed_tally_b != 5u || disclosed_tally_c != 3u)
+    if (disclosed_tally_a != 10u || disclosed_tally_b != 10u || disclosed_tally_c != 10u)
     {
       libmin_printf("ERROR: vote tally disclosed the wrong aggregate counts.\n");
+      libmin_fail(-1);
+    }
+    if (ballots_needing_cure != 2u)
+    {
+      libmin_printf("ERROR: vote tally identified the wrong number of ballots needing cure.\n");
       libmin_fail(-1);
     }
     break;
@@ -235,7 +287,7 @@ main(void)
     mojov_mem_proofcarrying_u64_t modified_ballots[VOTE_BALLOTS];
     for (unsigned i = 0; i < VOTE_BALLOTS; i++)
       modified_ballots[i] = encrypted_ballots[i];
-    modified_ballots[11] = encrypt_vote_value(1u, BALLOT_BRAND_BASE + 111u);
+    modified_ballots[0] = encrypt_vote_value(1u, BALLOT_BRAND_BASE + 111u);
 
     uint64e_t modified_tallies[VOTE_CANDIDATES];
     compute_encrypted_tallies(modified_ballots, modified_tallies);
