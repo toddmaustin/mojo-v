@@ -1,3 +1,12 @@
+** Mojo-V Reference Platform - Release 1.02
+
+  - Updated Mojo-M instruction set extension specification to Version 1.01, which now details datagrants, datagrant loading, and safe disclosures
+  - Added support for Mojo-V safe disclosures: disc and fdisc instructions, support for LDE datagrant loads
+  - Added datagrant and safe disclosure support to EXO library: _disclose, _fdisclose, _testdatagrant, etc.
+  - Added 3 Mojo-V safe disclosure benchmarks: gene risk analysis, secret auction winner, vote tally
+
+--
+
 ** Mojo-V Reference Platform - Release 1.01
 
   - Added EXO Mojo-V compiler. The EXO library supports program-level development of Mojo-V C++ applications, including support for encrypted C++ data types (e.g., uint64e_t, int32e_T, fp64e_t) and data-oblivious coding patterns.

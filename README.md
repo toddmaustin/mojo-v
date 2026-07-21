@@ -10,26 +10,26 @@ To learn more...
 - Here is an intro video describing Mojo-V: https://www.youtube.com/watch?v=HUT46TcNyyM
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
-The current Mojo-V ISA Extension Specification (release 1.00):
-- [In PDF format.] (https://drive.google.com/file/d/1O50EuI95i0APeQfc4jVVHrMJqdQnsEra)
+The current Mojo-V ISA Extension Specification (release 1.01):
+- [In PDF format.] (https://drive.google.com/file/d/1ETZ3eTAKmxLif83ZUAHA7rRr1Ishb2rC)
 
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
-# 🧩 Mojo-V Reference Platform — Release 1.01
+# 🧩 Mojo-V Reference Platform — Release 1.02
 
 ## 🚧 Project Status
 
-The Mojo-V reference platform release 1.01 builds on the 1.00 full reference implementation in the Spike RISC-V simulator for an RV64GC CPU with ML-KEM-512 key encapsulation and SIMON-128 secret computation protection. Mojo-V continues to support fast, strong, and proof-carrying encryption modes, and this release expands Bringup-Bench workload coverage and EXO developer documentation.
+The Mojo-V reference platform release 1.02 builds on the 1.00 full reference implementation in the Spike RISC-V simulator for an RV64GC CPU with ML-KEM-512 key encapsulation and SIMON-128 secret computation protection. Mojo-V continues to support fast, strong, and proof-carrying encryption modes, and this release expands Bringup-Bench workload coverage and EXO developer documentation.
 
-As of release 1.01, 64-bit secret computation remains fully secretized for software development and security analysis, with continuing roadmap items including LLVM compiler support and broader ecosystem integration.
+As of release 1.02, 64-bit secret computation remains fully secretized for software development and security analysis, with continuing roadmap items including LLVM compiler support and broader ecosystem integration.
 
-**Specification Version:** 1.00  (March 2026)  
+**Specification Version:** 1.01  (July 2026)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
 ## Current components
 
-1. **Mojo-V ISA Spec v1.00**
+1. **Mojo-V ISA Spec v1.01**
 
    - released in `doc/`
 
@@ -52,6 +52,7 @@ As of release 1.01, 64-bit secret computation remains fully secretized for softw
    - Full battery of EXO compiler library tests
    - Full batteries of EXO math and string library tests
    - Numerous privacy-oriented benchmarks build using the EXO Mojo-V compiler library
+   - Full battery of safe disclosure demonstration applications
    - Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
