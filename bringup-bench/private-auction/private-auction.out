@@ -16,8 +16,8 @@ Private auction safe disclosure demo
 INFO: Running private auction Mojo-V test 0...
   disclosed winner: bidder 4
   disclosed winning bid: 320
-  negative paths: disclosing with mismatched or invalid datagrants should trap.
-  raw losing bids remain encrypted; only granted aggregate results were disclosed.
+SUCCESS: disclosed winning_bidder (4) and winning big (320).
+SUCCESS: raw losing bids remain encrypted; only granted aggregate results were disclosed.
 --- Test 1 ---
 INFO: KMSM contract open succeeded.
 INFO: running with loaded data contract.
@@ -181,7 +181,7 @@ Private auction safe disclosure demo
   debug: winning bid grant valid: yes
   debug: winning bidder grant valid: yes
 INFO: Running private auction Mojo-V test 8...
-  negative test: disclose intermediate predicate with winning_bid_grant.
+  negative test: disclose winning_bid plus immediate one with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
   mtval  = 0x03de050b
@@ -202,7 +202,7 @@ Private auction safe disclosure demo
   debug: winning bid grant valid: yes
   debug: winning bidder grant valid: yes
 INFO: Running private auction Mojo-V test 9...
-  negative test: disclose winning_bid plus immediate one with winning_bid_grant.
+  negative test: disclose intermediate predicate with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
   mtval  = 0x03de050b

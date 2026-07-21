@@ -179,8 +179,8 @@ main(void)
 
     libmin_printf("  disclosed winner: bidder %lu\n", disclosed_winning_bidder);
     libmin_printf("  disclosed winning bid: %lu\n", disclosed_winning_bid);
-    libmin_printf("  negative paths: disclosing with mismatched or invalid datagrants should trap.\n");
-    libmin_printf("  raw losing bids remain encrypted; only granted aggregate results were disclosed.\n");
+    libmin_printf("SUCCESS: disclosed winning_bidder (4) and winning big (320).\n");
+    libmin_printf("SUCCESS: raw losing bids remain encrypted; only granted aggregate results were disclosed.\n");
 
     if (disclosed_winning_bidder != 4u || disclosed_winning_bid != 320u)
     {
@@ -254,7 +254,7 @@ main(void)
     mojov_mem_proofcarrying_u64_t modified_bids[AUCTION_BIDDERS];
     for (unsigned i = 0; i < AUCTION_BIDDERS; i++)
       modified_bids[i] = encrypted_bids[i];
-    modified_bids[7] = encrypt_bid(500u, BID_BRAND_BASE + 7u);
+    modified_bids[7] = encrypt_bid(500u, BID_BRAND_BASE + /*do not reuse brand */107u);
 
     uint64e_t modified_winning_bid;
     uint64e_t modified_winning_bidder;
@@ -279,9 +279,21 @@ main(void)
     break;
   }
 
+  // Negative test: compute winning_bid + 1 with an immediate operand, then try
+  // to disclose that derived value with the grant for the original winning_bid.
+  case 8:
+  {
+    libmin_printf("  negative test: disclose winning_bid plus immediate one with winning_bid_grant.\n");
+    uint64e_t incremented_winning_bid = winning_bid + 1u;
+    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    (void)_disclose(incremented_winning_bid.encrypted(), &winning_bid_grant.encrypted());
+    negative_test_failed("immediate-one derived winning bid datagrant test");
+    break;
+  }
+
   // Negative test: compute an intermediate comparison predicate and try to
   // disclose that predicate with the winning_bid_grant.
-  case 8:
+  case 9:
   {
     libmin_printf("  negative test: disclose intermediate predicate with winning_bid_grant.\n");
     uint64e_t bidder4_bid(encrypted_bids[4]);
@@ -290,18 +302,6 @@ main(void)
     (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
     (void)_disclose(bidder4_beats_bidder0.encrypted(), &winning_bid_grant.encrypted());
     negative_test_failed("intermediate predicate datagrant test");
-    break;
-  }
-
-  // Negative test: compute winning_bid + 1 with an immediate operand, then try
-  // to disclose that derived value with the grant for the original winning_bid.
-  case 9:
-  {
-    libmin_printf("  negative test: disclose winning_bid plus immediate one with winning_bid_grant.\n");
-    uint64e_t incremented_winning_bid = winning_bid + 1u;
-    (void)_testdatagrant(winning_bid.encrypted(), &winning_bid_grant.encrypted());
-    (void)_disclose(incremented_winning_bid.encrypted(), &winning_bid_grant.encrypted());
-    negative_test_failed("immediate-one derived winning bid datagrant test");
     break;
   }
 
