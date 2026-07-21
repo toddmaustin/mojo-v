@@ -235,8 +235,8 @@ main(void)
   case 5:
   {
     libmin_printf("  negative test: disclose winning_bid with bogus datagrant ciphertext.\n");
-    const mojov_mem_datagrant_t *bogus_grant =
-      (const mojov_mem_datagrant_t *)&encrypted_bids[0];
+    mojov_mem_datagrant_t *bogus_grant =
+      (mojov_mem_datagrant_t *)&encrypted_bids[0];
     (void)_testdatagrant(winning_bid.encrypted(), bogus_grant);
     (void)_disclose(winning_bid.encrypted(), bogus_grant);
     negative_test_failed("bogus datagrant ciphertext test");
