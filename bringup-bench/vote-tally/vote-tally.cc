@@ -128,8 +128,13 @@ main(void)
   libmin_srand(42);
 
   mojov_mem_proofcarrying_u64_t encrypted_ballots[VOTE_BALLOTS];
+  mojov_mem_proofcarrying_u64_t encrypted_ballots_to_cure[VOTE_BALLOTS];
+
   for (unsigned i = 0; i < VOTE_BALLOTS; i++)
+  {
     encrypted_ballots[i] = encrypt_vote_value(raw_ballots[i], BALLOT_BRAND_BASE + i);
+    encrypted_ballots_to_cure[i] = encrypt_vote_value(raw_ballots[i], BALLOT_BRAND_BASE);
+  }
 
   uint64e_t expected_tallies[VOTE_CANDIDATES];
   compute_encrypted_tallies(encrypted_ballots, expected_tallies);
