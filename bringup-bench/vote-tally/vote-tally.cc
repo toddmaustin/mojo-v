@@ -127,9 +127,9 @@ main(void)
 {
   static const uint64_t raw_ballots[VOTE_BALLOTS] = {
     0u, 1u, 2u, 0u, 1u, 2u, 0u, 1u,
-    2u, 0u, 1u, 2u, 0u, 1u, 2u, 0u,
+    2u, 99u, 1u, 2u, 0u, 42u, 2u, 0u,
     1u, 2u, 0u, 1u, 2u, 0u, 1u, 2u,
-    0u, 1u, 2u, 0u, 1u, 2u, 99u, 42u
+    0u, 1u, 2u, 0u, 1u, 2u, 0u, 1u
   };
 
   if (mojov_configure_kmsm_from_dc_proof() != 0)
@@ -210,16 +210,22 @@ main(void)
     libmin_printf("  disclosed tally_A: %lu\n", disclosed_tally_a);
     libmin_printf("  disclosed tally_B: %lu\n", disclosed_tally_b);
     libmin_printf("  disclosed tally_C: %lu\n", disclosed_tally_c);
-    libmin_printf("  ballots needing cure:");
+    libmin_printf("  ballots needing to be cured:");
     unsigned ballots_needing_cure = 0u;
+    bool first = true;
     for (unsigned i = 0; i < VOTE_BALLOTS; i++)
     {
       const uint64_t needs_curing = _disclose(encrypted_needs_curing[i].encrypted(),
                                              &curing_grants[i].encrypted());
       if (needs_curing != 0u)
       {
-        libmin_printf(" %u", i);
+        if (!first)
+        {
+          libmin_printf(",");
+        }
+        libmin_printf(" ballot #%u", i);
         ballots_needing_cure++;
+        first = false;
       }
     }
     libmin_printf("\n");
