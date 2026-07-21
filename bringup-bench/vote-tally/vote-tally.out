@@ -10,15 +10,17 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
 INFO: Running vote tally Mojo-V test 0...
-  disclosed tally_A: 4
-  disclosed tally_B: 5
-  disclosed tally_C: 3
-SUCCESS: disclosed tally_A (4), tally_B (5), and tally_C (3).
+  disclosed tally_A: 10
+  disclosed tally_B: 10
+  disclosed tally_C: 10
+  ballots needing cure: 30 31
+SUCCESS: disclosed tally_A (10), tally_B (10), and tally_C (10).
+SUCCESS: identified 2 ballots needing cure.
 SUCCESS: individual ballots remain encrypted; only final aggregate counts were disclosed.
 --- Test 1 ---
 INFO: KMSM contract open succeeded.
@@ -32,7 +34,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -54,7 +56,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -76,7 +78,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -98,7 +100,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -120,7 +122,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -142,7 +144,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -164,7 +166,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -186,7 +188,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
@@ -208,7 +210,7 @@ Decrypted data_contract_t fields:
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
 Vote tally safe disclosure demo
-  ballots: 12 encrypted votes over 3 candidates
+  ballots: 32 encrypted votes over 3 candidates
   debug: tally_A grant valid: yes
   debug: tally_B grant valid: yes
   debug: tally_C grant valid: yes
