@@ -84,12 +84,12 @@ compute_encrypted_tallies(const mojov_mem_proofcarrying_u64_t encrypted_ballots[
 }
 
 static void
-compute_encrypted_needs_curing(const mojov_mem_proofcarrying_u64_t encrypted_ballots_to_cure[VOTE_BALLOTS],
+compute_encrypted_needs_curing(const mojov_mem_proofcarrying_u64_t encrypted_ballots[VOTE_BALLOTS],
                                uint64e_t encrypted_needs_curing[VOTE_BALLOTS])
 {
   for (unsigned i = 0; i < VOTE_BALLOTS; i++)
   {
-    uint64e_t ballot(encrypted_ballots_to_cure[i]);
+    uint64e_t ballot(encrypted_ballots[i]);
     uint64e_t matches_valid_candidate =
       (ballot == 0u) || (ballot == 1u) || (ballot == 2u);
     encrypted_needs_curing[i] = !matches_valid_candidate;
@@ -144,13 +144,9 @@ main(void)
   libmin_srand(42);
 
   mojov_mem_proofcarrying_u64_t encrypted_ballots[VOTE_BALLOTS];
-  mojov_mem_proofcarrying_u64_t encrypted_ballots_to_cure[VOTE_BALLOTS];
 
   for (unsigned i = 0; i < VOTE_BALLOTS; i++)
-  {
     encrypted_ballots[i] = encrypt_vote_value(raw_ballots[i], BALLOT_BRAND_BASE + i);
-    encrypted_ballots_to_cure[i] = encrypt_vote_value(raw_ballots[i], BALLOT_BRAND_BASE);
-  }
 
   uint64e_t expected_tallies[VOTE_CANDIDATES];
   compute_encrypted_tallies(encrypted_ballots, expected_tallies);
@@ -160,7 +156,7 @@ main(void)
   datagrant_t tally_c_grant(make_datagrant(debug_dfhash_u64(expected_tallies[2].encrypted())));
 
   uint64e_t expected_encrypted_needs_curing[VOTE_BALLOTS];
-  compute_encrypted_needs_curing(encrypted_ballots_to_cure, expected_encrypted_needs_curing);
+  compute_encrypted_needs_curing(encrypted_ballots, expected_encrypted_needs_curing);
   datagrant_t curing_grants[VOTE_BALLOTS];
   for (unsigned i = 0; i < VOTE_BALLOTS; i++)
   {
@@ -171,7 +167,7 @@ main(void)
   compute_encrypted_tallies(encrypted_ballots, tallies);
 
   uint64e_t encrypted_needs_curing[VOTE_BALLOTS];
-  compute_encrypted_needs_curing(encrypted_ballots_to_cure, encrypted_needs_curing);
+  compute_encrypted_needs_curing(encrypted_ballots, encrypted_needs_curing);
 
   const datagrant_t::plaintext_type tally_a_grant_plaintext = tally_a_grant.decrypt();
   const datagrant_t::plaintext_type tally_b_grant_plaintext = tally_b_grant.decrypt();

@@ -18,7 +18,7 @@ INFO: Running vote tally Mojo-V test 0...
   disclosed tally_A: 10
   disclosed tally_B: 10
   disclosed tally_C: 10
-  ballots needing cure: 30 31
+  ballots needing to be cured: ballot #9, ballot #13
 SUCCESS: disclosed tally_A (10), tally_B (10), and tally_C (10).
 SUCCESS: identified 2 ballots needing cure.
 SUCCESS: individual ballots remain encrypted; only final aggregate counts were disclosed.
