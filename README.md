@@ -215,6 +215,26 @@ The current bring-up benchmark set includes the following Mojo-V benchmark appli
 | `verlet` | Verlet-integration physics benchmark |
 
 
+## Mojo-V Safe Disclosure Demonstrators Overview
+
+Mojo-V includes three safe disclosure demonstrator benchmarks in `bringup-bench`. These applications use proof-carrying encrypted memory plus encrypted data grants to show how a program can compute over sensitive inputs, disclose only explicitly authorized derived results, and trap attempts to reuse a grant for a different value, raw input, stale computation, tampered grant, or intermediate predicate.
+
+| Program | Sensitive input | Authorized disclosures | Demonstrated protections |
+|:---------|:----------------|:------------------------|:--------------------------|
+| `private-auction` | Eight encrypted private bids. | Winning bidder ID and winning bid value; the deterministic positive case discloses bidder `4` and bid `320`. | Finds the maximum bid with encrypted comparisons and `cmov()`, then validates per-output data grants. Negative cases reject mismatched grants, raw winning-bid disclosure, bogus or tampered grants, stale grants after changing the auction, derived `winning_bid + 1` values, and intermediate comparison predicates. |
+| `vote-tally` | Thirty-two encrypted ballots across three candidates, including two invalid ballots. | Aggregate tallies for candidates A, B, and C, plus per-ballot cure predicates; the deterministic positive case discloses tallies `10`, `10`, and `10`, and identifies two ballots needing cure. | Computes all candidate counts and ballot-validity predicates in encrypted form. Negative cases reject using one tally grant for another tally, raw ballot disclosure, bogus or tampered grants, stale grants after modifying ballots, derived tally values, and intermediate ballot predicates. |
+| `gene-risk` | Eight encrypted SNP marker dosages for a toy genomic risk workload. | A derived polygenic risk score and a low/medium/high risk bucket; the deterministic positive case discloses score `96` and bucket `0` (`low`). | Accumulates a weighted risk score and derives the risk bucket with encrypted predicates and `cmov()`. Negative cases reject cross-use of score and bucket grants, raw marker disclosure, bogus or tampered grants, stale grants after changing the genome, derived score values, and intermediate high-risk predicates. |
+
+Each demonstrator is listed in `MOJOV_DISCAPPS`, so it is part of the safe disclosure application battery. To run one directly, enter its benchmark directory and use the Mojo-V target, for example:
+
+```bash
+cd bringup-bench/private-auction
+make TARGET=mojov clean build test
+```
+
+Use Spike's `--mojov-arg=<n>` option to select the positive path (`0`) or one of the negative disclosure tests (`1` and higher) when running a demonstrator manually.
+
+
 ## 🛠️ Mojo-V Data Contract Multi-tool Usage
 
 The data contact multi-tool "dc-tool" is used to create and validate Mojo-V data contracts. 
