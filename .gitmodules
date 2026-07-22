@@ -3,4 +3,4 @@
 	url = git@github.com:/maxchristman/llvm-project.git
 [submodule "gem5"]
 	path = gem5
-	url = https://github.com/maxchristman/gem5.git
+	url = git@github.com:/maxchristman/gem5.git

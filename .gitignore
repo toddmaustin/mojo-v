@@ -41,3 +41,6 @@
 *.dSYM/
 
 *.swp
+
+# gem5 build tooling venv (see gem5/README build instructions)
+/.venv-gem5/
