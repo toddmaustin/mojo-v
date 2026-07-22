@@ -20,9 +20,9 @@ To contact the developers of Mojo-V:
 
 ## 🚧 Project Status
 
-The Mojo-V reference platform release 1.02 builds on the 1.00 full reference implementation in the Spike RISC-V simulator for an RV64GC CPU with ML-KEM-512 key encapsulation and SIMON-128 secret computation protection. Mojo-V continues to support fast, strong, and proof-carrying encryption modes, and this release expands Bringup-Bench workload coverage and EXO developer documentation.
+The Mojo-V Reference Platform release 1.02 implements a reference Spike simulator platform for RISC-V RV64GC and the EXO compiler for the Mojo-V ISA Specification v1.01. The current implementation supports fast, strong, and proof-carrying encryption modes, along with safe disclosure of encrypted computation results. The release includes a wide range of Mojo-V tests, privacy-oriented benchmarks, and demonstrator applications for safe disclosure. It also includes the complete Mojo-V ISA specification and developer documentation.
 
-As of release 1.02, 64-bit secret computation remains fully secretized for software development and security analysis, with continuing roadmap items including LLVM compiler support and broader ecosystem integration.
+This release is appropriate for use as i) a Mojo-V application development platform, ii) a golden model for validating Mojo-V hardware implementations, and iii) a reference implementation for security analysis. Current work focuses on the development of i) an LLVM-based Mojo-V compiler, ii) a gem5-based Mojo-V model for architectural exploration and analysis, and iii) a reference CVA6 SystemVerilog RTL implementation of RISC-V RV64GC with Mojo-V extensions.
 
 **Specification Version:** 1.01  (July 2026)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
