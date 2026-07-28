@@ -1,0 +1,13 @@
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+CERTRNG samples=256 first=0x8302b7e5be1e5490 last=0x40d5bede33ca439b
+randomness: one-bits=8268/16384 (50.46%), transitions=8042/16320 (49.27%)
+expected: one-bits about 8192/16384 (50.00%), transitions about 8160/16320 (50.00%)
