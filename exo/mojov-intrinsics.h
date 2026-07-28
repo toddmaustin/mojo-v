@@ -7,6 +7,20 @@
 /* Callers provide _uint64e_t and _fp64e_t before including this header. */
 typedef mojov_mem_datagrant_t _datagrant_t;
 
+/* Produces a proof-carrying TRNG leaf. SiteId is proof identity only. */
+template <unsigned SiteId>
+static inline _uint64e_t _certrng()
+{
+  static_assert(SiteId < 4096, "CERTRNG site_id must fit in 12 bits");
+  _uint64e_t dst;
+  __asm__ volatile (
+    CERTRNG(x28, %1)
+    SDE(x28, %0, 0)
+    : : "r"(&dst), "i"(SiteId)
+    : "x28", "memory");
+  return dst;
+}
+
 
 /*
  *  Mojo-V intrinsic helper functions...

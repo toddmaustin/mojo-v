@@ -433,6 +433,11 @@ using fp32e_t = fpe_t<32>;
 using fp64_generic_t = fpe_t<64>;
 using fp64e_t = fpe_t<64>;
 
+/* Generate a fresh certified random value. SiteId identifies this leaf in the
+ * proof graph and has no effect on the sampled value. */
+template <unsigned SiteId>
+inline uint64e_t certified_random() { return uint64e_t(_certrng<SiteId>()); }
+
 // Integer / special functions.
 // Conditional move for encrypted integer results.
 template <std::size_t B, bool S>
@@ -565,6 +570,7 @@ inline fp64e_t fabs(const fp64e_t& value) { return fp64e_t(_fabs(value.encrypted
 }  // namespace exo
 
 using exo::cmov;
+using exo::certified_random;
 using exo::datagrant_t;
 using exo::debug_context;
 using exo::fp32e_t;

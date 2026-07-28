@@ -421,6 +421,17 @@ public:
   // Mojo-V: secret mode state accessors
   //
   bool get_secreg_mode() const { return secreg_mode; }
+  // Keep simulated CERTRNG and encrypted-packet salts reproducible.  A single
+  // rand() result is commonly only 31 bits wide, so take 16 bits from each of
+  // four successive draws to populate all 64 output bits without gaps.
+  uint64_t mojov_trng64()
+  {
+    static_assert(RAND_MAX >= 0xffff, "rand() must provide at least 16 bits");
+    uint64_t result = 0;
+    for (unsigned i = 0; i < 4; ++i)
+      result |= (uint64_t)(rand() & 0xffff) << (16 * i);
+    return result;
+  }
   void set_secreg_mode(bool en)
     {
       secreg_mode = en;
