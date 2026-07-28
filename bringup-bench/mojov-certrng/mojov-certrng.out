@@ -8,6 +8,6 @@ Decrypted data_contract_t fields:
   contract_sig= 0xe18c51589dde18ff
   ciphers     = 0x0000000000000000
   format_sel  = 2 (proofcarrying)
-CERTRNG samples=256 first=0x8302b7e5be1e5490 last=0x40d5bede33ca439b
-randomness: one-bits=8268/16384 (50.46%), transitions=8042/16320 (49.27%)
-expected: one-bits about 8192/16384 (50.00%), transitions about 8160/16320 (50.00%)
+CERTRNG samples=16384 first=0x5d371822fc3e011c last=0xd03dd07f5b852619
+randomness: one-bits=523886/1048576 (49.96%), transitions=524325/1048512 (50.00%)
+expected: one-bits about 524288/1048576 (50.00%), transitions about 524256/1048512 (50.00%)

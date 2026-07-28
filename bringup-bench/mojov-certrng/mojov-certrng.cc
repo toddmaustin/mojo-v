@@ -8,7 +8,7 @@
 #include "mojov-exo.h"
 
 using namespace exo;
-static const unsigned sample_count = 256;
+static const unsigned sample_count = 16384;
 
 int main(void)
 {
