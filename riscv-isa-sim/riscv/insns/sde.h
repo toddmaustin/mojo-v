@@ -15,7 +15,7 @@ if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_FAST)
 
   // Mojo-V: prep the encrypted packet with RS2 value, salt and signature
   const uint32_t expected_auth_sig = (uint32_t)p->get_state()->mojov_dc.contract_sig;
-  ptval.pt = { RS2, (uint32_t)rand(), expected_auth_sig };
+  ptval.pt = { RS2, (uint32_t)p->mojov_trng64(), expected_auth_sig };
 
   // encrypt the memory packet with the processor's internal key
   simon_128_128_encrypt(&p->simon_state, ptval.ct, &ctval.ct);
@@ -29,7 +29,7 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_STRONG)
   union mojov_mem_strong_t ptval;
 
   // Mojo-V: prep the encrypted packet with RS2 value, salt and sig
-  ptval.pt = { RS2, ((((uint64_t)rand()) << 32) | (uint64_t)rand()), p->get_state()->mojov_dc.contract_sig, /* metadata */0 };
+  ptval.pt = { RS2, p->mojov_trng64(), p->get_state()->mojov_dc.contract_sig, /* metadata */0 };
 
   // encrypt the memory packet with the processor's internal key
   simon_128_128_encrypt(&p->simon_state, ptval.ct.ct_lo, &ctval.ct.ct_lo);
@@ -46,7 +46,7 @@ else if (SECREG_CSR_FIELD(MSECREGCFG_FORMAT_SEL) == FORMAT_SEL_PROOFCARRYING)
   union mojov_mem_proofcarrying_t ptval;
 
   // Mojo-V: prep the encrypted packet with RS2 value, salt and sig
-  ptval.pt = { RS2, ((((uint64_t)rand()) << 32) | (uint64_t)rand()), p->get_state()->mojov_dc.contract_sig, /* metadata */p->get_state()->dfhash_xpr[insn.rs2()] };
+  ptval.pt = { RS2, p->mojov_trng64(), p->get_state()->mojov_dc.contract_sig, /* metadata */p->get_state()->dfhash_xpr[insn.rs2()] };
 
   // encrypt the memory packet with the processor's internal key
   simon_128_128_encrypt(&p->simon_state, ptval.ct.ct_lo, &ctval.ct.ct_lo);
