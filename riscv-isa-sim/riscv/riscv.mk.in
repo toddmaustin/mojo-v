@@ -1119,6 +1119,7 @@ riscv_insn_ext_zkmojov = \
 	fsde \
 	disc \
 	fdisc \
+	certrng \
 
 riscv_insn_ext_zvk = \
 	$(riscv_insn_ext_zvbb) \
