@@ -99,6 +99,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **distinctness** - Computes if every element of an array is unique.
 
+- **dp-count** - Produces an encrypted count with request-bound, certified centered-binomial noise and rejects omitted, weakened, replaced, resampled, or replayed noise computations.
+
 - **donut** - A donut in code and action that defies proper explanation!
 
 - **fft-int** - Performs an integer fast-Fourier-transform on fixed integer input data.
