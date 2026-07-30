@@ -1,0 +1,200 @@
+--- Positive/control test 0 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 0...
+  positive test: honest certified tied draw.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0x47b47e70b8b7fa9e
+Proof verification:        PASS
+Committed result:          YES (ciphertext plus accepted receipt)
+Selected participant:      client-decrypted 2
+SUCCESS: every eligible participant and certified draw accepted.
+--- Positive/control test 1 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 1...
+  positive control: unrelated unused certified draw.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0x47b47e70b8b7fa9e
+Proof verification:        PASS
+Committed result:          YES (ciphertext plus accepted receipt)
+Selected participant:      client-decrypted 4
+SUCCESS: every eligible participant and certified draw accepted.
+--- Positive/control test 2 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 2...
+  positive unsafe control: disclose-before-commit grinding.
+Committed result:          NO (disclosed first)
+Selected participant:      server-visible 4
+Grinding target reached:   YES after 2 trials
+TAKEAWAY: commit the ciphertext and receipt before disclosure.
+--- Rejection test 10 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 10...
+  negative test: omit eligible participant 4.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0xdcb5dcee528825e9
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'
+--- Rejection test 11 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 11...
+  negative test: software RNG replacement.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0x4c0873a5cd53032e
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'
+--- Rejection test 12 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 12...
+  negative test: skip request nonce.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0xebf01fbadceba243
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'
+--- Rejection test 13 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 13...
+  negative test: replay stale request.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0x07b4fc273f134b14
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'
+--- Rejection test 14 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 14...
+  negative test: reuse one draw.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0x5eb0e969e2e6edcb
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'
+--- Rejection test 15 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 15...
+  negative test: swap participant draw sites.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0x38fcf375778a4c87
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'
+--- Rejection test 16 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Lottery (8 encrypted participants; ties 1/2/4 and 5/6)
+INFO: Running certified lotto Mojo-V test 16...
+  negative test: deterministic tie-break.
+Selected participant:      encrypted (server cannot observe)
+Expected dfhash:           0x47b47e70b8b7fa9e
+Returned dfhash:           0xb6688909723fcfd0
+Proof verification:        FAIL
+ERROR: committed winner receipt changed before decryption.
+ERROR: failure with termination code `-1'

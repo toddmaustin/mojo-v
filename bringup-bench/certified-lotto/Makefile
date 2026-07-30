@@ -18,8 +18,5 @@ test: $(TARGET_EXE)
 	  echo "--- Rejection test $$i ---" >> FOO; \
 	  $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE) >> FOO; \
 	done
-	test "$$(grep -c 'Proof verification:        PASS' FOO)" -eq 2
-	test "$$(grep -c 'Proof verification:        FAIL' FOO)" -eq 7
-	test "$$(grep -c 'Committed result:          YES' FOO)" -eq 2
-	grep -q 'TAKEAWAY: commit the ciphertext and receipt before disclosure.' FOO
+	$(TARGET_DIFF) FOO certified-lotto.$(TARGET_REFEXT)
 	rm -f FOO
