@@ -1,0 +1,145 @@
+--- Positive/control test 0 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 0...
+  positive test: approved certified noise mechanism.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0xb9a873e9f0fd20d1
+Proof verification:        PASS
+Released count:            client-decrypted value 24
+SUCCESS: exact request-bound certified noise graph accepted.
+--- Positive/control test 1 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 1...
+  positive control: unrelated unused certified draw.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0xb9a873e9f0fd20d1
+Proof verification:        PASS
+Released count:            client-decrypted value 17
+SUCCESS: exact request-bound certified noise graph accepted.
+--- Rejection test 10 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 10...
+  negative test: omit noise.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0x14775b4ec73e2a0b
+Proof verification:        FAIL
+ERROR: private-count dfhash changed before client decryption.
+DEBUG: expected dfhash 0xb9a873e9f0fd20d1, but received 0x14775b4ec73e2a0b
+ERROR: failure with termination code `-1'
+--- Rejection test 11 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 11...
+  negative test: reduce noise magnitude.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0x3dd34d269aae9214
+Proof verification:        FAIL
+ERROR: private-count dfhash changed before client decryption.
+DEBUG: expected dfhash 0xb9a873e9f0fd20d1, but received 0x3dd34d269aae9214
+ERROR: failure with termination code `-1'
+--- Rejection test 12 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 12...
+  negative test: software RNG replacement.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0x72eb6789f8848e2e
+Proof verification:        FAIL
+ERROR: private-count dfhash changed before client decryption.
+DEBUG: expected dfhash 0xb9a873e9f0fd20d1, but received 0x72eb6789f8848e2e
+ERROR: failure with termination code `-1'
+--- Rejection test 13 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 13...
+  negative test: favorable resampling.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0xf01540b8f4940980
+Proof verification:        FAIL
+ERROR: private-count dfhash changed before client decryption.
+DEBUG: expected dfhash 0xb9a873e9f0fd20d1, but received 0xf01540b8f4940980
+ERROR: failure with termination code `-1'
+--- Rejection test 14 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Verifiable Differentially Private Count (centered binomial noise)
+INFO: Running DP count Mojo-V test 14...
+  negative test: replay old query.
+Released count:            encrypted (server cannot observe)
+Expected dfhash:           0xb9a873e9f0fd20d1
+Returned dfhash:           0x9af5423f26757e21
+Proof verification:        FAIL
+ERROR: private-count dfhash changed before client decryption.
+DEBUG: expected dfhash 0xb9a873e9f0fd20d1, but received 0x9af5423f26757e21
+ERROR: failure with termination code `-1'
