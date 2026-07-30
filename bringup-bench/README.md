@@ -71,6 +71,8 @@ The Bringup-Bench benchmarks were selected for their minimal library and system 
 
 - **bit-kernels** - Bit-twiddling kernels galore.
 
+- **blind-audit** - Selects one of eight audit records with certified random priorities while keeping the result encrypted, and rejects biased or request-unbound selection graphs.
+
 - **blake2b** - Reference implementation and test of BLAKE2b, a cryptographic hash function based on Daniel J. Bernstein's ChaCha stream cipher.
 
 - **bloom-filter** - A Bloom filter implementation with test code that measures accuracy and false-positive rates.
@@ -373,4 +375,3 @@ The portions of the benchmark suite that was built by the benchmark team are (C)
 the [Apache License, version 2.0](https://www.apache.org/licenses/LICENSE-2.0) 
 
 And, thanks to the respective authors of the benchmarks that were adapted for the Bringup-Bench Benchmark Suite from other efforts.
-
