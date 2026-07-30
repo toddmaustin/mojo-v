@@ -1,0 +1,250 @@
+--- Positive/control test 0 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 0...
+  positive test: honest certified selection.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0xccee8073487dfaff
+Proof verification:        PASS
+Attack objective achieved: NO
+Server observed outcome:   NO
+Selected candidate:        client-decrypted record 3
+SUCCESS: certified, nonce-bound, data-oblivious selection accepted.
+--- Positive/control test 1 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 1...
+  positive control: 100 extra unused certified draws.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0xccee8073487dfaff
+Proof verification:        PASS
+Attack objective achieved: NO
+Server observed outcome:   NO
+Selected candidate:        client-decrypted record 2
+SUCCESS: unused draws are not ancestors and do not change the proof.
+--- Positive/control test 2 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 2...
+  positive unsafe control: disclose-before-commit grinding.
+  plaintext baseline: target=selected after 5 visible trials.
+Selected candidate:        client-decrypted record 5
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0xccee8073487dfaff
+Proof verification:        PASS
+Attack objective achieved: YES (8 server trials)
+Server observed outcome:   YES
+TAKEAWAY: unsafe disclosure restores a grinding oracle.
+--- Rejection test 10 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 10...
+  negative test: force target.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0xc8c5a135cc48b605
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0xc8c5a135cc48b605
+ERROR: failure with termination code `-1'
+--- Rejection test 11 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 11...
+  negative test: software RNG.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0xff0bca6afa213c3f
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0xff0bca6afa213c3f
+ERROR: failure with termination code `-1'
+--- Rejection test 12 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 12...
+  negative test: skip nonce.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0x1fef14e8f4fca715
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0x1fef14e8f4fca715
+ERROR: failure with termination code `-1'
+--- Rejection test 13 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 13...
+  negative test: replay nonce.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0x1a40486d12b92587
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0x1a40486d12b92587
+ERROR: failure with termination code `-1'
+--- Rejection test 14 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 14...
+  negative test: reuse draw.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0xdd41ad6abe78a7fd
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0xdd41ad6abe78a7fd
+ERROR: failure with termination code `-1'
+--- Rejection test 15 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 15...
+  negative test: drop candidate.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0x6434ed196ea3fca6
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0x6434ed196ea3fca6
+ERROR: failure with termination code `-1'
+--- Rejection test 16 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 16...
+  negative test: wrong draw.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0x9160c0a9b9beaf2f
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0x9160c0a9b9beaf2f
+ERROR: failure with termination code `-1'
+--- Rejection test 17 ---
+INFO: KMSM contract open succeeded.
+INFO: running with loaded data contract.
+SUCCESS: Mojo-V data contract validated and loaded.
+Decrypted data_contract_t fields:
+  salt        = 0xa08e2f1e9138f969
+  sig         = "Mojo-V ver. #001"
+  sym_key_128 = 0xed724bfac286f7033e9a998aded176ff
+  contract_sig= 0xe18c51589dde18ff
+  ciphers     = 0x0000000000000000
+  format_sel  = 2 (proofcarrying)
+Certified Blind Audit Selection (8 records, target record 5)
+INFO: Running blind audit Mojo-V test 17...
+  negative test: precompute result.
+Selected candidate:        encrypted (server cannot observe)
+Expected dfhash:           0xccee8073487dfaff
+Returned dfhash:           0x1a40486d12b92587
+Proof verification:        FAIL
+Attack objective achieved: NO
+Server observed outcome:   NO
+ERROR: selected candidate dfhash changed before client decryption.
+DEBUG: expected dfhash 0xccee8073487dfaff, but received 0x1a40486d12b92587
+ERROR: failure with termination code `-1'

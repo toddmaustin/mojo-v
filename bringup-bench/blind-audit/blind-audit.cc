@@ -192,7 +192,7 @@ int main(void)
     libmin_printf("Attack objective achieved: %s (%u server trials)\n",
                   disclosed == AUDIT_TARGET ? "YES" : "NO", trials);
     libmin_printf("Server observed outcome:   YES\n");
-    libmin_printf("SUCCESS: unsafe disclosure restores a grinding oracle.\n");
+    libmin_printf("TAKEAWAY: unsafe disclosure restores a grinding oracle.\n");
     libmin_success();
     return 0;
   }

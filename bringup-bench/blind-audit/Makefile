@@ -8,14 +8,15 @@ PROG=blind-audit
 include ../Makefile
 
 test: $(TARGET_EXE)
-	@set -e; \
+	@set -e
+	rm -f FOO
 	for i in 0 1 2; do \
-	  echo "--- Positive/control test $$i ---"; \
-	  $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE); \
-	done; \
-	for i in 10 11 12 13 14 15 16 17; do \
-	  echo "--- Rejection test $$i ---"; \
-	  if $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE); then \
-	    echo "ERROR: malicious test $$i was accepted"; exit 1; \
-	  fi; \
+	  echo "--- Positive/control test $$i ---" >> FOO; \
+	  $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE) >> FOO; \
 	done
+	for i in 10 11 12 13 14 15 16 17; do \
+	  echo "--- Rejection test $$i ---" >> FOO; \
+	  $(TARGET_SIM) --mojov-arg=$$i --mojov-verbose ./$(TARGET_EXE) >> FOO; \
+	done
+	$(TARGET_DIFF) FOO blind-audit.$(TARGET_REFEXT)
+	rm -f FOO
