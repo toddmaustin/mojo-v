@@ -235,6 +235,40 @@ make TARGET=mojov clean build test
 Use Spike's `--mojov-arg=<n>` option to select the positive path (`0`) or one of the negative disclosure tests (`1` and higher) when running a demonstrator manually.
 
 
+## Mojo-V Certified TRNG Demonstrators Overview
+
+Mojo-V includes three certified true-random-number-generator (CERTRNG)
+demonstrator benchmarks in `bringup-bench`. They use distinct `CERTRNG` sites,
+proof-carrying encrypted computation, and request nonces to show that a client
+can verify where fresh random values entered an approved computation. The
+results remain encrypted until receipt validation and commitment. The negative
+cases demonstrate that software-generated randomness, missing or reused draws,
+wrong site assignments, stale requests, altered computation graphs, and biased
+resampling do not satisfy the honest data grant. They also show an important
+limit: certified randomness alone cannot stop grinding if results are disclosed
+before commitment.
+
+| Program | Certified-random workload | Positive behavior | Demonstrated protections |
+|:---------|:--------------------------|:------------------|:--------------------------|
+| `blind-audit` | Selects one of eight audit records by taking the minimum of eight distinct, request-bound random priorities. | Certifies the complete fixed argmin graph; also shows that unused draws do not affect the receipt and that premature disclosure enables grinding. | Rejects a forced target, software RNG, a missing or stale nonce, draw reuse, a dropped candidate, swapped sites, and replay of a precomputed selection. |
+| `diffpriv-count` | Adds centered-binomial noise, formed as the difference of two independent `Binomial(8, 1/2)` values, to an encrypted count using 16 distinct random sites. | Certifies the precise noise-generation and request-binding graph while keeping both noise and answer hidden until validation. | Rejects omitted or weakened noise, software RNG, favorable resampling, and stale-request replay; unrelated unused randomness remains outside the receipt. |
+| `certified-lotto` | Chooses the highest-scoring eligible participant among eight encrypted entries and uses distinct request-bound priorities to break score ties. | Certifies every participant, random site, nonce mix, and tournament step; also demonstrates unused-draw behavior and the disclosure-before-commitment grinding hazard. | Rejects an omitted participant, software RNG, a skipped or stale nonce, draw reuse, swapped sites, and a deterministic tie-breaker. |
+
+These demonstrators are listed in `MOJOV_CERTRNG_APPS`, so they are included in
+the Mojo-V benchmark battery. Run one directly from its directory, for example:
+
+```bash
+cd bringup-bench/blind-audit
+make TARGET=mojov clean build test
+```
+
+Use Spike's `--mojov-arg=<n>` option when running a demonstrator manually. Case
+`0` is the honest path, low-numbered cases are successful explanatory controls,
+and cases `10` and higher are attacks expected to terminate with a Mojo-V
+security exception. The exact matrix for each application is documented in its
+benchmark-local `README.md`.
+
+
 ## 🛠️ Mojo-V Data Contract Multi-tool Usage
 
 The data contact multi-tool "dc-tool" is used to create and validate Mojo-V data contracts. 
