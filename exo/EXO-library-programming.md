@@ -147,6 +147,38 @@ uint64e_t s = cmov(a < b, a, 42);  // encrypted/plain branch value mix
 
 `cmov` is overloaded for integer and floating-point encrypted types and mixed encrypted/plain operands.
 
+### F) Certified random values
+
+Use the high-level `certified_random<SiteId>()` interface to execute `CERTRNG`
+and obtain a fresh encrypted 64-bit random value:
+
+```cpp
+uint64e_t request_nonce = /* encrypted, client-branded request value */;
+uint64e_t priority0 = certified_random<0>() ^ request_nonce;
+uint64e_t priority1 = certified_random<1>() ^ request_nonce;
+uint64e_t choose_first = priority0 < priority1;
+uint64e_t winner = cmov(choose_first, uint64e_t(0), uint64e_t(1));
+```
+
+`SiteId` is a compile-time constant in the range 0--4095. It identifies the
+random leaf in a proof-carrying dataflow receipt but does not influence the
+random bits. Give logically distinct draws distinct site IDs when the client is
+expected to verify their roles. Reusing one draw or swapping site IDs then
+changes the proof graph and will not match a data grant for the intended graph.
+
+The lower-level `_certrng<SiteId>()` intrinsic returns `_uint64e_t`; most EXO
+applications should prefer `certified_random<SiteId>()`, which wraps that
+payload as `uint64e_t`. Both interfaces emit `CERTRNG rd, site_id`. The
+instruction requires secret-register mode, a valid data contract, a secret
+integer destination register, and a 12-bit site ID; violating these constraints
+raises a Mojo-V security exception.
+
+Certified provenance is not a substitute for protocol design. Mix each draw
+with a fresh encrypted, client-branded request nonce, return the result while it
+is still encrypted, validate its dataflow receipt, and commit to that result
+before disclosure. Otherwise a server that can observe outcomes may repeatedly
+execute an entirely valid random computation and keep a favorable result.
+
 ---
 
 ## 4) Data-oblivious programming restrictions
@@ -249,6 +281,7 @@ int verify_example() {
 - Prefer encrypted types (`inte_t`/`fpe_t` aliases) end-to-end for secret values.
 - Use operator overloads for arithmetic/logic; use `cmov` for secret-dependent selection.
 - Remember that encrypted operations may take plaintext operands too, so you can write mixed expressions directly.
+- Use a unique `certified_random<SiteId>()` site for each independently verified random role, and bind draws to the current request before disclosure.
 - Keep branches, loop bounds, and memory access patterns independent of encrypted secrets.
 - Reserve `decrypt()` for validation/debug, after `debug_context(...)` initialization.
 - If needed, set `EXO_*_STORAGE_TYPE` macros to pick your encrypted storage ABI.

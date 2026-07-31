@@ -12,6 +12,39 @@ At a code level, EXO is centered on:
 
 This design gives developers an encrypted-type programming model before a complete LLVM language+backend integration exists.
 
+### Certified randomness (`CERTRNG`)
+
+The `CERTRNG rd, site_id` instruction generates a fresh 64-bit random value in
+a secret integer register. It is available only while secret-register mode and
+a valid data contract are active, and `rd` must name a secret register. The
+12-bit `site_id` (0--4095) labels the random leaf in the proof-carrying dataflow
+graph; it does **not** select, seed, or otherwise affect the sampled bits.
+Consequently, two sites can draw the same numerical value by chance while still
+having distinct provenance, and repeated execution of one site produces fresh
+samples with the same proof identity.
+
+Unlike an ordinary load of a value produced by a software PRNG, a `CERTRNG`
+result carries opcode-and-site provenance. Downstream proof-carrying encrypted
+operations incorporate that leaf into their dataflow receipt, allowing a data
+grant to require a particular random draw at a particular point in an approved
+computation. Random instructions whose results do not reach the disclosed value
+are not part of that value's receipt.
+
+EXO exposes the instruction at two levels:
+
+- `_certrng<SiteId>()` in `mojov-intrinsics.h` is the low-level intrinsic. Its
+  compile-time `SiteId` is checked to fit in 12 bits and it returns the encrypted
+  storage payload type `_uint64e_t`.
+- `certified_random<SiteId>()` in `mojov-exo.h` is the application interface. It
+  returns a `uint64e_t`, so the draw can be combined directly with encrypted
+  arithmetic, comparisons, and `cmov()`.
+
+Certification proves the draw's provenance and its place in the approved
+dataflow; it does not by itself prevent an untrusted service from retrying until
+it likes an outcome. Applications should bind draws to a fresh encrypted,
+client-branded request nonce and keep the result encrypted until the client has
+accepted the receipt and committed to that result.
+
 ## 2) What EXO is used for
 
 EXO is used to:
