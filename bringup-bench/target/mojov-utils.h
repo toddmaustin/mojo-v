@@ -17,8 +17,8 @@ typedef unsigned __int128 uint128_t;
 #define SDE(src,base,ofs) ".insn s 0xb, 0x1, " #src ", " #ofs "(" #base ")\n\t"
 #define FLDE(rd,base,ofs) ".insn i 0xb, 0x2, " #rd ", " #base ", " #ofs "\n\t"
 #define FSDE(src,base,ofs) ".insn s 0xb, 0x3, " #src ", " #ofs "(" #base ")\n\t"
-#define DISC(rd,rs1,rs2) ".insn r 0xb, 0x0, 0x1, " #rd ", " #rs1 ", " #rs2 "\n\t"
-#define FDISC(rd,rs1,rs2) ".insn r 0xb, 0x1, 0x1, " #rd ", " #rs1 ", " #rs2 "\n\t"
+#define DISC(rd,rs1,rs2) ".insn r 0x2b, 0x0, 0x1, " #rd ", " #rs1 ", " #rs2 "\n\t"
+#define FDISC(rd,rs1,rs2) ".insn r 0x2b, 0x1, 0x1, " #rd ", " #rs1 ", " #rs2 "\n\t"
 #define CERTRNG(rd,site_id) ".insn i 0xb, 0x4, " #rd ", x0, " #site_id "\n\t"
 
 #define MOJOV_HASH64_BASIS 0x9e3779b97f4a7c15ull
