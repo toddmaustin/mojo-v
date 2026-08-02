@@ -37,7 +37,7 @@ INFO: Running private auction Mojo-V test 1...
   negative test: disclose winning_bidder with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 2 ---
 INFO: KMSM contract open succeeded.
@@ -58,7 +58,7 @@ INFO: Running private auction Mojo-V test 2...
   negative test: disclose encrypted_bids[4] with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 3 ---
 INFO: KMSM contract open succeeded.
@@ -79,7 +79,7 @@ INFO: Running private auction Mojo-V test 3...
   negative test: disclose winning_bid with winning_bidder_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 4 ---
 INFO: KMSM contract open succeeded.
@@ -100,7 +100,7 @@ INFO: Running private auction Mojo-V test 4...
   negative test: disclose winning_bid with bogus datagrant ciphertext.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de0f0b
+  mtval  = 0x03de0f2b
 ERROR: failure with termination code `1'
 --- Test 5 ---
 INFO: KMSM contract open succeeded.
@@ -121,7 +121,7 @@ INFO: Running private auction Mojo-V test 5...
   negative test: disclose winning_bid with tampered datagrant dfhash.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 6 ---
 INFO: KMSM contract open succeeded.
@@ -142,7 +142,7 @@ INFO: Running private auction Mojo-V test 6...
   negative test: disclose modified auction winner with stale winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 7 ---
 INFO: KMSM contract open succeeded.
@@ -163,7 +163,7 @@ INFO: Running private auction Mojo-V test 7...
   negative test: disclose winning_bid plus encrypted_one with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 8 ---
 INFO: KMSM contract open succeeded.
@@ -184,7 +184,7 @@ INFO: Running private auction Mojo-V test 8...
   negative test: disclose winning_bid plus immediate one with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 9 ---
 INFO: KMSM contract open succeeded.
@@ -205,5 +205,5 @@ INFO: Running private auction Mojo-V test 9...
   negative test: disclose intermediate predicate with winning_bid_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'

@@ -42,7 +42,7 @@ INFO: Running vote tally Mojo-V test 1...
   negative test: disclose tally_B with tally_A_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 2 ---
 INFO: KMSM contract open succeeded.
@@ -64,7 +64,7 @@ INFO: Running vote tally Mojo-V test 2...
   negative test: disclose encrypted_ballots[0] with tally_A_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 3 ---
 INFO: KMSM contract open succeeded.
@@ -86,7 +86,7 @@ INFO: Running vote tally Mojo-V test 3...
   negative test: disclose tally_A with tally_B_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 4 ---
 INFO: KMSM contract open succeeded.
@@ -108,7 +108,7 @@ INFO: Running vote tally Mojo-V test 4...
   negative test: disclose tally_A with bogus datagrant ciphertext.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de0f0b
+  mtval  = 0x03de0f2b
 ERROR: failure with termination code `1'
 --- Test 5 ---
 INFO: KMSM contract open succeeded.
@@ -130,7 +130,7 @@ INFO: Running vote tally Mojo-V test 5...
   negative test: disclose tally_A with tampered datagrant dfhash.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 6 ---
 INFO: KMSM contract open succeeded.
@@ -152,7 +152,7 @@ INFO: Running vote tally Mojo-V test 6...
   negative test: disclose modified election tally with stale tally_A_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 7 ---
 INFO: KMSM contract open succeeded.
@@ -174,7 +174,7 @@ INFO: Running vote tally Mojo-V test 7...
   negative test: disclose tally_A plus encrypted_one with tally_A_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 8 ---
 INFO: KMSM contract open succeeded.
@@ -196,7 +196,7 @@ INFO: Running vote tally Mojo-V test 8...
   negative test: disclose tally_A plus immediate one with tally_A_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
 --- Test 9 ---
 INFO: KMSM contract open succeeded.
@@ -218,5 +218,5 @@ INFO: Running vote tally Mojo-V test 9...
   negative test: disclose intermediate ballot predicate with tally_A_grant.
 ERROR: *** TRAP ***
   mcause = 0x1f (Mojo-V security exception)
-  mtval  = 0x03de050b
+  mtval  = 0x03de052b
 ERROR: failure with termination code `1'
