@@ -106,6 +106,109 @@ simple_output_hash(uint64_t __hashval)
   SIMPLE_DEV_WRITE(SIMPLE_CTRL_BASE + SIMPLE_CTRL_LOHASH, (uint32_t)__hashval);
 }
 
+#elif defined(TARGET_CVA6_RV64)
+#include <stdlib.h>
+
+#define UART_BASE 0x10000000UL
+#define UART_THR  0x0UL
+
+extern inline void
+_mmio_write8(uintptr_t addr, uint8_t value)
+{
+  *(volatile uint8_t *)addr = value;
+}
+
+extern inline int
+_cva6_putchar(char c)
+{
+  // The mock_uart prints the low byte written to THR.
+  _mmio_write8(UART_BASE + UART_THR, (uint8_t)c);
+  return c;
+}
+
+// The Verilator testharness / SimDTM looks up the address of this symbol
+// through +tohost_addr=<nm output>.
+volatile uint64_t tohost __attribute__((section(".tohost"))) = 0;
+volatile uint64_t fromhost __attribute__((section(".fromhost"))) = 0;
+
+void _cva6_exit(int code) __attribute__((noreturn));
+void
+_cva6_exit(int code)
+{
+  tohost = (((uint64_t)(uint32_t)code) << 1) | 1ULL;
+
+  // Wait for the testharness to observe tohost and terminate simulation.
+  while (1) {
+    __asm__ volatile ("wfi");
+  }
+}
+
+extern inline void *
+memset(void *dest, int val, size_t len)
+{
+  return libmin_memset(dest, val, len);
+}
+
+// Small local stack, since we are not using the C runtime startup files.
+// NOTE: If you change stack size, you must also update the cva6-crt0.S file.
+uint8_t _boot_stack[8*4096] __attribute__((aligned(16)));
+
+extern inline uint64_t
+_cva6_get_mepc(void)
+{
+  uint64_t result;
+  __asm__ volatile("csrr %0, mepc;" : "=r"(result));
+  return result;
+}
+
+extern inline uint64_t
+_cva6_get_mcause(void)
+{
+  uint64_t result;
+  __asm__ volatile("csrr %0, mcause;" : "=r"(result));
+  return result;
+}
+
+extern inline uint64_t
+_cva6_get_mtval(void)
+{
+  uint64_t result;
+  __asm__ volatile("csrr %0, mtval;" : "=r"(result));
+  return result;
+}
+
+// GCC/Clang RISC-V interrupt attribute emits an M-mode trap epilogue.
+// This handler never returns, but the attribute still gives a safe prologue.
+void _cva6_exc_handler(void) __attribute__((interrupt("machine"), aligned(16)));
+
+void
+_cva6_exc_handler(void)
+{
+  libmin_printf("EXCEPTION!!!\n");
+  libmin_printf("============\n");
+  libmin_printf("MEPC:0x%lx, CAUSE:0x%lx, MTVAL:0x%lx\n",
+                _cva6_get_mepc(), _cva6_get_mcause(), _cva6_get_mtval());
+
+  _cva6_exit(-1);
+}
+
+void
+_cva6_timer_handler(void)
+{
+  libmin_printf("TIMER EXCEPTION!!!\n");
+
+  _cva6_exit(-1);
+}
+
+#ifdef notdef
+extern inline void
+simple_output_hash(uint64_t __hashval)
+{
+  SIMPLE_DEV_WRITE(SIMPLE_CTRL_BASE + SIMPLE_CTRL_HIHASH, (uint32_t)(__hashval >> 32));
+  SIMPLE_DEV_WRITE(SIMPLE_CTRL_BASE + SIMPLE_CTRL_LOHASH, (uint32_t)__hashval);
+}
+#endif /* notdef */
+
 #else /* undefined target */
 #error Co-simulation platform not defined, define TARGET_HOST or a target-dependent definition.
 #endif
@@ -153,6 +256,8 @@ SPIN_SUCCESS_ADDR:
 #elif defined(TARGET_SIMPLE) || defined(TARGET_SPIKE)
   // libmin_printf("EXIT: success\n");
   simple_halt();
+#elif defined(TARGET_CVA6_RV64)
+  _cva6_exit(0);
 #else
 #error Co-simulation platform not defined, define TARGET_HOST or a target-dependent definition.
 #endif
@@ -179,6 +284,8 @@ SPIN_FAIL_ADDR:
 #elif defined(TARGET_SIMPLE) || defined(TARGET_SPIKE) || defined(TARGET_HASPIKE)
   // libmin_printf("EXIT: fail code = %d\n", code);
   simple_halt();
+#elif defined(TARGET_CVA6_RV64)
+  _cva6_exit(code);
 #else
 #error Co-simulation platform not defined, define TARGET_HOST or a target-dependent definition.
 #endif
@@ -203,6 +310,8 @@ libtarg_putc(char c)
   __hashval = libmin_fnv64a(&c, 1, __hashval);
 #elif defined(TARGET_SIMPLE) || defined(TARGET_SPIKE)
   simple_putchar(c);
+#elif defined(TARGET_CVA6_RV64)
+  _cva6_putchar(c);
 #else
 #error Co-simulation platform not defined, define TARGET_HOST or a target-dependent definition.
 #endif
@@ -220,7 +329,7 @@ static uint8_t __heap[MAX_HEAP];
 static uint32_t __heap_ptr = 0;
 #endif /* TARGET_HAHOST */
 
-#if defined(TARGET_SIMPLE) || defined(TARGET_SPIKE) || defined(TARGET_HASPIKE)
+#if defined(TARGET_SIMPLE) || defined(TARGET_SPIKE) || defined(TARGET_HASPIKE) || defined(TARGET_CVA6_RV64)
 #define MAX_HEAP    (32*1024)
 static uint8_t __heap[MAX_HEAP];
 static uint32_t __heap_ptr = 0;
@@ -235,7 +344,7 @@ libtarg_sbrk(size_t inc)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif /* __clang__ */
   return sbrk(inc);
-#elif defined(TARGET_SA) || defined(TARGET_HAHOST) || defined(TARGET_SIMPLE) || defined(TARGET_SPIKE) || defined(TARGET_HASPIKE)
+#elif defined(TARGET_SA) || defined(TARGET_HAHOST) || defined(TARGET_SIMPLE) || defined(TARGET_SPIKE) || defined(TARGET_HASPIKE) || defined(TARGET_CVA6_RV64)
   uint8_t *ptr = &__heap[__heap_ptr];
   if (inc == 0)
     return ptr;

@@ -116,6 +116,18 @@ TARGET_CLEAN = *.d ibex_simple_system_pcount.csv
 TARGET_EXCLUDES = ackermann anagram c-interp checkers donut lz-compress pi-calc rho-factor rsa-cipher spelt2num
 TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
+else ifeq ($(TARGET), mojov-cva6)
+TARGET_CC = riscv-none-elf-gcc
+TARGET_AR = riscv-none-elf-ar
+TARGET_CFLAGS = -DTARGET_CVA6_RV64 -DLIBMIN_MALLOC_ALIGN_BYTES=8 -march=rv64gc -mabi=lp64d -static -mcmodel=medany -Wall -g -Os -fvisibility=hidden -nostdlib -nostartfiles -ffreestanding -fno-builtin -Wl,--no-relax # -MMD -mcmodel=medany
+TARGET_LIBS = #-lgcc
+TARGET_EXE = $(PROG).elf
+TARGET_SIM = time -p $(CVA6_REPO_DIR)/work-ver/Variane_testharness $(TARGET_EXE) +elf_file=$(TARGET_EXE) +core_name=cv64a6_imafdc_sv39 +tohost_addr= +time_out=250000000 +no_rvfi_trace | ../scripts/cva6-filter.sh
+TARGET_DIFF = diff
+TARGET_CLEAN = encaps.traces iti.traces trace_hart_0.dasm trace_rvfi_hart_00.dasm
+TARGET_EXCLUDES = ackermann anagram c-interp checkers donut lz-compress pi-calc rho-factor rsa-cipher spelt2num connect4-minimax donut huff-encode lz-compress matmult n-queens parrondo pi-calc ransac rho-factor rsa-cipher sudoku-solver
+TARGET_CONFIGURED = 1
+TARGET_REFEXT = out
 else ifeq ($(TARGET), spike32)
 #TARGET_CC = riscv64-unknown-elf-gcc
 TARGET_CC = /opt/riscv/bin/clang-21 -target riscv64-unknown-elf
@@ -169,7 +181,7 @@ TARGET_CLEAN =
 TARGET_EXCLUDES =
 TARGET_CONFIGURED = 1
 TARGET_REFEXT = out
-else ifeq ($(TARGET), mojov)
+else ifeq ($(TARGET), mojov-spike)
 #TARGET_CC = /opt/riscv/bin/clang
 TARGET_CC = /opt/riscv/bin/riscv64-unknown-elf-gcc -std=c2x
 #TARGET_CXX = /opt/riscv/bin/clang++
@@ -252,6 +264,8 @@ else ifeq ($(TARGET), hashalone-spike64)
 	$(TARGET_CC) $(CFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -o $@ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), simple)
 	$(TARGET_CC) $(CFLAGS) -T ../target/simple-map.ld $^ ../target/simple-crt0.S -o $@ $(LIBS) $(TARGET_LIBS)
+else ifeq ($(TARGET), mojov-cva6)
+	$(TARGET_CC) $(CFLAGS) -T ../target/cva6-map.ld -Wl,--no-relax $^ ../target/cva6-crt0.S -o $@ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), spike32)
 	$(TARGET_CC) $(CFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -nostartfiles -o $@ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), spike64)
@@ -260,7 +274,7 @@ else ifeq ($(TARGET), spike32-pk)
 	$(TARGET_CC) $(CFLAGS) -o $@ $^ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), spike64-pk)
 	$(TARGET_CC) $(CFLAGS) -o $@ $^ $(LIBS) $(TARGET_LIBS)
-else ifeq ($(TARGET), mojov)
+else ifeq ($(TARGET), mojov-spike)
 	$(TARGET_CC) $(LFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -nostartfiles -o $@ $(LIBS) $(TARGET_LIBS)
 else ifeq ($(TARGET), mojov-llvm)
 	$(TARGET_CC) $(CFLAGS) -T ../target/spike-map.ld $^ ../target/spike-crt0.S -nostartfiles -o $@ $(LIBS) $(TARGET_LIBS)
@@ -320,7 +334,7 @@ mojov-tests:
 	  echo "--------------------------------" ; \
 	  echo "Running "$$_BMARK" in TARGET=mojov" ; \
 	  echo "--------------------------------" ; \
-	  $(MAKE) TARGET=mojov clean build test || exit 1; \
+	  $(MAKE) TARGET=$(TARGET) clean build test || exit 1; \
 	  cd .. ; \
 	done
 
@@ -330,6 +344,6 @@ mojov-clean:
 	  echo "--------------------------------" ; \
 	  echo "Cleaning "$$_BMARK" in TARGET=mojov" ; \
 	  echo "--------------------------------" ; \
-	  $(MAKE) TARGET=mojov clean ; \
+	  $(MAKE) TARGET=$(TARGET) clean ; \
 	  cd .. ; \
 	done
