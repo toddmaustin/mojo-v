@@ -62,7 +62,7 @@ _testdatagrant(_uint64e_t src, _datagrant_t *datagrant)
     LDE(x29, %1, 0)
     DISC(x30, x28, x29)
     : : "r"(&src), "r"(datagrant)
-    : "x28", "x29", "memory");
+    : "x28", "x29", "x30", "memory");
 }
 
 /* Discloses an encrypted integer value when a valid datagrant is presented. */
