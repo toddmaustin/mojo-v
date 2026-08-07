@@ -1,4 +1,4 @@
-LOCAL_CFLAGS= -Wno-strict-aliasing]
+LOCAL_CFLAGS= -Wno-strict-aliasing
 LOCAL_LIBS=
 LOCAL_OBJS=nbody-sim.o ../common/simon.o ../target/mojov-utils.o
 
