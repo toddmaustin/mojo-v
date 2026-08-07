@@ -1,4 +1,7 @@
+require_rv64;
 require_extension(EXT_ZKMOJOV);
+require_extension('D');
+require_fp;
 
 // Mojo-V: SDE requires SECREGs enabled AND RS2 must be secret reg
 if (!p->get_secreg_mode() || !IS_FP_SECREG(insn.rs2())) 

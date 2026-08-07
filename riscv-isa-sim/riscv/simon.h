@@ -77,7 +77,7 @@ simon_128_64_decrypt(simon_state_t *simon_state, uint64_t ciphertext, uint64_t *
 }
 
 inline extern bool
-simon_128_128_keyexpand(simon_state_t *simon_state, uint128_t key, unsigned round_limit /* full strength = 44 */)
+simon_128_128_keyexpand(simon_state_t *simon_state, uint128_t key, unsigned round_limit /* full strength = 68 */)
 {
   uint8_t result, iv = 0, counter = 0;
 

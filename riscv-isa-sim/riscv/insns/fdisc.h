@@ -1,4 +1,7 @@
+require_rv64;
 require_extension(EXT_ZKMOJOV);
+require_extension('D');
+require_fp;
 
 // Mojo-V: FDISC is the only floating-point operation that may consume a
 // datagrant.  If rd is secret, FDISC is a simple secret-to-secret move after

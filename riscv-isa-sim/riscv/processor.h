@@ -73,7 +73,9 @@ typedef std::vector<std::tuple<reg_t, uint64_t, uint8_t>> commit_log_mem_t;
 //
 // Mojo-V integrity checking state
 //
-#define MAX_INPUTS 4
+// must cover the worst-case register reads of any single instruction,
+// e.g. cm.push {ra, s0-s11} performs 14 tracked reads even outside secret mode
+#define MAX_INPUTS 16
 typedef uint64_t dfhash_t;
 
 // architectural state of a RISC-V hart

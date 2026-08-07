@@ -330,8 +330,6 @@ static std::vector<size_t> parse_hartids(const char *s)
 }
 
 // Mojo-V: helper routines
-#define GCM_IV_LEN     12
-#define GCM_TAG_LEN    16
 #define DC_WIRE_LEN 64
 
 /* ---- Utility / error ---- */

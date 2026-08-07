@@ -1,3 +1,4 @@
+require_rv64;
 require_extension(EXT_ZKMOJOV);
 
 // Mojo-V: LDE requires SECREGs enabled AND RD must be secret reg
