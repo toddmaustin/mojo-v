@@ -1,6 +1,6 @@
 define HELP_TEXT
 Please choose one of the following targets:
-  run-tests      - clean, build, and test all benchmarks for the specified TARGET mode (host,standalone,simple,spike[62/32],spike[64/32]-pk)
+  run-tests      - clean, build, and test all benchmarks for the specified TARGET mode (host,standalone,simple,spike[64/32],spike[64/32]-pk,mojov-spike)
   all-clean      - clean all benchmark directories for all TARGET modes
   spike-build    - build RISC-V Spike simulator extensions for bringup-bench
 
@@ -13,8 +13,8 @@ Note that benchmark builds must be parameterized with the build MODE, such as:
   TARGET=host            - build benchmarks to run on a Linux host
   TARGET=standalone      - build benchmarks to run in standalone mode (a virtual bare-metal CPU)
   TARGET=simple          - build benchmarks to run on the RISC-V Simple_System simulation testing environment
-  TARGET=spike[64/32]    - build benchmarks to run on the RISC-V 32-bit Spike Instruction Set Simulator (ISS) with Simple_System devices
-  TARGET=spike[64/32]-pk - build benchmarks to run on the RISC-V 64-bit Spike Instruction Set Simulator (ISS) with proxy kernel (pk)
+  TARGET=spike[64/32]    - build benchmarks to run on the RISC-V 64/32-bit Spike Instruction Set Simulator (ISS) with Simple_System devices
+  TARGET=spike[64/32]-pk - build benchmarks to run on the RISC-V 64/32-bit Spike Instruction Set Simulator (ISS) with proxy kernel (pk)
   TARGET=mojov-spike     - build benchmarks to run on the RISC-V Mojo-V 64-bit Spike Reference Instruction Set Simulator (ISS) (bare metal)
   TARGET=mojov-cva6      - build benchmarks to run on the RISC-V Mojo-V 64-bit CVA6 RTL (on Verilator) CPU pipeline (bare metal)
 
@@ -34,9 +34,6 @@ error:
 #
 # END of user-modifiable variables
 #
-BMARKS = ackermann aes anagram audio-codec avl-tree banner bit-kernels blake2b bloom-filter boyer-moore-search bubble-sort c-interp ccmac checkers cipher congrad connect4-minimax convex-hull dhrystone distinctness donut fft-int flood-fill flood-fill-On2 frac-calc fuzzy-match fy-shuffle gcd-list grad-descent graph-tests hanoi heldkarp-tsp highlife heapsort heat-calc huff-encode idct-alg indirect-test k-means kadane kcore-decomp kepler knapsack knights-tour lcs lyndon-factors manacher-lps life longdiv lu-decomp lz-compress mandelbrot matmult max-subseq mersenne minspan mojov-stringtests monte-carlo moving-average moving-average-fp64 murmur-hash n-queens natlog nbody-sim seq-align nr-solver packet-filter private-auction vote-tally gene-risk parrondo pca-analysis pascal pi-calc primal-test priority-queue quaternions qsort-demo qsort-test quine rabinkarp-search rand-test ransac regex-parser rho-factor risk-score rle-compress secret-regex rsa-cipher sat-solver shortest-path sieve simple-grep skeleton soundex spelt2num spirograph strange sudoku-solver tetris-sim tiny-NN topo-sort totient transcend uniquify variability-sample vectors-3d verlet weekday randshell-sort
-BMARKS = ackermann aes anagram audio-codec avl-tree banner bit-kernels blake2b bloom-filter boyer-moore-search bubble-sort c-interp ccmac checkers cipher congrad connect4-minimax convex-hull dhrystone distinctness donut fft-int flood-fill flood-fill-On2 frac-calc fuzzy-match fy-shuffle gcd-list grad-descent graph-tests hanoi highlife heapsort heat-calc huff-encode idct-alg indirect-test k-means kadane kcore-decomp kepler knapsack knights-tour lcs lyndon-factors manacher-lps life longdiv lu-decomp lz-compress mandelbrot matmult max-subseq mersenne minspan mojov-stringtests monte-carlo moving-average moving-average-fp64 murmur-hash n-queens natlog nbody-sim seq-align nr-solver packet-filter private-auction vote-tally gene-risk parrondo pca-analysis pascal pi-calc primal-test priority-queue quaternions qsort-demo qsort-test quine rabinkarp-search rand-test ransac regex-parser rho-factor risk-score rle-compress secret-regex rsa-cipher sat-solver scrambled-compare shortest-path sieve simple-grep skeleton soundex spelt2num spirograph strange sudoku-solver tetris-sim tiny-NN topo-sort totient transcend uniquify variability-sample vectors-3d verlet weekday randshell-sort
-BMARKS = ackermann aes anagram audio-codec avl-tree banner bit-kernels blake2b bloom-filter boyer-moore-search bubble-sort c-interp ccmac checkers cipher chi-squared congrad connect4-minimax convex-hull dhrystone distinctness donut fft-int flood-fill flood-fill-On2 frac-calc fuzzy-match fy-shuffle gcd-list grad-descent graph-tests hanoi heldkarp-tsp highlife heapsort heat-calc huff-encode idct-alg indirect-test k-means kadane kcore-decomp kepler knapsack knights-tour lcs lyndon-factors manacher-lps life longdiv lu-decomp lz-compress mandelbrot matmult max-subseq mersenne minspan mojov-stringtests monte-carlo moving-average moving-average-fp64 murmur-hash n-queens natlog nbody-sim seq-align nr-solver packet-filter private-auction vote-tally gene-risk parrondo pascal pi-calc primal-test priority-queue quaternions qsort-demo qsort-test quine rabinkarp-search rand-test ransac regex-parser rho-factor risk-score rle-compress secret-regex rsa-cipher sat-solver shortest-path sieve simple-grep skeleton soundex spelt2num spirograph strange sudoku-solver tetris-sim tiny-NN topo-sort totient transcend uniquify variability-sample vectors-3d verlet weekday randshell-sort
 BMARKS = ackermann aes anagram audio-codec avl-tree banner bit-kernels blake2b bloom-filter boyer-moore-search bubble-sort c-interp ccmac checkers cipher chi-squared congrad connect4-minimax convex-hull dhrystone distinctness donut fft-int flood-fill flood-fill-On2 frac-calc fuzzy-match fy-shuffle gcd-list grad-descent graph-tests hanoi highlife heapsort heat-calc huff-encode idct-alg indirect-test k-means kadane kcore-decomp kepler knapsack knights-tour lcs lyndon-factors manacher-lps life longdiv lu-decomp lz-compress mandelbrot matmult max-subseq mersenne minspan mojov-stringtests monte-carlo moving-average moving-average-fp64 murmur-hash n-queens natlog nbody-sim seq-align nr-solver packet-filter private-auction vote-tally gene-risk parrondo pascal pi-calc primal-test priority-queue quaternions qsort-demo qsort-test quine rabinkarp-search rand-test ransac regex-parser rho-factor risk-score rle-compress secret-regex rsa-cipher sat-solver scrambled-compare shortest-path sieve simple-grep skeleton soundex spelt2num spirograph strange sudoku-solver tetris-sim tiny-NN topo-sort totient transcend uniquify variability-sample vectors-3d verlet weekday randshell-sort
 
 #OPT_CFLAGS = -O0 -g
@@ -299,24 +296,20 @@ ifeq ($(TARGET_CONFIGURED), 0)
 	echo "$$HELP_TEXT"
 else
 	@for _BMARK in $(TARGET_BMARKS) ; do \
-	  cd $$_BMARK ; \
 	  echo "--------------------------------" ; \
 	  echo "Running "$$_BMARK" in TARGET="$$TARGET ; \
 	  echo "--------------------------------" ; \
-	  $(MAKE) TARGET=$$TARGET clean build test || exit 1; \
-	  cd .. ; \
+	  ( cd $$_BMARK && $(MAKE) TARGET=$$TARGET clean build test ) || exit 1; \
 	done
-endif 
+endif
 
 clean-all all-clean:
 	@for _BMARK in $(BMARKS) ; do \
 	  for _TARGET in host standalone hashalone-host simple spike hashalone-host hashalone-spike ; do \
-	    cd $$_BMARK ; \
 	    echo "--------------------------------" ; \
 	    echo "Cleaning "$$_BMARK" in TARGET="$$_TARGET ; \
 	    echo "--------------------------------" ; \
-	    $(MAKE) TARGET=$$_TARGET clean ; \
-	    cd .. ; \
+	    ( cd $$_BMARK && $(MAKE) TARGET=$$_TARGET clean ) || exit 1; \
 	  done \
 	done
 
@@ -332,20 +325,18 @@ MOJOV_BMARKS = $(MOJOV_TESTS) $(MOJOV_APPS) $(MOJOV_DISC_APPS) $(MOJOV_CERTRNG_A
 
 mojov-tests:
 	@for _BMARK in $(MOJOV_BMARKS) ; do \
-	  cd $$_BMARK ; \
 	  echo "--------------------------------" ; \
 	  echo "Running "$$_BMARK" in TARGET=mojov" ; \
 	  echo "--------------------------------" ; \
-	  $(MAKE) TARGET=$(TARGET) clean build test || exit 1; \
-	  cd .. ; \
+	  ( cd $$_BMARK && $(MAKE) TARGET=$(TARGET) clean build test ) || exit 1; \
 	done
 
 mojov-clean:
 	@for _BMARK in $(MOJOV_BMARKS) ; do \
-	  cd $$_BMARK ; \
 	  echo "--------------------------------" ; \
 	  echo "Cleaning "$$_BMARK" in TARGET=mojov" ; \
 	  echo "--------------------------------" ; \
-	  $(MAKE) TARGET=$(TARGET) clean ; \
-	  cd .. ; \
+	  ( cd $$_BMARK && $(MAKE) TARGET=$(TARGET) clean ) || exit 1; \
 	done
+
+.PHONY: error build clean test run-tests clean-all all-clean spike-build mojov-tests mojov-clean
