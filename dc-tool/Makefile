@@ -1,13 +1,16 @@
-# Makefile for ML-KEM-512 + AES-128-GCM demo (OpenSSL 3.6.x)
+# Makefile for the Mojo-V data contract multi-tool (ML-KEM-512 + SIMON-128, OpenSSL 3.6.x)
 #
 # Usage:
-#   make
-#   make run-all
-#   make clean
+#   make clean build test
+#
+# Set OPENSSL_DIR to the root of an OpenSSL 3.6+ installation if it is not
+# in the default system paths, e.g. make OPENSSL_DIR=/opt/ssl
+
+OPENSSL_DIR ?= /opt/ssl
 
 CC      = gcc
-CFLAGS  = -Wall -Wextra -O0 -g -I/opt/ssl/include
-LDFLAGS = -L/opt/ssl/lib64 -Wl,-rpath,/opt/ssl/lib64
+CFLAGS  = -Wall -Wextra -O0 -g -I$(OPENSSL_DIR)/include
+LDFLAGS = -L$(OPENSSL_DIR)/lib64 -Wl,-rpath,$(OPENSSL_DIR)/lib64
 LDLIBS  = -lcrypto
 
 TARGET  := dc-tool
@@ -15,6 +18,8 @@ SRC     := dc-tool.c simon.c
 OBJ     := $(SRC:.c=.o)
 
 .PHONY: all clean build test
+
+all: build
 
 build: $(TARGET)
 
@@ -25,10 +30,7 @@ $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 
-bob: $(TARGET)
-	./$(TARGET) bob
-
-test:
+test: $(TARGET)
 	-rm -f FOO
 	./$(TARGET) keygen pk-file.pem sk-file.pem >> FOO
 	./$(TARGET) dcgen pk-file.pem strong dc-file.txt >> FOO

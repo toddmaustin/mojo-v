@@ -1,12 +1,13 @@
-// mlkem_files_demo.c
+// dc-tool.c - Mojo-V data contract multi-tool
 //
 // Build:
-//   cc -Wall -Wextra -O2 mlkem_files_demo.c -o mlkem_demo -lcrypto
+//   make clean build
 //
 // Usage:
-//   ./dc-multitool keygen <pk_file> <sk_file>
-//   ./dc-multitool dcgen  <pk_file> {fast,strong,proof-carrying} <ct_file>
-//   ./dc-multitool dcchk  <sk_file> <ct_file>
+//   ./dc-tool keygen  <pk_file> <sk_file>
+//   ./dc-tool dcgen   <pk_file> {fast,strong,proof-carrying} <ct_file>
+//   ./dc-tool dcchk   <sk_file> <ct_file>
+//   ./dc-tool dcchk-v <sk_file> <ct_file>
 //
 
 #include <stdio.h>
@@ -14,7 +15,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <assert.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -27,13 +29,9 @@
 
 #include "simon.h"
 
-typedef unsigned __int128 uint128_t;
-
 // simon cipher state
 simon_state_t simon_state;
 
-#define GCM_IV_LEN       12
-#define GCM_TAG_LEN      16
 #define SIMON128_KEY_LEN 16
 
 /* === Mojo-V data contract (512 bits) ===
@@ -61,6 +59,9 @@ typedef struct {
     uint8_t  format_sel;     // 0=fast, 1=strong, 2=proofcarrying
     uint8_t  pad[7];         // random padding to reach 64 bytes
 } data_contract_t;
+
+_Static_assert(sizeof(data_contract_t) == DC_WIRE_LEN,
+               "data_contract_t must encode to 64 wire bytes");
 
 /* ---- Utility / error ---- */
 static void die_openssl(const char *what) {
@@ -299,15 +300,17 @@ simon_encrypt(const unsigned char *pt, size_t pt_len,
               unsigned char *ct)
 {
   // expecting not to pad this encryption
-  assert(pt_len % (128/8) == 0);
-
-  uint128_t *psrc = (uint128_t *)pt, *pdst = (uint128_t *)ct;
+  if (pt_len % (128/8) != 0)
+    die_msg("simon_encrypt: length not a multiple of the 128-bit block size");
 
   uint128_t iv = 0;
   for (unsigned i=0; i < pt_len/(128/8); i++)
   {
-    simon_128_128_encrypt(&simon_state, psrc[i] ^ iv, &pdst[i]);
-    iv = pdst[i];
+    uint128_t blk, out;
+    memcpy(&blk, pt + i*(128/8), sizeof(blk));
+    simon_128_128_encrypt(&simon_state, blk ^ iv, &out);
+    memcpy(ct + i*(128/8), &out, sizeof(out));
+    iv = out;
   }
 }
 
@@ -316,16 +319,18 @@ simon_decrypt(const unsigned char *ct, size_t ct_len,
               unsigned char *pt)
 {
   // expecting not to pad this encryption
-  assert(ct_len % (128/8) == 0);
-
-  uint128_t *psrc = (uint128_t *)ct, *pdst = (uint128_t *)pt;
+  if (ct_len % (128/8) != 0)
+    die_msg("simon_decrypt: length not a multiple of the 128-bit block size");
 
   uint128_t iv = 0;
   for (unsigned i=0; i < ct_len/(128/8); i++)
   {
-    simon_128_128_decrypt(&simon_state, psrc[i], &pdst[i]);
-    pdst[i] = pdst[i] ^ iv;
-    iv = psrc[i];
+    uint128_t blk, out;
+    memcpy(&blk, ct + i*(128/8), sizeof(blk));
+    simon_128_128_decrypt(&simon_state, blk, &out);
+    out = out ^ iv;
+    memcpy(pt + i*(128/8), &out, sizeof(out));
+    iv = blk;
   }
 }
 
@@ -352,8 +357,11 @@ static int write_pubkey_pem(const char *path, EVP_PKEY *pkey) {
     return ok;
 }
 static int write_privkey_pem_unencrypted(const char *path, EVP_PKEY *pkey) {
-    BIO *bio = BIO_new_file(path, "wb");
-    if (!bio) return 0;
+    /* private key material: create the file owner-read/write only */
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (fd < 0) return 0;
+    BIO *bio = BIO_new_fd(fd, BIO_CLOSE);
+    if (!bio) { close(fd); return 0; }
     int ok = PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL);
     BIO_free(bio);
     return ok;
@@ -374,16 +382,18 @@ static void write_combined_file(const char *path,
     if (!kem_dc_hex || !msg_dc_hex || !hash_hex)
         die_msg("bytes_to_hex failed");
 
-    fprintf(f, "KEM=ML-KEM-512\n");
-    fprintf(f, "CIPHER=SIMON-128\n");
-    fprintf(f, "KEM_DC=%s\n", kem_dc_hex);
-    fprintf(f, "MSG_DC=%s\n", msg_dc_hex);
-    fprintf(f, "PT_SHA256=%s\n", hash_hex);
+    int wr_ok = 1;
+    wr_ok &= fprintf(f, "KEM=ML-KEM-512\n") > 0;
+    wr_ok &= fprintf(f, "CIPHER=SIMON-128\n") > 0;
+    wr_ok &= fprintf(f, "KEM_DC=%s\n", kem_dc_hex) > 0;
+    wr_ok &= fprintf(f, "MSG_DC=%s\n", msg_dc_hex) > 0;
+    wr_ok &= fprintf(f, "PT_SHA256=%s\n", hash_hex) > 0;
 
     OPENSSL_free(kem_dc_hex);
     OPENSSL_free(msg_dc_hex);
     OPENSSL_free(hash_hex);
-    fclose(f);
+    if (fclose(f) != 0 || !wr_ok)
+        die_msg("write(combined ct file) failed");
 }
 
 /* ---- Steps ---- */
@@ -443,7 +453,10 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
         die_openssl("DCGEN: HKDF key derivation failed");
 
     // simon key expansion
-    simon_128_128_keyexpand(&simon_state, *((uint128_t *)k), 68);
+    uint128_t k128;
+    memcpy(&k128, k, sizeof(k128));
+    if (!simon_128_128_keyexpand(&simon_state, k128, 68))
+        die_msg("DCGEN: SIMON-128 key expansion failed");
 
     /* Build Mojo-V data contract, encode to 64 bytes */
     data_contract_t dc;
@@ -467,7 +480,11 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
 
     /* Cleanup */
     OPENSSL_cleanse(k, sizeof(k));
+    OPENSSL_cleanse(&k128, sizeof(k128));
     OPENSSL_cleanse(ss, ss_len);
+    OPENSSL_cleanse(pt, sizeof(pt));
+    OPENSSL_cleanse(&dc, sizeof(dc));
+    OPENSSL_cleanse(&simon_state, sizeof(simon_state));
 
     OPENSSL_free(ss);
     OPENSSL_free(kem_dc);
@@ -477,9 +494,11 @@ step_dcgen(const char *pk_file, uint8_t format_sel, const char *ct_file)
     OSSL_PROVIDER_unload(prov);
 }
 
-static void
+/* Returns 0 when the contract validates, 1 when validation fails. */
+static int
 step_dcchk(const char *sk_file, const char *ct_file, bool verbose)
 {
+    int status = 1;
     OSSL_PROVIDER *prov = OSSL_PROVIDER_load(NULL, "default");
     if (!prov) die_openssl("OSSL_PROVIDER_load(default)");
 
@@ -532,10 +551,13 @@ step_dcchk(const char *sk_file, const char *ct_file, bool verbose)
         die_openssl("DCCHK: HKDF key derivation failed");
 
     // simon key expansion
-    simon_128_128_keyexpand(&simon_state, *((uint128_t *)k), 68);
+    uint128_t k128;
+    memcpy(&k128, k, sizeof(k128));
+    if (!simon_128_128_keyexpand(&simon_state, k128, 68))
+        die_msg("DCCHK: SIMON-128 key expansion failed");
 
-    // encrypt the data contract with simon cipher
-    unsigned char pt[DC_WIRE_LEN]; 
+    // decrypt the data contract with simon cipher
+    unsigned char pt[DC_WIRE_LEN];
     simon_decrypt(msg_dc, msg_dc_len, pt);
 
     unsigned char pt_sha[32];
@@ -558,6 +580,7 @@ step_dcchk(const char *sk_file, const char *ct_file, bool verbose)
     }
 
     printf("SUCCESS: DCGEN -> DCCHK Mojo-V data_contract_t transfer validated.\n");
+    status = 0;
     if (verbose)
     {
       printf("Decrypted data_contract_t fields:\n");
@@ -579,7 +602,11 @@ step_dcchk(const char *sk_file, const char *ct_file, bool verbose)
 
 cleanup:
     OPENSSL_cleanse(k, sizeof(k));
+    OPENSSL_cleanse(&k128, sizeof(k128));
     OPENSSL_cleanse(ss, ss_len);
+    OPENSSL_cleanse(pt, sizeof(pt));
+    OPENSSL_cleanse(&dc, sizeof(dc));
+    OPENSSL_cleanse(&simon_state, sizeof(simon_state));
 
     OPENSSL_free(ss);
     OPENSSL_free(kem_dc);
@@ -590,6 +617,7 @@ cleanup:
     EVP_PKEY_CTX_free(dctx);
     EVP_PKEY_free(sk);
     OSSL_PROVIDER_unload(prov);
+    return status;
 }
 
 /* ---- CLI ---- */
@@ -622,18 +650,13 @@ static uint8_t parse_format_sel(const char *mode) {
 int
 main(int argc, char **argv)
 {
-
-    assert(sizeof(data_contract_t) == 64);
-
     if (argc < 2) usage(argv[0]);
-
-    ERR_load_crypto_strings();
 
     if (strcmp(argv[1], "keygen") == 0)
     {
         if (argc != 4)
         {
-          fprintf(stderr, "dcgen requires <sk_file> and <sk_file> arguments.\n");
+          fprintf(stderr, "keygen requires <pk_file> and <sk_file> arguments.\n");
           usage(argv[0]);
         }
         else
@@ -647,7 +670,7 @@ main(int argc, char **argv)
     {
         if (argc != 5)
         {
-            fprintf(stderr, "dcgen requires an <pk_file>, mode: {fast,strong,proof-carrying}, and <ct_file>\n");
+            fprintf(stderr, "dcgen requires a <pk_file>, mode: {fast,strong,proof-carrying}, and <ct_file>\n");
             usage(argv[0]);
         }
         const char *pk_file = argv[2];
@@ -659,23 +682,23 @@ main(int argc, char **argv)
     {
         if (argc != 4)
         {
-            fprintf(stderr, "dcgen requires an <sk_file> and an <ct_file>\n");
+            fprintf(stderr, "dcchk requires an <sk_file> and a <ct_file>\n");
             usage(argv[0]);
         }
         const char *sk_file = argv[2];
         const char *ct_file = argv[3];
-        step_dcchk(sk_file, ct_file, false);
+        return step_dcchk(sk_file, ct_file, false);
     }
     else if (strcmp(argv[1], "dcchk-v") == 0)
     {
         if (argc != 4)
         {
-            fprintf(stderr, "dcgen requires an <sk_file> and an <ct_file>\n");
+            fprintf(stderr, "dcchk-v requires an <sk_file> and a <ct_file>\n");
             usage(argv[0]);
         }
         const char *sk_file = argv[2];
         const char *ct_file = argv[3];
-        step_dcchk(sk_file, ct_file, true);
+        return step_dcchk(sk_file, ct_file, true);
     }
     else
     {
