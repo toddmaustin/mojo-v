@@ -10,11 +10,13 @@ Within individual directories, the following Makefile targets are also available
   test           - run the standard test on the binary
 
 Note that benchmark builds must be parameterized with the build MODE, such as:
-  TARGET=host       - build benchmarks to run on a Linux host
-  TARGET=standalone - build benchmarks to run in standalone mode (a virtual bare-metal CPU)
-  TARGET=simple     - build benchmarks to run on the RISC-V Simple_System simulation testing environment
+  TARGET=host            - build benchmarks to run on a Linux host
+  TARGET=standalone      - build benchmarks to run in standalone mode (a virtual bare-metal CPU)
+  TARGET=simple          - build benchmarks to run on the RISC-V Simple_System simulation testing environment
   TARGET=spike[64/32]    - build benchmarks to run on the RISC-V 32-bit Spike Instruction Set Simulator (ISS) with Simple_System devices
   TARGET=spike[64/32]-pk - build benchmarks to run on the RISC-V 64-bit Spike Instruction Set Simulator (ISS) with proxy kernel (pk)
+  TARGET=mojov-spike     - build benchmarks to run on the RISC-V Mojo-V 64-bit Spike Reference Instruction Set Simulator (ISS) (bare metal)
+  TARGET=mojov-cva6      - build benchmarks to run on the RISC-V Mojo-V 64-bit CVA6 RTL (on Verilator) CPU pipeline (bare metal)
 
 Example benchmark builds:
   make TARGET=host clean build test

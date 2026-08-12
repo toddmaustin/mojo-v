@@ -114,14 +114,14 @@ make clean build test
 
    ```bash
    cd ..                # go to the top-level bringup-bench directory
-   make mojov-tests     # run all Mojo-V tests
+   make TARGET=mojov-spike mojov-tests     # run all Mojo-V tests
    ```
 
    As an alternative, you can run an individual benchmark by going into its directory and running the following command.
 
    ```bash
    cd ../mojov-test
-   make TARGET=mojov clean build test
+   make TARGET=mojov-spike clean build test
    ```
 
 
@@ -230,7 +230,7 @@ Each demonstrator is listed in `MOJOV_DISCAPPS`, so it is part of the safe discl
 
 ```bash
 cd bringup-bench/private-auction
-make TARGET=mojov clean build test
+make TARGET=mojov-spike clean build test
 ```
 
 Use Spike's `--mojov-arg=<n>` option to select the positive path (`0`) or one of the negative disclosure tests (`1` and higher) when running a demonstrator manually.
@@ -260,7 +260,7 @@ the Mojo-V benchmark battery. Run one directly from its directory, for example:
 
 ```bash
 cd bringup-bench/blind-audit
-make TARGET=mojov clean build test
+make TARGET=mojov-spike clean build test
 ```
 
 Use Spike's `--mojov-arg=<n>` option when running a demonstrator manually. Case

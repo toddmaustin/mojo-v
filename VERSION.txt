@@ -5,6 +5,7 @@
   - Added certified random number generation support to EXO library: certified_random<site_id>(), etc.
   - Added 3 Mojo-V safe disclosure benchmarks: blind-audit, diffpriv-count, and certified-lotto
   - Fixed an unintended opcode overlap between DISC/FDISC and LDE/FLDE (with thanks to Peter Endl)
+  - Refined the "bringup-bench/" TARGETs, which now are "mojov-spike" and "mojov-cva6", for the Spike simulator and CVA6 RTL on Verilator, respectively
 
 --
 
