@@ -11,7 +11,7 @@ To learn more...
 - Slides that give an overview of the Mojo-V project:  https://drive.google.com/file/d/1VVzZqYHvQgnKMgXZjg7I_cX2GzF7awSN
 
 The current Mojo-V ISA Extension Specification (release 1.02):
-- [In PDF format.] (https://drive.google.com/file/d/1ETZ3eTAKmxLif83ZUAHA7rRr1Ishb2rC)
+- [In PDF format.] (https://drive.google.com/file/d/1yfiBqp0xyXD-S_G5d2o7Ggta5wI6nRot)
 
 To contact the developers of Mojo-V:
 - Email: [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
@@ -24,7 +24,7 @@ The Mojo-V Reference Platform release 1.03 implements a reference Spike simulato
 
 This release is appropriate for use as i) a Mojo-V application development platform, ii) a golden model for validating Mojo-V hardware implementations, and iii) a reference implementation for security analysis. Current work focuses on the development of i) an LLVM-based Mojo-V compiler, ii) a gem5-based Mojo-V model for architectural exploration and analysis, and iii) a reference CVA6 SystemVerilog RTL implementation of RISC-V RV64GC with Mojo-V extensions.
 
-**Specification Version:** 1.02  (July 2026)  
+**Specification Version:** 1.02  (August 2026)  
 **Contact:** [mojov-devs@umich.edu](mailto:mojov-devs@umich.edu)
 
 ## Current components
@@ -53,6 +53,7 @@ This release is appropriate for use as i) a Mojo-V application development platf
    - Full batteries of EXO math and string library tests
    - Numerous privacy-oriented benchmarks build using the EXO Mojo-V compiler library
    - Full battery of safe disclosure demonstration applications
+   - Full battery of certified TRNG demonstration applications
    - Hand-coded examples (e.g., bubble-sort) showing Mojo-V working secret computation
 
 Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo-V, as yet.
@@ -246,7 +247,7 @@ cases demonstrate that software-generated randomness, missing or reused draws,
 wrong site assignments, stale requests, altered computation graphs, and biased
 resampling do not satisfy the honest data grant. They also show an important
 limit: certified randomness alone cannot stop grinding if results are disclosed
-before commitment.
+(using Mojo-V DISC or FDISC instructions) before commitment.
 
 | Program | Certified-random workload | Positive behavior | Demonstrated protections |
 |:---------|:--------------------------|:------------------|:--------------------------|

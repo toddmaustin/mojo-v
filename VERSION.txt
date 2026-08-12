@@ -4,6 +4,7 @@
   - Added support for Mojo-V certified random number generation: CERTRNG instruction with site identification support
   - Added certified random number generation support to EXO library: certified_random<site_id>(), etc.
   - Added 3 Mojo-V safe disclosure benchmarks: blind-audit, diffpriv-count, and certified-lotto
+  - Fixed an unintended opcode overlap between DISC/FDISC and LDE/FLDE (with thanks to Peter Endl)
 
 --
 
