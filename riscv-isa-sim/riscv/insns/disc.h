@@ -1,3 +1,4 @@
+require_rv64;
 require_extension(EXT_ZKMOJOV);
 
 // Mojo-V: DISC is the only integer operation that may consume a datagrant.  If

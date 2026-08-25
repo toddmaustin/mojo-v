@@ -34,7 +34,7 @@
 
 #define UCHAR_MAX   ((unsigned char)~0)
 #define USHRT_MAX   ((unsigned short)~0)
-#define UINT_MAX    (~0)
+#define UINT_MAX    (~0u)
 #define ULONG_MAX   (~0ul)
 #define ULLONG_MAX  (~0ull)
 
@@ -49,7 +49,7 @@
 
 /* size type */
 typedef __SIZE_TYPE__   size_t;
-typedef unsigned long int   ssize_t;
+typedef signed long int   ssize_t;
 
 /* signed */
 typedef __INT8_TYPE__   int8_t;

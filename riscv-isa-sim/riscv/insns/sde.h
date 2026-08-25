@@ -1,3 +1,4 @@
+require_rv64;
 require_extension(EXT_ZKMOJOV);
 
 // Mojo-V: SDE requires SECREGs enabled AND RS2 must be secret reg

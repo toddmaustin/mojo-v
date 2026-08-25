@@ -52,7 +52,7 @@
 #define CHECK_LEAKY_FP(reg) ((p->get_secreg_mode() && IS_FP_SECREG(reg)) ? (throw trap_security_exception(insn.bits()), (void)0) : (void)0)
 #define FP_SECREG_REF(reg) (p->extension_enabled(EXT_ZKMOJOV) && p->get_secreg_mode() && IS_FP_SECREG(reg))
 #define FP_SECREG_RESET \
-  { DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP0, freg(f64(0))); \
+  { DO_WRITE_FREG(X_FP0, freg(f64(0))); DO_WRITE_FREG(X_FP1, freg(f64(0))); DO_WRITE_FREG(X_FP2, freg(f64(0))); DO_WRITE_FREG(X_FP3, freg(f64(0))); \
     DO_WRITE_FREG(X_FP4, freg(f64(0))); DO_WRITE_FREG(X_FP5, freg(f64(0))); DO_WRITE_FREG(X_FP6, freg(f64(0))); DO_WRITE_FREG(X_FP7, freg(f64(0))); }
 
 // Mojo-V: DFHASH handling
@@ -209,7 +209,7 @@ union mojov_mem_proofcarrying_t {
 // FPU macros
 // Mojo-V: DFHASH handling
 #define DFHASH_FREG_R(reg) (assert(STATE.n_inputs < MAX_INPUTS), (STATE.dfhash_input[STATE.n_inputs].regID = ((reg)+32)), (STATE.dfhash_input[STATE.n_inputs++].hash = (FP_SECREG_REF(reg) ? STATE.dfhash_fpr[reg] : STATE.FPR[reg].v[0])))
-#define DFHASH_FREG_W(reg) ((STATE.dfhash_fpr[reg] = dfhash_gen(p, insn)), ({ if (FP_SECREG_REF(reg+32)) dfhash_debug(p, reg+32, STATE.dfhash_fpr[reg]); }), (void)0)
+#define DFHASH_FREG_W(reg) ((STATE.dfhash_fpr[reg] = dfhash_gen(p, insn)), ({ if (FP_SECREG_REF(reg)) dfhash_debug(p, reg+32, STATE.dfhash_fpr[reg]); }), (void)0)
 
 // Mojo-V: track the input dependencies
 #define CHECK_FREG_R(reg) (DFHASH_FREG_R(reg), (insn.set_xpr_deps(insn.get_xpr_deps() | ((reg_deps_t)1 << ((reg) + 32))), (void) 0))

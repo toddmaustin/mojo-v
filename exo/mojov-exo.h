@@ -5,7 +5,7 @@
 #include "mojov-intrinsics.h"
 #else
 
-// #include <cstdint>
+#include <cstdint>
 #include <cstddef>
 #include <type_traits>
 
