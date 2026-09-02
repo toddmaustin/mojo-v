@@ -63,13 +63,13 @@ Note, the remainder of the Bringup-bench benchmarks have NOT been ported to Mojo
 ### A. Install a RISC-V LLVM Compiler
 You’ll need an LLVM-based RISC-V cross-compiler capable of producing `RV64GC` binaries.
 
-Here is a good place to start: https://github.com/openssl/openssl
+Here is a good place to start: https://clang.llvm.org/get_started.html
 
 ### B. Install OpenSSL version 3.6 or newer
 
 You’ll need a developer's installation of OpenSSL version 3.6 or newer. This provides libraries that implement ML-KEM512, used by Spike for protected key exchange.
 
-Here is a good place to start: https://clang.llvm.org/get_started.html
+Here is a good place to start: https://github.com/openssl/openssl
 
 ### C. Clone the Mojo-V Repository
 
